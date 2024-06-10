@@ -111,14 +111,14 @@ const std::vector<std::vector<int64_t>>& infer_shapes)
     std::vector<cv::Rect> boxes;
     std::vector<float> confs;
     std::vector<int> classIds;
-    const auto confThreshold = 0.1f;
-    const auto iouThreshold = 0.1f;
+    const auto confThreshold = 0.3f;
+    const auto iouThreshold = 0.4f;
     const auto infer_shape = infer_shapes.front(); 
     auto infer_result = infer_results.front(); 
-    std::cout << "infer_shape[2]  :  "  <<infer_shape[2] << std::endl;
-    std::cout << "infer_shape[1]  :  "  <<infer_shape[1] << std::endl;
-    std::cout << "infer_shape[0]  :  "  <<infer_shape[0] << std::endl;
-    std::cout << "size infer shape :  "  <<infer_shape.size() << std::endl;
+    //std::cout << "infer_shape[2]  :  "  <<infer_shape[2] << std::endl;
+    //std::cout << "infer_shape[1]  :  "  <<infer_shape[1] << std::endl;
+    //std::cout << "infer_shape[0]  :  "  <<infer_shape[0] << std::endl;
+    //s//td::cout << "size infer shape :  "  <<infer_shape.size() << std::endl;
     if(infer_shape[2]  < infer_shape[1])
     {
         const int numClasses =  infer_shape[2] - 5;
@@ -145,7 +145,7 @@ const std::vector<std::vector<int64_t>>& infer_shapes)
         std::vector<std::vector<float>> output(infer_shape[1], std::vector<float>(infer_shape[2]));
 
         // Construct output matrix
-        std::cout << "numClasses :  "  <<numClasses<< std::endl;
+       //std::cout << "numClasses :  "  <<numClasses<< std::endl;
         for (int i = 0; i < infer_shape[1]; i++) {
             for (int j = 0; j < infer_shape[2]; j++) {
                 output[i][j] = infer_result[i * infer_shape[2] + j];
@@ -169,7 +169,7 @@ const std::vector<std::vector<int64_t>>& infer_shapes)
             auto maxSPtr = std::max_element(scoresPtr, scoresPtr + numClasses);
             float score = *maxSPtr;
             if (score > confThreshold) {
-                std::cout <<Yolo::get_rect(frame_size, std::vector<float>(bboxesPtr, bboxesPtr + 4))<< std::endl;
+                //std::cout <<Yolo::get_rect(frame_size, std::vector<float>(bboxesPtr, bboxesPtr + 4))<< std::endl;
                 boxes.emplace_back(Yolo::get_rect(frame_size, std::vector<float>(bboxesPtr, bboxesPtr + 4)));
                 int label = maxSPtr - scoresPtr;
                 confs.emplace_back(score);
@@ -247,9 +247,9 @@ std::vector<uint8_t> Yolo::preprocess(
     for (size_t i = 0; i < img_channels; ++i)
     {
         input_bgr_channels.emplace_back(
-            img_size.height, img_size.width, img_type1, &(input_data[pos]));
+        img_size.height, img_size.width, img_type1, &(input_data[pos]));
         pos += input_bgr_channels.back().total() *
-            input_bgr_channels.back().elemSize();
+        input_bgr_channels.back().elemSize();
     }
 
     cv::split(sample, input_bgr_channels);

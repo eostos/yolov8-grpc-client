@@ -1,8 +1,6 @@
 CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/Yolo.cpp.o: \
- /yolov8-grpc-client/src/tasks/object_detection/src/Yolo.cpp \
- /usr/include/stdc-predef.h \
- /yolov8-grpc-client/src/tasks/object_detection/src/Yolo.hpp \
- /yolov8-grpc-client/include/common.hpp \
+ /app/src/tasks/object_detection/src/Yolo.cpp /usr/include/stdc-predef.h \
+ /app/src/tasks/object_detection/src/Yolo.hpp /app/include/common.hpp \
  /usr/include/opencv4/opencv2/core.hpp \
  /usr/include/opencv4/opencv2/core/cvdef.h \
  /usr/include/opencv4/opencv2/core/version.hpp /usr/include/c++/11/limits \
@@ -82,7 +80,9 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/
  /usr/include/c++/11/bits/concept_check.h \
  /usr/include/c++/11/debug/assertions.h \
  /usr/include/c++/11/bits/stl_iterator.h /usr/include/c++/11/new \
- /usr/include/c++/11/bits/exception.h /usr/include/c++/11/debug/debug.h \
+ /usr/include/c++/11/bits/exception.h \
+ /usr/include/c++/11/bits/stl_construct.h \
+ /usr/include/c++/11/debug/debug.h \
  /usr/include/c++/11/bits/predefined_ops.h \
  /usr/include/c++/11/bits/range_access.h \
  /usr/include/opencv4/opencv2/core/base.hpp \
@@ -101,7 +101,6 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/
  /usr/include/c++/11/bits/algorithmfwd.h \
  /usr/include/c++/11/bits/stl_heap.h \
  /usr/include/c++/11/bits/stl_tempbuf.h \
- /usr/include/c++/11/bits/stl_construct.h \
  /usr/include/c++/11/bits/uniform_int_dist.h \
  /usr/include/c++/11/bits/ranges_algo.h \
  /usr/include/c++/11/bits/ranges_algobase.h /usr/include/c++/11/iterator \
@@ -537,8 +536,7 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/
  /workspace/install/include/grpcpp/impl/codegen/proto_buffer_writer.h \
  /workspace/install/include/grpcpp/impl/codegen/stub_options.h \
  /workspace/install/include/ipc.h \
- /workspace/install/include/http_client.h \
- /yolov8-grpc-client/include/TaskInterface.hpp \
+ /workspace/install/include/http_client.h /app/include/TaskInterface.hpp \
  /usr/include/opencv4/opencv2/opencv.hpp \
  /usr/include/opencv4/opencv2/calib3d.hpp \
  /usr/include/opencv4/opencv2/features2d.hpp \

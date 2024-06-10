@@ -57,10 +57,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /yolov8-grpc-client
+CMAKE_SOURCE_DIR = /app
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /yolov8-grpc-client/build
+CMAKE_BINARY_DIR = /app/build
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -87,9 +87,9 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /yolov8-grpc-client/build/CMakeFiles /yolov8-grpc-client/build//CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /app/build/CMakeFiles /app/build//CMakeFiles/progress.marks
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /yolov8-grpc-client/build/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /app/build/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -201,6 +201,102 @@ src/tasks/object_detection/src/YoloNas.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/computer-vision-triton-cpp-client.dir/build.make CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/YoloNas.cpp.s
 .PHONY : src/tasks/object_detection/src/YoloNas.cpp.s
 
+src/tasks/tracker/CentroidTracker.o: src/tasks/tracker/CentroidTracker.cpp.o
+.PHONY : src/tasks/tracker/CentroidTracker.o
+
+# target to build an object file
+src/tasks/tracker/CentroidTracker.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/computer-vision-triton-cpp-client.dir/build.make CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/CentroidTracker.cpp.o
+.PHONY : src/tasks/tracker/CentroidTracker.cpp.o
+
+src/tasks/tracker/CentroidTracker.i: src/tasks/tracker/CentroidTracker.cpp.i
+.PHONY : src/tasks/tracker/CentroidTracker.i
+
+# target to preprocess a source file
+src/tasks/tracker/CentroidTracker.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/computer-vision-triton-cpp-client.dir/build.make CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/CentroidTracker.cpp.i
+.PHONY : src/tasks/tracker/CentroidTracker.cpp.i
+
+src/tasks/tracker/CentroidTracker.s: src/tasks/tracker/CentroidTracker.cpp.s
+.PHONY : src/tasks/tracker/CentroidTracker.s
+
+# target to generate assembly for a file
+src/tasks/tracker/CentroidTracker.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/computer-vision-triton-cpp-client.dir/build.make CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/CentroidTracker.cpp.s
+.PHONY : src/tasks/tracker/CentroidTracker.cpp.s
+
+src/tasks/tracker/EventQueue.o: src/tasks/tracker/EventQueue.cpp.o
+.PHONY : src/tasks/tracker/EventQueue.o
+
+# target to build an object file
+src/tasks/tracker/EventQueue.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/computer-vision-triton-cpp-client.dir/build.make CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/EventQueue.cpp.o
+.PHONY : src/tasks/tracker/EventQueue.cpp.o
+
+src/tasks/tracker/EventQueue.i: src/tasks/tracker/EventQueue.cpp.i
+.PHONY : src/tasks/tracker/EventQueue.i
+
+# target to preprocess a source file
+src/tasks/tracker/EventQueue.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/computer-vision-triton-cpp-client.dir/build.make CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/EventQueue.cpp.i
+.PHONY : src/tasks/tracker/EventQueue.cpp.i
+
+src/tasks/tracker/EventQueue.s: src/tasks/tracker/EventQueue.cpp.s
+.PHONY : src/tasks/tracker/EventQueue.s
+
+# target to generate assembly for a file
+src/tasks/tracker/EventQueue.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/computer-vision-triton-cpp-client.dir/build.make CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/EventQueue.cpp.s
+.PHONY : src/tasks/tracker/EventQueue.cpp.s
+
+src/tasks/tracker/Utils.o: src/tasks/tracker/Utils.cpp.o
+.PHONY : src/tasks/tracker/Utils.o
+
+# target to build an object file
+src/tasks/tracker/Utils.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/computer-vision-triton-cpp-client.dir/build.make CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/Utils.cpp.o
+.PHONY : src/tasks/tracker/Utils.cpp.o
+
+src/tasks/tracker/Utils.i: src/tasks/tracker/Utils.cpp.i
+.PHONY : src/tasks/tracker/Utils.i
+
+# target to preprocess a source file
+src/tasks/tracker/Utils.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/computer-vision-triton-cpp-client.dir/build.make CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/Utils.cpp.i
+.PHONY : src/tasks/tracker/Utils.cpp.i
+
+src/tasks/tracker/Utils.s: src/tasks/tracker/Utils.cpp.s
+.PHONY : src/tasks/tracker/Utils.s
+
+# target to generate assembly for a file
+src/tasks/tracker/Utils.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/computer-vision-triton-cpp-client.dir/build.make CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/Utils.cpp.s
+.PHONY : src/tasks/tracker/Utils.cpp.s
+
+src/tasks/tracker/poligonTrackerManager.o: src/tasks/tracker/poligonTrackerManager.cpp.o
+.PHONY : src/tasks/tracker/poligonTrackerManager.o
+
+# target to build an object file
+src/tasks/tracker/poligonTrackerManager.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/computer-vision-triton-cpp-client.dir/build.make CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/poligonTrackerManager.cpp.o
+.PHONY : src/tasks/tracker/poligonTrackerManager.cpp.o
+
+src/tasks/tracker/poligonTrackerManager.i: src/tasks/tracker/poligonTrackerManager.cpp.i
+.PHONY : src/tasks/tracker/poligonTrackerManager.i
+
+# target to preprocess a source file
+src/tasks/tracker/poligonTrackerManager.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/computer-vision-triton-cpp-client.dir/build.make CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/poligonTrackerManager.cpp.i
+.PHONY : src/tasks/tracker/poligonTrackerManager.cpp.i
+
+src/tasks/tracker/poligonTrackerManager.s: src/tasks/tracker/poligonTrackerManager.cpp.s
+.PHONY : src/tasks/tracker/poligonTrackerManager.s
+
+# target to generate assembly for a file
+src/tasks/tracker/poligonTrackerManager.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/computer-vision-triton-cpp-client.dir/build.make CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/poligonTrackerManager.cpp.s
+.PHONY : src/tasks/tracker/poligonTrackerManager.cpp.s
+
 src/triton/Triton.o: src/triton/Triton.cpp.o
 .PHONY : src/triton/Triton.o
 
@@ -243,6 +339,18 @@ help:
 	@echo "... src/tasks/object_detection/src/YoloNas.o"
 	@echo "... src/tasks/object_detection/src/YoloNas.i"
 	@echo "... src/tasks/object_detection/src/YoloNas.s"
+	@echo "... src/tasks/tracker/CentroidTracker.o"
+	@echo "... src/tasks/tracker/CentroidTracker.i"
+	@echo "... src/tasks/tracker/CentroidTracker.s"
+	@echo "... src/tasks/tracker/EventQueue.o"
+	@echo "... src/tasks/tracker/EventQueue.i"
+	@echo "... src/tasks/tracker/EventQueue.s"
+	@echo "... src/tasks/tracker/Utils.o"
+	@echo "... src/tasks/tracker/Utils.i"
+	@echo "... src/tasks/tracker/Utils.s"
+	@echo "... src/tasks/tracker/poligonTrackerManager.o"
+	@echo "... src/tasks/tracker/poligonTrackerManager.i"
+	@echo "... src/tasks/tracker/poligonTrackerManager.s"
 	@echo "... src/triton/Triton.o"
 	@echo "... src/triton/Triton.i"
 	@echo "... src/triton/Triton.s"

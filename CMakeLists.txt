@@ -5,8 +5,8 @@ message(STATUS ${PROJECT_NAME})
 message(STATUS $ENV{TritonClientBuild_DIR})
 set(CMAKE_CXX_STANDARD 20)
 
-option(WITH_SHOW_FRAME "Option description" OFF)
-option(WITH_WRITE_FRAME "Option description" ON)
+option(WITH_SHOW_FRAME "Option description" ON)
+option(WITH_WRITE_FRAME "Option description" OFF)
 
 if(WITH_SHOW_FRAME)
   add_definitions(-DSHOW_FRAME)
@@ -26,10 +26,18 @@ find_package(TritonCommon REQUIRED)
 find_package(TritonClient REQUIRED)
 find_package(CURL REQUIRED)
 find_package(RapidJSON REQUIRED)
+###
+find_package(hiredis REQUIRED)
+find_package(PkgConfig REQUIRED)
 
 # Set the source files
 set(SOURCES
     ${PROJECT_SOURCE_DIR}/client.cpp
+    ${PROJECT_SOURCE_DIR}/src/tasks/tracker/EventQueue.cpp
+    ${PROJECT_SOURCE_DIR}/src/tasks/tracker/CentroidTracker.cpp
+    ${PROJECT_SOURCE_DIR}/src/tasks/tracker/
+    ${PROJECT_SOURCE_DIR}/src/tasks/tracker/Utils.cpp
+    ${PROJECT_SOURCE_DIR}/src/tasks/tracker/poligonTrackerManager.cpp
     # Add any additional source files here
 )
 
@@ -53,6 +61,10 @@ target_include_directories(${PROJECT_NAME}
     ${PROJECT_SOURCE_DIR}/src/tasks/classification/include
     ${PROJECT_SOURCE_DIR}/src/tasks/classification/src    
     ${PROJECT_SOURCE_DIR}/src/triton
+    ${PROJECT_SOURCE_DIR}/lib/redox/include
+    ${PROJECT_SOURCE_DIR}/src/tasks/tracker
+    ${hiredis_INCLUDE_DIRS}  # Add hiredis include directory
+   
     # Add any additional include directories here
 )
 
@@ -60,6 +72,10 @@ target_include_directories(${PROJECT_NAME}
 target_link_directories(${PROJECT_NAME}
     PRIVATE
     $ENV{TritonClientBuild_DIR}/lib
+    ${hiredis_LIBRARY_DIRS}  # Add hiredis library directory
+    ${LIBEV_LIBRARY_DIRS}    # Add libev library directory
+    ${PROJECT_SOURCE_DIR}/lib/redox/build
+    /usr/lib/x86_64-linux-gnu
     # Add any additional link directories here
 )
 
@@ -70,4 +86,11 @@ target_link_libraries(${PROJECT_NAME}
     httpclient
     ${OpenCV_LIBS}
     CURL::libcurl
+    redox  # Link Redox library
+    ${hiredis_LIBRARIES}  # Link hiredis library
+    ev 
+    jsoncpp
+    tbb
+    boost_system
+    boost_filesystem
 )

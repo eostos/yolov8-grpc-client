@@ -1,9 +1,8 @@
 CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/YoloNas.cpp.o: \
- /yolov8-grpc-client/src/tasks/object_detection/src/YoloNas.cpp \
+ /app/src/tasks/object_detection/src/YoloNas.cpp \
  /usr/include/stdc-predef.h \
- /yolov8-grpc-client/src/tasks/object_detection/src/YoloNas.hpp \
- /yolov8-grpc-client/include/TaskInterface.hpp \
- /usr/include/opencv4/opencv2/opencv.hpp \
+ /app/src/tasks/object_detection/src/YoloNas.hpp \
+ /app/include/TaskInterface.hpp /usr/include/opencv4/opencv2/opencv.hpp \
  /usr/include/opencv4/opencv2/opencv_modules.hpp \
  /usr/include/opencv4/opencv2/core.hpp \
  /usr/include/opencv4/opencv2/core/cvdef.h \
@@ -84,7 +83,9 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/
  /usr/include/c++/11/bits/concept_check.h \
  /usr/include/c++/11/debug/assertions.h \
  /usr/include/c++/11/bits/stl_iterator.h /usr/include/c++/11/new \
- /usr/include/c++/11/bits/exception.h /usr/include/c++/11/debug/debug.h \
+ /usr/include/c++/11/bits/exception.h \
+ /usr/include/c++/11/bits/stl_construct.h \
+ /usr/include/c++/11/debug/debug.h \
  /usr/include/c++/11/bits/predefined_ops.h \
  /usr/include/c++/11/bits/range_access.h \
  /usr/include/opencv4/opencv2/core/base.hpp /usr/include/c++/11/climits \
@@ -101,7 +102,6 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/
  /usr/include/c++/11/bits/algorithmfwd.h \
  /usr/include/c++/11/bits/stl_heap.h \
  /usr/include/c++/11/bits/stl_tempbuf.h \
- /usr/include/c++/11/bits/stl_construct.h \
  /usr/include/c++/11/bits/uniform_int_dist.h \
  /usr/include/c++/11/bits/ranges_algo.h \
  /usr/include/c++/11/bits/ranges_algobase.h /usr/include/c++/11/iterator \
