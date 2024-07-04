@@ -5,6 +5,8 @@
 #include <opencv2/core.hpp>
 
 #include "Utils.hpp"
+#include <numeric>
+
 
 using namespace std;
 using namespace cv;
@@ -49,7 +51,16 @@ protected:
     lint duration;
     Scalar trk_color=(0,0,0);
     string init_frame_id;
-    
+    Point previous_position;
+    Point current_position;
+    Point t_previous_position;
+    Point t_current_position;
+    ///  speed
+    float speed = 0.0;
+    std::deque<double> speed_buffer;
+    std::string speed_km_vec;
+    int buffer_size = 20; // Adjust the buffer size as needed
+    bool lock_speed = false; 
 public:
     TrackingObject();
     virtual ~TrackingObject();
@@ -99,6 +110,7 @@ public:
     bool isToDelete();
     void setToDelete(bool toDelete);
     void setShiftMethod(int METHOD);
+    string getSpeed();
     //
     void setTrackingData(Mat &img_trkr, Mat &img_draw);
     float calcDistance(cv::Point center_det);
@@ -106,6 +118,11 @@ public:
     Point calcProjCenter(int SHIFT_METHOD);
     dnn_bbox getRouteBboxTail();
     //
+    void updateSpeed(double fps,std::vector<cv::Point2f> speed_poligon,std::vector<cv::Point2f> speed_meters) ;
+    
+    Point getCurrentPosition()const;
+    double getSmoothedSpeed();
+///////
     vector<Point> getRouteToSend();
     void startTracker(uint _obj_id, string _obj_label);
     void setTrackerDNN(const dnn_bbox &dnnData, cv::Point center_det);
@@ -134,9 +151,11 @@ protected:
     std::vector<TrackingObject*> objects;
     bool setted_roi = false;
     Rect limit_roi_objects;
-
+    double totalTime;
     vector<dnn_bbox> detections;
     vector<string> ids_with_dets;
+    std::vector<cv::Point2f> speed_poligon;
+    std::vector<cv::Point2f> speed_meters;
 
     void drawRoi();
     void setDrawRoi();
@@ -150,12 +169,17 @@ public:
     void drawObjects(cv::Mat &mat);
 
     void setDataImages(Mat &frame);
-    virtual void UpdateObjects(vector<dnn_bbox> _detections,string frame_id);
+    //virtual void UpdateObjects(vector<dnn_bbox> _detections,string frame_id,double fps );
+    
+    virtual void UpdateObjects(vector<dnn_bbox> _detections,string frame_id,double fps);
+
     Mat getDrawImage();
     Mat getDetsImage();
+    double getFps();
     void evalObjects();
     Json::Value reportObjects(bool &save_img);
     void deactivateObjects();
     int getActiveTrackers();
+    void setPoligonForSpeed(const Json::Value& poligon);
 };
 #endif

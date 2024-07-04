@@ -1,4 +1,5 @@
 #include "Triton.hpp"
+#include <future>
 
     static size_t WriteCallback(char* ptr, size_t size, size_t nmemb, std::string& data) {
         size_t totalSize = size * nmemb;
@@ -250,7 +251,7 @@
 
     std::tuple<std::vector<std::vector<float>>, std::vector<std::vector<int64_t>>> Triton::infer(const std::vector<uint8_t>& input_data)
     {
-
+///here is i have to change it for async 
         tc::Error err;
         std::vector<tc::InferInput*> inputs = { nullptr };
         std::vector<const tc::InferRequestedOutput*> outputs = createInferRequestedOutput(model_info_.output_names_);        
@@ -298,4 +299,78 @@
         result_ptr.reset(result);
         return std::make_tuple(infer_results, infer_shapes);
 
+
     }
+ 
+ 
+ 
+std::tuple<std::vector<std::vector<float>>, std::vector<std::vector<int64_t>>> Triton::inferAsync(const std::vector<uint8_t>& input_data)
+{
+    tc::Error err;
+    std::vector<tc::InferInput*> inputs = { nullptr };
+    std::vector<const tc::InferRequestedOutput*> outputs = createInferRequestedOutput(model_info_.output_names_);
+    tc::InferOptions options(model_name_);
+    options.model_version_ = model_version_;
+
+    if (inputs[0] != nullptr) {
+        err = inputs[0]->Reset();
+        if (!err.IsOk()) {
+            std::cerr << "failed resetting input: " << err << std::endl;
+            exit(1);
+        }
+    } else {
+        err = tc::InferInput::Create(
+            &inputs[0], model_info_.input_name_, model_info_.shape_, model_info_.input_datatype_);
+        if (!err.IsOk()) {
+            std::cerr << "unable to get input: " << err << std::endl;
+            exit(1);
+        }
+    }
+
+    err = inputs[0]->AppendRaw(input_data);
+    if (!err.IsOk()) {
+        std::cerr << "failed setting input: " << err << std::endl;
+        exit(1);
+    }
+
+    std::promise<std::tuple<std::vector<std::vector<float>>, std::vector<std::vector<int64_t>>>> promise;
+    auto future = promise.get_future();
+
+    // Modify the callback to match the expected signature
+    auto callback = [this, &promise](tc::InferResult* result) {
+        tc::Error err = result->RequestStatus();
+        if (!err.IsOk()) {
+            std::cerr << "failed sending asynchronous infer request: " << err << std::endl;
+            promise.set_exception(std::make_exception_ptr(std::runtime_error("Failed sending asynchronous infer request")));
+            return;
+        }
+
+        const auto [infer_results, infer_shapes] = getInferResults(result, model_info_.batch_size_, model_info_.output_names_, model_info_.max_batch_size_ != 0);
+        promise.set_value(std::make_tuple(infer_results, infer_shapes));
+    };
+
+    if (protocol_ == ProtocolType::HTTP) {
+        err = triton_client_.httpClient->AsyncInfer(
+            callback, options, inputs, outputs);
+    } else {
+        auto start = std::chrono::steady_clock::now();
+        
+        err = triton_client_.grpcClient->AsyncInfer(
+            callback, options, inputs, outputs);
+        
+        auto end = std::chrono::steady_clock::now();
+        auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+        std::cout << "Infer async Function  time: " << diff << " ms" << std::endl;
+    }
+
+    if (!err.IsOk()) {
+        std::cerr << "failed sending asynchronous infer request: " << err << std::endl;
+        throw std::runtime_error("Failed sending asynchronous infer request");
+    }
+
+    // Block until the result is available
+    auto result_tuple = future.get();
+    return result_tuple;
+}
+
+    

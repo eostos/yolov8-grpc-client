@@ -871,11 +871,11 @@ void PoligonTrackerManager::evaluateArea() {
             to->setPolygon(this->getPoligonID());
             
         }
-        if (route_area_size <  6 || !to->isAwake()) {
+        if (route_area_size <  6 || !to->isAwake()) { // we have to fix this because in scenarios that 
             continue;
         }
             //float status_1 = isInside >= 0;  // true if bboxCenter is inside or on edge; false if outside
-          int route_size = route_area.size();
+        int route_size = route_area.size();
           //cout <<route_size <<endl;
         auto bboxPoints_first = route_poligon[route_size-6];
         cv::Point2f bboxCenter_first((bboxPoints_first[0].x + bboxPoints_first[2].x) / 2.0f, (bboxPoints_first[0].y + bboxPoints_first[2].y) / 2.0f);
@@ -892,31 +892,31 @@ void PoligonTrackerManager::evaluateArea() {
         //int npts = cv::Mat(intPoints).rows;
 
         //cv::polylines(darkImage, &pts, &npts, 1, true, color, 2, cv::LINE_AA);
-    //};
+        //};
 
-    // Draw evaluation polygon (_eval_points)
-    //drawPolygon(this->_eval_points, cv::Scalar(0, 255, 0)); // Green
+        // Draw evaluation polygon (_eval_points)
+        //drawPolygon(this->_eval_points, cv::Scalar(0, 255, 0)); // Green
 
-    //for (size_t i = 0; i < number_tracker; ++i) {
-    ///    TrackingObject* to = this->_trackers[i];
-    //    if (!to->isActive()) { continue; }
+        //for (size_t i = 0; i < number_tracker; ++i) {
+        ///    TrackingObject* to = this->_trackers[i];
+        //    if (!to->isActive()) { continue; }
 
-        // Draw the last bounding box (route_poligon.back())
-    //    if (!to->getBboxPoligon().empty()) {
-    //        drawPolygon(to->getBboxPoligon().back(), cv::Scalar(0, 0, 255)); // Red
-    //    }
+            // Draw the last bounding box (route_poligon.back())
+        //    if (!to->getBboxPoligon().empty()) {
+        //        drawPolygon(to->getBboxPoligon().back(), cv::Scalar(0, 0, 255)); // Red
+        //    }
 
-        // Draw the first bounding box (route_poligon.front())
-    //    if (!to->getBboxPoligon().empty()) {
-    //        drawPolygon(route_poligon[route_size-2], cv::Scalar(255, 0, 0)); // Blue
-    //    }
-    //}
+            // Draw the first bounding box (route_poligon.front())
+        //    if (!to->getBboxPoligon().empty()) {
+        //        drawPolygon(route_poligon[route_size-2], cv::Scalar(255, 0, 0)); // Blue
+        //    }
+        //}
 
-    // Display the result
-    //cv::imshow("Evaluation Visualization", darkImage);
-    //cv::waitKey(1); 
-      bool status_0 = isInside_0 >= 0;
-            if (status_0 == 1 && status_1 == 1) { continue; }
+        // Display the result
+        //cv::imshow("Evaluation Visualization", darkImage);
+        //cv::waitKey(1); 
+        bool status_0 = isInside_0 >= 0;
+        if (status_0 == 1 && status_1 == 1) { continue; }
 
         std::string type_event;
         bool flag = false;
@@ -939,6 +939,8 @@ void PoligonTrackerManager::evaluateArea() {
 
             Point p1 = route_center[route_center_size-1];
             Point p0 = route_center[route_center_size-2];     
+  
+
 
             Point p0_ext;
             p0_ext.x = 1.5*p0.x - 0.5*p1.x;

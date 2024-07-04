@@ -1,5 +1,23 @@
 #include "CentroidTracker.hpp"
+class ViewTransformer {
+public:
+    ViewTransformer(const std::vector<cv::Point2f>& source, const std::vector<cv::Point2f>& target) {
+        m = cv::getPerspectiveTransform(source, target);
+    }
 
+    std::vector<cv::Point2f> transform_points(const std::vector<cv::Point2f>& points) {
+        if (points.empty()) {
+            return points;
+        }
+
+        std::vector<cv::Point2f> transformed_points;
+        cv::perspectiveTransform(points, transformed_points, m);
+        return transformed_points;
+    }
+
+private:
+    cv::Mat m;
+};
 template <typename T>
 std::string to_string_with_precision(const T a_value, const int n = 6)
 {
@@ -13,6 +31,10 @@ TrackingObject::TrackingObject() {
 	active = false;
 	awake = false;
 	matched = false;
+
+
+
+
 }
 
 TrackingObject::~TrackingObject() {
@@ -225,12 +247,187 @@ void TrackingObject::startTracker(uint _obj_id, string _obj_label) {
 	id  = genId();
 	timestamp_in = getTimeMilis();  
 
-	trk_color = EB_BLU;//randomColor();
+	trk_color = EB_BLU;//randomColor();<<
 
 	setShiftMethod(MET_HALF);
 }
+double calculate_mean(const std::deque<double>& vec) {
+    double sum = std::accumulate(vec.begin(), vec.end(), 0.0);
+    return sum / vec.size();
+}
 
+// Function to calculate standard deviation
+double calculate_stddev(const std::deque<double>& vec, double mean) {
+    double sum = 0.0;
+    for (double value : vec) {
+        sum += std::pow(value - mean, 2);
+    }
+    return std::sqrt(sum / vec.size());
+}
+
+// Function to filter out peak values
+std::deque<double> filter_peaks(const std::deque<double>& vec) {
+    if (vec.empty()) {
+        return {};
+    }
+
+    // Calculate mean and standard deviation
+    double mean = calculate_mean(vec);
+    double stddev = calculate_stddev(vec, mean);
+
+    // Define the acceptable range
+    double lower_bound = mean - stddev;
+    double upper_bound = mean + stddev;
+
+    // Filter the deque to remove peaks
+    std::deque<double> filtered_vec;
+    for (double value : vec) {
+        if (value >= lower_bound && value <= upper_bound) {
+            filtered_vec.push_back(value);
+        }
+    }
+
+    return filtered_vec;
+}
+
+double TrackingObject::getSmoothedSpeed() {
+    if (speed_buffer.empty()) return 0.0;
+
+    if (speed_buffer.size() > 10 ) {
+        // Sort the deque (optional, but useful for inspection)
+        std::sort(speed_buffer.begin(), speed_buffer.end());
+		 
+        // Filter the deque to remove peak values
+        std::deque<double> filtered_speed_buffer = filter_peaks(speed_buffer);
+
+        // Calculate the mean of the filtered deque
+        double sum = std::accumulate(filtered_speed_buffer.begin(), filtered_speed_buffer.end(), 0.0);
+        speed = sum / filtered_speed_buffer.size();
+        //speed_buffer.pop_back();
+
+        //lock_speed = true;
+    }
+
+    return speed;
+}
+
+
+void TrackingObject::updateSpeed(double fps ,std::vector<cv::Point2f> speed_poligon,std::vector<cv::Point2f> speed_meters ) {
+    for (const auto& point : speed_poligon) {
+        cv::circle(drawable, point, 5, cv::Scalar(0, 0, 255), -1); // Draw red circles
+    }
+    for (size_t i = 0; i < speed_poligon.size(); ++i) {
+        cv::line(drawable, speed_poligon[i], speed_poligon[(i + 1) % speed_poligon.size()], cv::Scalar(255, 0, 0), 2); // Draw blue lines
+    }
+double result = cv::pointPolygonTest(speed_poligon, current_position, false);
+if (result > 0) {
+
+	ViewTransformer view_transformer(speed_poligon, speed_meters);
+	std::vector<cv::Point2f> points_to_transform = { static_cast<cv::Point2f>(current_position) };
+	std::vector<cv::Point2f> transformed_points = view_transformer.transform_points(points_to_transform);
+
+    // Extract the first point from transformed_points and convert to cv::Point
+    cv::Point transformed_point(static_cast<int>(transformed_points[0].x), static_cast<int>(transformed_points[0].y));
+    // Calculate the overall distance in meters
+	////
+    t_previous_position = t_current_position;
+    // Update current position
+    t_current_position = transformed_point;
+
+    if (t_previous_position != Point(0, 0)) {
+        
+ 	    float distance1 = cv::norm(t_current_position - t_previous_position);
+
+        // Draw previous and current positions
+        circle(drawable, previous_position, 5, Scalar(0, 0, 255), -1); // Red for previous position
+        circle(drawable, current_position, 5, Scalar(0, 255, 0), -1); // Green for current position
+
+        // Calculate speed in meters per second
+		cout << "INFER TME : (" <<fps << ")" << endl;
+        double new_speed = distance1 / (1.0/fps); // Convert speed to meters per second
+
+        // Add the new speed to the buffer
+	
+	//if(center_det) {
+   
+
+        std::cout << "The point is inside the polygon." << std::endl;
+        speed_buffer.push_back(new_speed);
+        //if (speed_buffer.size() > buffer_size) {
+        //    speed_buffer.pop_front(); // Remove the oldest speed value
+        //}
+        if (speed_buffer.size()>10.0/2) {
+        // Calculate smoothed speed
+         getSmoothedSpeed();
+
+        // Convert speed to kilometers per hour
+        double speed_kmh = speed * 3.6;
+		speed_km_vec=to_string(speed_kmh);
+        // Draw the speed on the image
+        string speed_text = "Speed: " + to_string(speed_kmh) + " km/h";
+        putText(drawable, speed_text, Point(current_position.x, current_position.y - 10), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 0, 255), 2);
+ 			}
+		 }
+
+
+    // Optionally, connect the points with lines
+
+
+        // Logging for debugging
+      /*
+	    cout << "Previous Position: (" << previous_position.x << ", " << previous_position.y << ")" << endl;
+        cout << "Current Position: (" << current_position.x << ", " << current_position.y << ")" << endl;
+        cout << "Delta X Pixels: " << delta_x_pixels << ", Delta Y Pixels: " << delta_y_pixels << endl;
+        cout << "Distance X Meters: " << distance_x_meters << ", Distance Y Meters: " << distance_y_meters << endl;
+        cout << "Overall Distance in Meters: " << distance_meters << endl;
+        cout << "FPS: " << fps << ", Calculated Speed: " << new_speed << " m/s (" << speed_kmh << " km/h)" << endl;	  
+	  
+	  
+	  
+	  
+	  */
+
+
+        // Update previous position to current position for the next calculation
+        t_previous_position = t_current_position;
+    }
+}
+
+//(185.30645161290323, 438.4677419354839), (1124.6612903225805, 438.4677419354839), (861.4354838709676, 312.01612903225805), (355.67786187322616, 311.4772942289499)
+
+
+Point TrackingObject::getCurrentPosition() const {
+    return current_position;
+}
 void TrackingObject::setTrackerDNN(const dnn_bbox &dnnData, cv::Point center_det) {
+	///////
+
+	////
+    previous_position = current_position;
+    // Update current position
+    current_position = center_det;
+
+
+
+//}else{
+/*
+	ViewTransformer view_transformer(source, target);
+	std::vector<cv::Point2f> points_to_transform = { static_cast<cv::Point2f>(center_det) };
+	std::vector<cv::Point2f> transformed_points = view_transformer.transform_points(points_to_transform);
+
+    // Extract the first point from transformed_points and convert to cv::Point
+    cv::Point transformed_point(static_cast<int>(transformed_points[0].x), static_cast<int>(transformed_points[0].y));
+    // Calculate the overall distance in meters
+	////
+    previous_position = current_position;
+    // Update current position
+    current_position = transformed_point;
+}
+*/
+
+
+	///
+	
 	route.push_back(center_det);
 	route_bboxes.push_back(dnnData);
 	
@@ -336,7 +533,8 @@ void TrackingObject::drawTrack(Mat &draw_trks, int &ix) {
 	Scalar TXT_COLOR = isMatched() ? EB_GRN : EB_RED;
 	rectangle(draw_trks, last_box, BOX_COLOR, 2, 8, 0);
 	drawRoute(draw_trks);
-	putText(draw_trks, strprob, pt0, FONT_HERSHEY_SIMPLEX, 0.75, TXT_COLOR, 2);
+	//putText(draw_trks, strid, pt0, FONT_HERSHEY_SIMPLEX, 0.75, TXT_COLOR, 2); //it daw the tracker 
+	//putText(draw_trks, strprob, pt0, FONT_HERSHEY_SIMPLEX, 0.75, TXT_COLOR, 2);
 }
 
 // ---------------------------------------------------------------------
@@ -419,133 +617,147 @@ vector<dnn_bbox> CentroidTracker::validateDets(vector<dnn_bbox> &_detections) {
 	}
 	return valid_dets;
 }
+double CentroidTracker::getFps(){
 
-void CentroidTracker::UpdateObjects(vector<dnn_bbox> _detections, string frame_id) {
-	/*
-	@ Draw Search Radius
-	*/
-	//for (auto &trk_i: objects) {
-	//	if (trk_i->isActive()) {
-			//trk_i->drawSearchRadius(draw_img);
-	//	}
-	//}
-	/*
-	@ Add all Detections to active trackers
-	*/
-	detections = validateDets(_detections);
-	for(auto detection: detections){
-		Rect det_bbox = detection.bbox;
-		cv::rectangle(dets_img, det_bbox, Scalar(255,64,64), 4, 8, 0);
-	}
-	// Set all trackers as NOT matched
-	for (auto &trk_i: objects) {
-		if (trk_i->isActive()) {
-			trk_i->setMatched(false);
-		}
-	}
-	/*
-	@ Update disappeared time if there are not detections
-	*/  
-	if (detections.size() < 1) {
-		for (auto &trk_i: objects) {
-			if (trk_i->isActive()) {
-				trk_i->updateDisappeared();
-			}
-		}
-	} else {
-	//SEARCH DETS NEAR TO EACH OBJECT
-		//DEFINE THE INERTIA METHOD TO SHIFT THE CENTER OF THE SEARCH AREA
-		int METHOD = MET_HALF;
-		for (auto &trk_i: objects) {
-			if (trk_i->isActive()) {
-				float min_dist = 10000;
-				int nearest_idx = -1;
-				bool is_found = false;
-				//trk_i->drawSearchRadius(draw_img, METHOD);
-				//- PROYECTAR UN CENTRO VIRTUAL USANDO LA TRAYECTORIA PREVIA DE ROUTE (try flow)
-				//- AQUÍ SERÍA POSIBLE USAR MINIFLOW
-				for (int i=0; i<detections.size();i++) {
-					Point center_det = getRectCenter(detections[i].bbox);
-					//- vvvv ÉSTE CALCULO SE DEBE HACER CON EL CENTRO PROYECTADO
-					//float dist = trk_i->calcDistance(projected_center);
-					float dist = trk_i->calcDistAlt(center_det, METHOD);
-					//float dist = distanceP(projected_center, center_det);
-					float max_dist = trk_i->getMaxDistance();
-					bool C1 = (dist<min_dist);
-					bool C2 = (dist<max_dist);
-					bool C3 = (detections[i].obj_id == trk_i->getObjId());
-/*
-//treat truck as car
-string aux_id0 = detections[i].label;
-string aux_id1 = trk_i->getRouteBboxTail().label;
-//aux0 = aux0==7 ? 2 : aux0;
-//aux1 = aux1==7 ? 2 : aux1;
-//bool C3 = (aux_id0 == aux_id1);
-if ( ( aux_id0=="car" && aux_id1=="truck" ) || ( aux_id0=="truck" && aux_id1=="car" ) ) {
-	C3 = 1;
-cout << " xx aux_id0 " << aux_id0 << endl;
-cout << " xx aux_id1 " << aux_id1 << endl;
-}*/
-					bool C4 = (trk_i->isUpdated());
-					bool C5 = !(trk_i->isMatched());
-					if (C1 && C2 && C3 && C5) {
-						min_dist = dist;
-						is_found = true;
-						nearest_idx = i;
-					}
-				}
-				// IF FOUND, REMOVE THE DETECTION_i, AND UPDATE THE TRACKER
-				if (is_found) {
-					trk_i->setTrackerDNN(detections[nearest_idx], getRectCenter(detections[nearest_idx].bbox));
-					trk_i->setStatus(1);
-					trk_i->setMatched(true);
-					detections.erase(detections.begin() + nearest_idx);
-				//OTHERWISE, INCREMENT HE DISAPP COUNTER
-				} else {
-					trk_i->updateDisappeared();
-				}
-			}
-		}
-		// UNMATCHED DETECTIONS WILL TRIGGER THE CREATION OF NEW TRACKERS
-		for (auto &detection: detections) {
-			if (detection.prob > 0.1) {
-				for (auto &trk_i: objects) {
-					if (!trk_i->isActive()) {
-						trk_i->startTracker(detection.obj_id,detection.label);
-						trk_i->setInitFrameId(frame_id);
-						trk_i->setTrackerDNN(detection, getRectCenter(detection.bbox));
-						//cout << "*-*-*-*-*-*-* Create tracker : "<< trk_i->getId() <<endl;
-						break;
-					}
-				}
-			}
-		}
-	}
+return totalTime;
 
-	/*
-	@ Draw Images
-	*/
-	int ix = 0;
-	
-	for (auto &trk_i: objects) {
-		if (trk_i->isActive()) {
-			trk_i->drawTrack(draw_img, ix);
-		}
-		Scalar TXT_COLOR = EB_BLU;
-		string NUMDET = "#D: " + to_string(_detections.size());
-		string NUMTRK = "#T: " + to_string(getActiveTrackers());
-		Point pt0(10, 60);
-		Point pt1(10, 90);
-		putText(draw_img, NUMDET , pt0, FONT_HERSHEY_SIMPLEX, 0.75, TXT_COLOR, 2);
-		putText(draw_img, NUMTRK , pt1, FONT_HERSHEY_SIMPLEX, 0.75, TXT_COLOR, 2);
-	}
-	
+}
+void CentroidTracker::UpdateObjects(vector<dnn_bbox> _detections, string frame_id, double fps ) {
+    /*
+    @ Draw Search Radius
+    */
+    //for (auto &trk_i: objects) {
+    //    if (trk_i->isActive()) {
+            //trk_i->drawSearchRadius(draw_img);
+    //    }
+    //}
+    /*
+    @ Add all Detections to active trackers
+    */
+   
+    detections = validateDets(_detections);
+    for(auto detection: detections){
+        Rect det_bbox = detection.bbox;
+       // cv::rectangle(dets_img, det_bbox, Scalar(255,64,64), 4, 8, 0);
+    }
+    // Set all trackers as NOT matched
+    for (auto &trk_i: objects) {
+        if (trk_i->isActive()) {
+            trk_i->setMatched(false);
+        }
+    }
+    /*
+    @ Update disappeared time if there are not detections
+    */  
+    if (detections.size() < 1) {
+        for (auto &trk_i: objects) {
+            if (trk_i->isActive()) {
+                trk_i->updateDisappeared();
+            }
+        }
+    } else {
+        //SEARCH DETS NEAR TO EACH OBJECT
+        //DEFINE THE INERTIA METHOD TO SHIFT THE CENTER OF THE SEARCH AREA
+        int METHOD = MET_HALF;
+        for (auto &trk_i: objects) {
+            if (trk_i->isActive()) {
+                float min_dist = 10000;
+                int nearest_idx = -1;
+                bool is_found = false;
+                //trk_i->drawSearchRadius(draw_img, METHOD);
+                //- PROYECTAR UN CENTRO VIRTUAL USANDO LA TRAYECTORIA PREVIA DE ROUTE (try flow)
+                //- AQUÍ SERÍA POSIBLE USAR MINIFLOW
+                for (int i=0; i<detections.size();i++) {
+                    Point center_det = getRectCenter(detections[i].bbox);
+                    //- vvvv ÉSTE CALCULO SE DEBE HACER CON EL CENTRO PROYECTADO
+                    //float dist = trk_i->calcDistance(projected_center);
+                    float dist = trk_i->calcDistAlt(center_det, METHOD);
+                    //float dist = distanceP(projected_center, center_det);
+                    float max_dist = trk_i->getMaxDistance();
+                    bool C1 = (dist<min_dist);
+                    bool C2 = (dist<max_dist);
+                    bool C3 = (detections[i].obj_id == trk_i->getObjId());
+    /*
+    //treat truck as car
+    string aux_id0 = detections[i].label;
+    string aux_id1 = trk_i->getRouteBboxTail().label;
+    //aux0 = aux0==7 ? 2 : aux0;
+    //aux1 = aux1==7 ? 2 : aux1;
+    //bool C3 = (aux_id0 == aux_id1);
+    if ( ( aux_id0=="car" && aux_id1=="truck" ) || ( aux_id0=="truck" && aux_id1=="car" ) ) {
+        C3 = 1;
+    cout << " xx aux_id0 " << aux_id0 << endl;
+    cout << " xx aux_id1 " << aux_id1 << endl;
+    }*/
+                    bool C4 = (trk_i->isUpdated());
+                    bool C5 = !(trk_i->isMatched());
+                    if (C1 && C2 && C3 && C5) {
+                        min_dist = dist;
+                        is_found = true;
+                        nearest_idx = i;
+                    }
+                }
+                // IF FOUND, REMOVE THE DETECTION_i, AND UPDATE THE TRACKER
+                if (is_found) {
+                    trk_i->setTrackerDNN(detections[nearest_idx], getRectCenter(detections[nearest_idx].bbox));
+                    trk_i->setStatus(1);
+                    trk_i->setMatched(true);
+                    // Calculate speed in pixels/frame
+                    trk_i->updateSpeed(fps,speed_poligon,speed_meters);
+                    detections.erase(detections.begin() + nearest_idx);
+                //OTHERWISE, INCREMENT HE DISAPP COUNTER
+                } else {
+                    trk_i->updateDisappeared();
+                }
+            }
+        }
+        // UNMATCHED DETECTIONS WILL TRIGGER THE CREATION OF NEW TRACKERS
+        for (auto &detection: detections) {
+            if (detection.prob > 0.1) {
+                for (auto &trk_i: objects) {
+                    if (!trk_i->isActive()) {
+                        trk_i->startTracker(detection.obj_id,detection.label);
+                        trk_i->setInitFrameId(frame_id);
+                        trk_i->setTrackerDNN(detection, getRectCenter(detection.bbox));
+                        cout << "*-*-*-*-*-*-* Create tracker : "<< trk_i->getId() <<endl;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    /*
+    @ Draw Images
+    */
+    int ix = 0;
+    
+    for (auto &trk_i: objects) {
+        if (trk_i->isActive()) {
+            trk_i->drawTrack(draw_img, ix);
+            // Display the speed
+
+
+            //string speed_text = "Speed: " + to_string(trk_i->getSpeed()) + " px/frame";
+            //Point speed_point = trk_i->getCurrentPosition();
+            //putText(draw_img, speed_text, speed_point, FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0,255,0), 2);
+        }
+        Scalar TXT_COLOR = EB_BLU;
+        string NUMDET = "#D: " + to_string(_detections.size());
+        string NUMTRK = "#T: " + to_string(getActiveTrackers());
+        Point pt0(10, 60);
+        Point pt1(10, 90);
+        putText(draw_img, NUMDET , pt0, FONT_HERSHEY_SIMPLEX, 0.75, TXT_COLOR, 2);
+        putText(draw_img, NUMTRK , pt1, FONT_HERSHEY_SIMPLEX, 0.75, TXT_COLOR, 2);
+    }
 }
 
 Mat CentroidTracker::getDrawImage() {
 	return draw_img;
 }
-
+string TrackingObject::getSpeed() {
+	return speed_km_vec;
+}
 Mat CentroidTracker::getDetsImage() {
 	return dets_img;
 }
@@ -589,6 +801,8 @@ Json::Value CentroidTracker::reportObjects(bool &save_img) {
 			partInfo["tracker_size"] = trk_i->getRouteSize();
 			partInfo["state"] = trk_i->getStatus();            
 			partInfo["init_frame_id"] = trk_i->getInitFrameId();
+			partInfo["speed"] = trk_i->getSpeed();
+			//cout<<trk_i->getSpeed()<<"  speed   ***************"<<endl;
 			if (trk_i->isAwake()) {
 				Rect ri = obj_tail.bbox;
 				partInfo["bbox"]["x"] = to_string_with_precision(ri.x * FX, 4);
@@ -648,4 +862,105 @@ int CentroidTracker::getActiveTrackers() {
 			count++;
 	}
 	return count++;
+}
+
+
+void CentroidTracker::setPoligonForSpeed(const Json::Value& poligon)
+{
+
+	std::vector<Json::Value> poligon_objects = get_list_of_json(poligon);
+	// se redimensiona el tracker para almacenar todos los poligonos
+
+	
+	int index_pol = 0;
+	for (size_t i = 0, n = poligon_objects.size(); i < n; ++i) {
+		// obtienen el id del tracker
+		bool check_id = poligon_objects[i].isMember("poligon_id");
+		if (!check_id) {
+			std::cerr << "ERROR: this poligon does not have an \"poligon_id\" key\n";
+			continue;
+		}
+		std::string poligon_id = poligon_objects[i]["poligon_id"].asString();
+		cout<<poligon_id<<"  points    *************"<<endl;
+		// obtiene los puntos del tracker en formato json
+		bool check_id_0 = poligon_objects[i].isMember("points");
+		if (!check_id_0) {
+			std::cerr << "ERROR: wrong input on poligon id: " << poligon_id << "\n";
+			std::cerr << "ERROR: this poligon does not have an \"points\" key\n";
+			continue;
+		}
+		bool check_id_1 = poligon_objects[i].isMember("meters");
+		if (!check_id_1) {
+			std::cerr << "ERROR: wrong input on poligon id: " << poligon_id << "\n";
+			std::cerr << "ERROR: this poligon does not have a \"meters\" key\n";
+			continue;
+		}
+				////////////////////////////////////////
+		
+		std::vector<Json::Value> poligon_points = get_list_of_json(poligon_objects[i]["points"]);
+		
+		bool temp_flag = false;
+		size_t m = poligon_points.size();
+		if (m < 3) {
+			std::cerr << "ERROR: wrong input on poligon id: " << poligon_id << "\n";
+			std::cerr << "ERROR: number of poligon is lower to 3" << std::endl;
+			continue;
+		}
+		for (size_t j = 0; j < m; ++j) {
+			// se leen las coordenadas del punto
+			bool check_x = poligon_points[j].isMember("x");
+			if (!check_x) {
+				std::cerr << "ERROR: wrong input on poligon id: " << poligon_id << "\n";
+				std::cerr << "ERROR: point " << (j + 1) << " does no have attribute \"x\"" << std::endl;
+				temp_flag = true;
+				break;
+			}
+			float x = poligon_points[j]["x"].asFloat();
+			bool check_y = poligon_points[j].isMember("y");
+			if (!check_y) {
+				std::cerr << "ERROR: wrong input on poligon id: " << poligon_id << "\n";
+				std::cerr << "ERROR: point " << (j + 1) << " does no have attribute \"y\"" << std::endl;
+				temp_flag = true;
+				break;
+			}
+			float y = poligon_points[j]["y"].asFloat();
+			cout<<x<<"   "<<y<<" y   *********************"<<endl;
+			speed_poligon.push_back(cv::Point2f(x,y));
+		}
+		////////////////////////////////////////
+		
+		
+		std::vector<Json::Value> poligon_meters = get_list_of_json(poligon_objects[i]["meters"]);
+		
+		bool temp_flag_meters = false;
+		size_t m_1 = poligon_meters.size();
+		if (m < 3) {
+			std::cerr << "ERROR: wrong input on poligon id: " << poligon_id << "\n";
+			std::cerr << "ERROR: number of poligon is lower to 3" << std::endl;
+			continue;
+		}
+		for (size_t j = 0; j < m_1; ++j) {
+			// se leen las coordenadas del punto
+			bool check_x = poligon_meters[j].isMember("x");
+			if (!check_x) {
+				std::cerr << "ERROR: wrong input on poligon id: " << poligon_id << "\n";
+				std::cerr << "ERROR: point " << (j + 1) << " does no have attribute \"x\"" << std::endl;
+				temp_flag_meters = true;
+				break;
+			}
+			float x_1 = poligon_meters[j]["x"].asFloat();
+			bool check_y_1 = poligon_points[j].isMember("y");
+			if (!check_y_1) {
+				std::cerr << "ERROR: wrong input on poligon id: " << poligon_id << "\n";
+				std::cerr << "ERROR: point " << (j + 1) << " does no have attribute \"y\"" << std::endl;
+				temp_flag_meters = true;
+				break;
+			}
+			float y_1 = poligon_meters[j]["y"].asFloat();
+			//cout<<x_1<<"   "<<y_1<<" y   *********************"<<endl;
+			speed_meters.push_back(cv::Point2f(x_1,y_1));
+		}
+		
+	}
+
 }

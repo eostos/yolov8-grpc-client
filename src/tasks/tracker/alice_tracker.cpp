@@ -180,6 +180,7 @@ int main(int argc,const char * argv[]) {
 	// ADD TRACKER OBJECTS TO TRACKING MANAGER
 	CentroidTracker tracking;
 	tracking.setTrackingObjects(trackers);
+
 	// -----------------------------------------------------------------------------------
 
 	// -----------------------------------------------------------------------------------
@@ -571,19 +572,7 @@ void join_and_send_outdata_redox(Redox &rdx,
 
 }
 
-std::vector<Json::Value> get_list_of_json(Json::Value jsonin) {
-	if (!jsonin.isArray()) {
-		std::cerr << "This key is not an array!!!!!\n";
-		return std::vector<Json::Value>();
-		// throw; //  std::exception("");
-	}
-	const size_t n = jsonin.size();
-	std::vector<Json::Value> output;
-	for (Json::Value::ArrayIndex ai = 0; ai < n; ++ai) {
-		output.push_back(jsonin[ai]);
-	}
-	return output;
-}
+
 
 
 

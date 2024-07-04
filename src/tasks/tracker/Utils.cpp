@@ -17,7 +17,19 @@ std::string slurp(std::ifstream& in) {
     sstr << in.rdbuf();
     return sstr.str();
 }
-
+std::vector<Json::Value> get_list_of_json(Json::Value jsonin) {
+	if (!jsonin.isArray()) {
+		std::cerr << "This key is not an array!!!!!\n";
+		return std::vector<Json::Value>();
+		// throw; //  std::exception("");
+	}
+	const size_t n = jsonin.size();
+	std::vector<Json::Value> output;
+	for (Json::Value::ArrayIndex ai = 0; ai < n; ++ai) {
+		output.push_back(jsonin[ai]);
+	}
+	return output;
+}
 Json::Value find_obj(Json::Value &obj_src, string key, string desired_value) {
     Json::Value obj_out;
     bool FOUND = false;

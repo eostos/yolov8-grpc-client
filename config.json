@@ -5,12 +5,13 @@
         {
           "id": "1",
           "host_id": "71358df2-2c4d-4bd1-b0d9-c908ef03d963",
-          "url_video":"/app/output.mp4",
+          "url_video1":"rtsp://admin:Mossmerka19*@181.39.152.137/Streaming/Channels/501",
+          "url_video":"rtsp://127.0.0.1:8554/1",
           "name": "Tsaguur-PTZ",
           "task_type": "detection",
-          "model": "yolov8-trt-traffic-2",
+          "model": "yolov8-trt",
           "model_type": "yolov8",
-          "labelsFile": "traffic.names",
+          "labelsFile": "coco.names",
           "input_sizes": "3 640 640",
           "debug": 0,
           "verbose": 0,
@@ -21,8 +22,29 @@
           "server_port": 6379,
           "send_b64": 0,
           "topost": "",
+          "speed_detection": true,
           "poligons": [
             {
+               "poligon_id": "speed",
+               "points": [
+                 {
+                   "x": 0.1,
+                   "y": 0.1
+                 },
+                 {
+                   "x": 0.9,
+                   "y": 0.1
+                 },
+                 {
+                   "x": 0.9,
+                   "y": 0.9
+                 },
+                 {
+                   "x": 0.1,
+                   "y": 0.9
+                 }
+               ]
+             },{
               "poligon_id": "17",
               "points": [
                 {
@@ -43,6 +65,49 @@
                 }
               ]
             }
+
+          ],
+          "poligon_speed": [
+            {
+               "poligon_id": "1",
+               "points": [
+                 {
+                   "x": 466.0,
+                   "y": 267.1
+                 },
+                 {
+                   "x": 770.0,
+                   "y": 500.0
+                 },
+                 {
+                   "x": 336.0,
+                   "y": 516.0
+                 },
+                 {
+                   "x": 214.0,
+                   "y": 272.0
+                 }
+               ],
+               "meters": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 23.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 23.0
+                  }
+                ]
+
+             }
           ]
         },
         {

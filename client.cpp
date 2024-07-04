@@ -94,19 +94,8 @@ void join_and_send_outdata_redox(Redox &rdx,
 
 
 
-std::vector<Json::Value> get_list_of_json(Json::Value jsonin) {
-	if (!jsonin.isArray()) {
-		std::cerr << "This key is not an array!!!!!\n";
-		return std::vector<Json::Value>();
-		// throw; //  std::exception("");
-	}
-	const size_t n = jsonin.size();
-	std::vector<Json::Value> output;
-	for (Json::Value::ArrayIndex ai = 0; ai < n; ++ai) {
-		output.push_back(jsonin[ai]);
-	}
-	return output;
-}
+
+
 std::vector<PoligonTrackerManager*> get_poligons_trackers(Json::Value poligon_json) {
 
 	std::vector<PoligonTrackerManager*> poligon_tracker_manager;
@@ -270,12 +259,24 @@ std::vector<Result> processSource(const cv::Mat& source,
     const std::unique_ptr<Triton>&  tritonClient, 
     const TritonModelInfo& modelInfo)
 {
- 
-    std::vector<uint8_t> input_data = task->preprocess(source, modelInfo.input_format_, modelInfo.type1_, modelInfo.type3_,
-        modelInfo.input_c_, cv::Size(modelInfo.input_w_, modelInfo.input_h_));
+    auto start = std::chrono::steady_clock::now();
+    std::vector<uint8_t> input_data = task->preprocess(source, modelInfo.input_format_, modelInfo.type1_, modelInfo.type3_,modelInfo.input_c_, cv::Size(modelInfo.input_w_, modelInfo.input_h_));
+	auto end = std::chrono::steady_clock::now();
+    auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    std::cout << "preproccess " << diff << " ms" << std::endl;
 
-    auto [infer_results, infer_shapes] = tritonClient->infer(input_data);
+	auto start1 = std::chrono::steady_clock::now();
+	auto [infer_results, infer_shapes] = tritonClient->inferAsync(input_data);
+	auto end1 = std::chrono::steady_clock::now();
+    auto diff1 = std::chrono::duration_cast<std::chrono::milliseconds>(end1 - start1).count();
+    std::cout << "infer Total " << diff1 << " ms" << std::endl;
+
+        // Call your processSource function here
+ 
+
+
     return task->postprocess(cv::Size(source.cols, source.rows), infer_results, infer_shapes);
+
 }
 
 
@@ -295,12 +296,9 @@ void ProcessImage(const std::string& sourceName,
         return;
     }
 
-    auto start = std::chrono::steady_clock::now();
+ 
     // Call your processSource function here
     std::vector<Result> predictions = processSource(image, task,  tritonClient, modelInfo);
-    auto end = std::chrono::steady_clock::now();
-    auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    std::cout << "Infer time: " << diff << " ms" << std::endl;
 
     for (const Result& prediction : predictions) 
     {
@@ -387,6 +385,12 @@ string media_path = "/opt/alice-media/tracker";
 		cout << "Not connection To Redis - " << host_id << endl;
 		exit(-2);
 	}
+//////////////
+
+
+
+
+
 
 
     	//SET REDIS STATUS VARIABLE
@@ -399,14 +403,15 @@ string media_path = "/opt/alice-media/tracker";
 	const size_t MAX_NUM_TRACKERS = 50;//originally was in 25
 	std::vector<TrackingObject *> trackers(MAX_NUM_TRACKERS);
 	for (size_t i = 0; i < MAX_NUM_TRACKERS; ++i) {
-		trackers[i] = new TrackingObject();
+		trackers[i] = new TrackingObject();///
 		trackers[i]->setMaxRouteSize(250);
-		trackers[i]->setMaxDisappeared(50);//originally was in 10
+		trackers[i]->setMaxDisappeared(20);//originally was in 10
 	}
 
 	// ADD TRACKER OBJECTS TO TRACKING MANAGER
 	CentroidTracker tracking;
 	tracking.setTrackingObjects(trackers);
+	tracking.setPoligonForSpeed(config_params["poligon_speed"]);
 	// -----------------------------------------------------------------------------------
 
 	// -----------------------------------------------------------------------------------
@@ -415,6 +420,8 @@ string media_path = "/opt/alice-media/tracker";
 	// VECTOR OF POLYGON AND POLYGON MANAGER ARE CONSTRUCTED AND INITIALIZED
 	std::vector<PoligonTrackerManager * > poligon_tracker_manager;
 	poligon_tracker_manager = get_poligons_trackers(config_params["poligons"]);
+	
+
 	for (int i = 0, m = (int)poligon_tracker_manager.size(); i < m; ++i) {
 		poligon_tracker_manager[i]->setTrackers(trackers);
 	}
@@ -442,15 +449,7 @@ string media_path = "/opt/alice-media/tracker";
 	bool save_img = false;
 	//////////////////////////
 	cout << "Connecting to Camera :  "<< input_url <<endl;	
-///////////////////////////ALICE
-
-
-
-
-
-
-
-    ///////////////////////////////////////
+///////////////////////////ALICE///////////////////////////////////////
 
 
 
@@ -482,18 +481,16 @@ string media_path = "/opt/alice-media/tracker";
 	}
 	string motion_method = "KNN";
 	FrMs msgi;
-    
-    while (cap.read(frame)) {
+    double fps=0.0;
+    while (true) {
 /////////////////////////////
+  		auto start = std::chrono::steady_clock::now();
+		cap.read(frame) ;
+      //  resize(frame, frame, Size(1280, 720));
 		std::string unixTimeStamp = unixTimeStampStr();
 		std::string frameId = unixTimeStamp + "_" + host_id;
 		//msgi.mat_frame = frame;
 //////////////////////////////////
-
-
-
-
-        auto start = std::chrono::steady_clock::now();
         // Call your processSource function here
         std::vector<Result> predictions = processSource(frame, task, tritonClient, modelInfo);
         auto end = std::chrono::steady_clock::now();
@@ -501,7 +498,7 @@ string media_path = "/opt/alice-media/tracker";
         std::cout << "Infer time: " << diff << " ms" << std::endl;
         //smartQueueFrames.addNewItem(msgi);
 #if defined(SHOW_FRAME) || defined(WRITE_FRAME)
-        double fps = 1000.0 / static_cast<double>(diff);
+        //double fps = 1000.0 / static_cast<double>(diff);
         std::string fpsText = "FPS: " + std::to_string(fps);
         cv::putText(frame, fpsText, cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 255, 0), 2);
  		if (!status_analytics) {
@@ -527,15 +524,16 @@ string media_path = "/opt/alice-media/tracker";
 			// DELETE CURRENT POLYGONS
 			free_poligon_trackers(poligon_tracker_manager);
 			poligon_tracker_manager.clear(); 
-			// CREATE NEW POLYGONS
+		//	// CREATE NEW POLYGONS
 			poligon_tracker_manager = get_poligons_trackers(config_params["poligons"]);
 			// --------------------------------------------------------------------
-			for (int i = 0, m = (int)poligon_tracker_manager.size(); i < m; ++i) {
+		for (int i = 0, m = (int)poligon_tracker_manager.size(); i < m; ++i) 
+		{
 				poligon_tracker_manager[i]->setTrackers(trackers);
 			}
 		}
- 		auto eventsQueue_size = abs(smartQueueEvents.getListSize());
-		auto framesQueue_size = abs(smartQueueFrames.getListSize());
+ 		//auto eventsQueue_size = abs(smartQueueEvents.getListSize());
+		//auto framesQueue_size = abs(smartQueueFrames.getListSize());
         vector<dnn_bbox> detections;
 		Json::Value parts;
 		FrMs msgi;
@@ -577,10 +575,13 @@ string media_path = "/opt/alice-media/tracker";
 				idx++;						
 				////
                 uint id = stoul(obj_id);//this was a fake 
+				//std::cout << "Detected class  "  << class_names[detection.class_id]<<std::endl;
+				
                 dnn_bbox dnn_obj = dnn_bbox{detection.bbox,detection.class_confidence, id, class_names[detection.class_id],"photo_object_cutted","uuid","embeddings",std::to_string(detection.class_confidence)};
                 detections.push_back(dnn_obj);
-                cv::rectangle(frame, detection.bbox, cv::Scalar(255, 0, 0), 2);
-                draw_label(frame,  class_names[detection.class_id], detection.class_confidence, detection.bbox.x, detection.bbox.y - 1);
+				
+                //cv::rectangle(frame, detection.bbox, cv::Scalar(255, 0, 0), 2);
+               // draw_label(frame,  class_names[detection.class_id], detection.class_confidence, detection.bbox.x, detection.bbox.y - 1);
             }
         }
 
@@ -602,7 +603,7 @@ string media_path = "/opt/alice-media/tracker";
 			int64 ti = cv::getTickCount();
 			tracking.setDataImages(frame);
            // UpdateObjects(vector<dnn_bbox> _detections, string frame_id)
-			tracking.UpdateObjects(detections,frameId);
+			tracking.UpdateObjects(detections,frameId,fps);
 			tracking.evalObjects();
 			
 			for (auto &trk_i: trackers) {
@@ -613,6 +614,7 @@ string media_path = "/opt/alice-media/tracker";
 				poligon_tracker_manager[i]->setSize(frame.size());
 				//poligon_tracker_manager[i]->evaluateAreabbox();
 				poligon_tracker_manager[i]->evaluateArea();
+
 				
 			}
 
@@ -637,7 +639,7 @@ string media_path = "/opt/alice-media/tracker";
 					cout << "Failed to set update time - " << host_id << endl;
 				}
 			}
-			if (DEBUG) {
+			if (!DEBUG) {
 				//float data_fin = (tf-ti)*1000/cv::getTickFrequency();
 				//cout << " - Time elapsed per frame: " << data_fin << "ms - " << host_id << endl;				
 				imgShow = tracking.getDrawImage();
@@ -653,7 +655,14 @@ string media_path = "/opt/alice-media/tracker";
 						cv::line(imgShow, p0, p1, EB_GRN, 1);
 					}
 				}
+
+		//cv::imshow("video feed", imgShow);
+        //cv::waitKey(1);
+
+
+
 			}
+
 
 
 
@@ -661,12 +670,14 @@ string media_path = "/opt/alice-media/tracker";
 
 #ifdef SHOW_FRAME
 
-		send_out_imageb64(rdx,frame,msgi.host_uuid);
+		send_out_imageb64(rdx,frame,msgi.host_uuid); //it takes a lot of time in my pc core I5 around 13 ms 
 		auto end2 = std::chrono::steady_clock::now();
         auto diff2 = std::chrono::duration_cast<std::chrono::milliseconds>(end2 - start).count();
-        std::cout << "Total Infer time : " << diff2 << " ms" << std::endl;
+        std::cout << "Total Infer time : " << static_cast<double>(diff2) << " ms" << std::endl;
+		fps = 1000.0 / static_cast<double>(diff2);
+		
         //cv::imshow("video feed", frame);
-        //cv::waitKey(0);
+        //cv::waitKey(1);
 #endif
 
 #ifdef WRITE_FRAME

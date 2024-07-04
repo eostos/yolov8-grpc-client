@@ -112,6 +112,7 @@ string time_stamp (const char *format);
 std::string currentDateTime();
 std::string currentHour();
 //
+std::vector<Json::Value> get_list_of_json(Json::Value jsonin);
 std::string genId();
 std::string unixTimeStampStr();
 Point getRectCenter(Rect &rect_i);

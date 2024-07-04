@@ -106,7 +106,7 @@ auto Yolo::getBestClassInfo(std::vector<float>::iterator it, const size_t& numCl
 std::vector<Result> Yolo::postprocess(const cv::Size& frame_size, std::vector<std::vector<float>>& infer_results, 
 const std::vector<std::vector<int64_t>>& infer_shapes) 
 {
-    
+      auto start2 = std::chrono::steady_clock::now();
     std::vector<Result> detections;
     std::vector<cv::Rect> boxes;
     std::vector<float> confs;
@@ -154,6 +154,9 @@ const std::vector<std::vector<int64_t>>& infer_shapes)
 
         // Transpose output matrix
         std::vector<std::vector<float>> transposedOutput(infer_shape[2], std::vector<float>(infer_shape[1]));
+                    auto end2 = std::chrono::steady_clock::now();
+    auto diff2 = std::chrono::duration_cast<std::chrono::milliseconds>(end2 - start2).count();
+    std::cout << "post proccess " << diff2 << " ms" << std::endl;
         for (int i = 0; i < infer_shape[1]; i++) {
             for (int j = 0; j < infer_shape[2]; j++) {
                 transposedOutput[j][i] = output[i][j];
@@ -161,6 +164,7 @@ const std::vector<std::vector<int64_t>>& infer_shapes)
                 }
 
         // Get all the YOLO proposals
+
         for (int i = 0; i < infer_shape[2]; i++) {
             const auto& row = transposedOutput[i];
             const float* bboxesPtr = row.data();
@@ -190,6 +194,8 @@ const std::vector<std::vector<int64_t>>& infer_shapes)
         detections.emplace_back(d);
 
     }        
+
+
     return detections; 
 }
 

@@ -11,7 +11,7 @@
 
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
-
+#include <opencv2/opencv.hpp> 
 #include "CentroidTracker.hpp"
 
 
@@ -21,6 +21,7 @@ struct PoligonEvent {
     cv::Point2f point;
     std::string tracker_id;
     int id_object;
+    
 };
 
 
@@ -58,6 +59,7 @@ protected:
     double _poligon_area;
     // int _object_id;
     std::string _poligon_id;
+ 
     cv::Size _size;
     cv::Point2f _center_point;
     float _debug = false;
