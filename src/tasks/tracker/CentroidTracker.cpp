@@ -319,7 +319,8 @@ void TrackingObject::updateSpeed(double fps ,std::vector<cv::Point2f> speed_poli
     for (size_t i = 0; i < speed_poligon.size(); ++i) {
         cv::line(drawable, speed_poligon[i], speed_poligon[(i + 1) % speed_poligon.size()], cv::Scalar(255, 0, 0), 2); // Draw blue lines
     }
-double result = cv::pointPolygonTest(speed_poligon, current_position, false);
+	double result = cv::pointPolygonTest(speed_poligon, current_position, false);
+
 if (result > 0) {
 
 	ViewTransformer view_transformer(speed_poligon, speed_meters);
@@ -327,72 +328,39 @@ if (result > 0) {
 	std::vector<cv::Point2f> transformed_points = view_transformer.transform_points(points_to_transform);
 
     // Extract the first point from transformed_points and convert to cv::Point
-    cv::Point transformed_point(static_cast<int>(transformed_points[0].x), static_cast<int>(transformed_points[0].y));
+    cv::Point transformed_point(transformed_points[0].x, transformed_points[0].y);
     // Calculate the overall distance in meters
 	////
-    t_previous_position = t_current_position;
+    //t_previous_position = t_current_position;
     // Update current position
-    t_current_position = transformed_point;
-
-    if (t_previous_position != Point(0, 0)) {
-        
- 	    float distance1 = cv::norm(t_current_position - t_previous_position);
-
+   
+	int point_y_int = transformed_point.y;
+	speed_coordinates.push_back(point_y_int);
+	if (speed_coordinates.size()> 18/2) {
+   
+        int coordinate_start = static_cast<int>(speed_coordinates.back());
+		int coordinate_end = static_cast<int>(speed_coordinates.front());
+ 	    int distance1 = abs(coordinate_start-coordinate_end);
+		cout << "Distance  : (" <<distance1 << ")" << endl;
         // Draw previous and current positions
         circle(drawable, previous_position, 5, Scalar(0, 0, 255), -1); // Red for previous position
         circle(drawable, current_position, 5, Scalar(0, 255, 0), -1); // Green for current position
-
+		double time = speed_coordinates.size()/18;
         // Calculate speed in meters per second
 		cout << "INFER TME : (" <<fps << ")" << endl;
-        double new_speed = distance1 / (1.0/fps); // Convert speed to meters per second
-
-        // Add the new speed to the buffer
-	
-	//if(center_det) {
-   
-
+        double new_speed =  static_cast<int>(distance1 / time); // Convert speed to meters per second
         std::cout << "The point is inside the polygon." << std::endl;
-        speed_buffer.push_back(new_speed);
-        //if (speed_buffer.size() > buffer_size) {
-        //    speed_buffer.pop_front(); // Remove the oldest speed value
-        //}
-        if (speed_buffer.size()>10.0/2) {
-        // Calculate smoothed speed
-         getSmoothedSpeed();
-
-        // Convert speed to kilometers per hour
-        double speed_kmh = speed * 3.6;
+		int speed_kmh =  static_cast<int>(new_speed * 3.6);
 		speed_km_vec=to_string(speed_kmh);
         // Draw the speed on the image
-        string speed_text = "Speed: " + to_string(speed_kmh) + " km/h";
-        putText(drawable, speed_text, Point(current_position.x, current_position.y - 10), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 0, 255), 2);
- 			}
-		 }
+        string speed_text =  to_string(speed_kmh) ;
+	std::cout << "speed_is  " <<speed_kmh<<"   " <<coordinate_start<<"   "<<coordinate_end << "   "<< speed_coordinates.size()<<"   "<<getId()<<std::endl;
 
-
-    // Optionally, connect the points with lines
-
-
-        // Logging for debugging
-      /*
-	    cout << "Previous Position: (" << previous_position.x << ", " << previous_position.y << ")" << endl;
-        cout << "Current Position: (" << current_position.x << ", " << current_position.y << ")" << endl;
-        cout << "Delta X Pixels: " << delta_x_pixels << ", Delta Y Pixels: " << delta_y_pixels << endl;
-        cout << "Distance X Meters: " << distance_x_meters << ", Distance Y Meters: " << distance_y_meters << endl;
-        cout << "Overall Distance in Meters: " << distance_meters << endl;
-        cout << "FPS: " << fps << ", Calculated Speed: " << new_speed << " m/s (" << speed_kmh << " km/h)" << endl;	  
-	  
-	  
-	  
-	  
-	  */
-
-
-        // Update previous position to current position for the next calculation
-        t_previous_position = t_current_position;
+        putText(drawable, speed_text, Point(current_position.x, current_position.y - 10), FONT_HERSHEY_SIMPLEX, 1, Scalar(255, 0, 255), 3);
+        
     }
 }
-
+}
 //(185.30645161290323, 438.4677419354839), (1124.6612903225805, 438.4677419354839), (861.4354838709676, 312.01612903225805), (355.67786187322616, 311.4772942289499)
 
 
@@ -480,6 +448,10 @@ void TrackingObject::shutDown() {
 	route_bboxes.resize(0);
 	route_areas.resize(0);
 	route_polygons.resize(0);
+	///
+speed_buffer.resize(0);
+speed_coordinates.resize(0);
+	///
 	numSent 		= 0;
 	id 				= "";
 	timestamp_in 	= 0;
@@ -801,7 +773,7 @@ Json::Value CentroidTracker::reportObjects(bool &save_img) {
 			partInfo["tracker_size"] = trk_i->getRouteSize();
 			partInfo["state"] = trk_i->getStatus();            
 			partInfo["init_frame_id"] = trk_i->getInitFrameId();
-			partInfo["speed"] = trk_i->getSpeed();
+			//partInfo["speed"] = trk_i->getSpeed();
 			//cout<<trk_i->getSpeed()<<"  speed   ***************"<<endl;
 			if (trk_i->isAwake()) {
 				Rect ri = obj_tail.bbox;
@@ -817,6 +789,7 @@ Json::Value CentroidTracker::reportObjects(bool &save_img) {
 			for(int i=0; i<trk_i->polygon_inside.size();i++){
 				jpoligon_inside[i] = trk_i->polygon_inside[i];
 			}
+			partInfo["speed"] = trk_i->getSpeed();
 			partInfo["poligon_inside"] = jpoligon_inside;
 			partInfo["poligon_events"] = trk_i->polygon_events;
 			//cout<<trk_i->polygon_events<<endl;

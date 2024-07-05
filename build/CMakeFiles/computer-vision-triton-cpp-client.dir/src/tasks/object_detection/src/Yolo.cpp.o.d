@@ -1,6 +1,8 @@
 CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/Yolo.cpp.o: \
- /app/src/tasks/object_detection/src/Yolo.cpp /usr/include/stdc-predef.h \
- /app/src/tasks/object_detection/src/Yolo.hpp /app/include/common.hpp \
+ /yolov8-grpc-client/src/tasks/object_detection/src/Yolo.cpp \
+ /usr/include/stdc-predef.h \
+ /yolov8-grpc-client/src/tasks/object_detection/src/Yolo.hpp \
+ /yolov8-grpc-client/include/common.hpp \
  /usr/include/opencv4/opencv2/core.hpp \
  /usr/include/opencv4/opencv2/core/cvdef.h \
  /usr/include/opencv4/opencv2/core/version.hpp /usr/include/c++/11/limits \
@@ -536,7 +538,8 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/
  /workspace/install/include/grpcpp/impl/codegen/proto_buffer_writer.h \
  /workspace/install/include/grpcpp/impl/codegen/stub_options.h \
  /workspace/install/include/ipc.h \
- /workspace/install/include/http_client.h /app/include/TaskInterface.hpp \
+ /workspace/install/include/http_client.h \
+ /yolov8-grpc-client/include/TaskInterface.hpp \
  /usr/include/opencv4/opencv2/opencv.hpp \
  /usr/include/opencv4/opencv2/calib3d.hpp \
  /usr/include/opencv4/opencv2/features2d.hpp \

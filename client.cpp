@@ -243,7 +243,7 @@ std::unique_ptr<TaskInterface> createDetectorInstance(const std::string& modelTy
 }
 void send_out_imageb64(Redox &rdx,Mat drawings,string host_id) {
 	cv::Mat resized_frame;
-    cv::resize(drawings, resized_frame, cv::Size(360*2, 240*2));
+    cv::resize(drawings, resized_frame, cv::Size(360*3, 240*3));
 	std::vector<uchar> buf;
 	 std::vector<int> params = {cv::IMWRITE_JPEG_QUALITY, 95};
 	cv::imencode(".jpg", resized_frame, buf,params);
@@ -266,7 +266,8 @@ std::vector<Result> processSource(const cv::Mat& source,
     std::cout << "preproccess " << diff << " ms" << std::endl;
 
 	auto start1 = std::chrono::steady_clock::now();
-	auto [infer_results, infer_shapes] = tritonClient->inferAsync(input_data);
+	//auto [infer_results, infer_shapes] = tritonClient->inferAsync(input_data);
+	auto [infer_results, infer_shapes] = tritonClient->infer(input_data);
 	auto end1 = std::chrono::steady_clock::now();
     auto diff1 = std::chrono::duration_cast<std::chrono::milliseconds>(end1 - start1).count();
     std::cout << "infer Total " << diff1 << " ms" << std::endl;
@@ -484,8 +485,9 @@ string media_path = "/opt/alice-media/tracker";
     double fps=0.0;
     while (true) {
 /////////////////////////////
-  		auto start = std::chrono::steady_clock::now();
+  		
 		cap.read(frame) ;
+		auto start = std::chrono::steady_clock::now();
       //  resize(frame, frame, Size(1280, 720));
 		std::string unixTimeStamp = unixTimeStampStr();
 		std::string frameId = unixTimeStamp + "_" + host_id;
@@ -493,6 +495,7 @@ string media_path = "/opt/alice-media/tracker";
 //////////////////////////////////
         // Call your processSource function here
         std::vector<Result> predictions = processSource(frame, task, tritonClient, modelInfo);
+		//std::vector<Result> predictions;
         auto end = std::chrono::steady_clock::now();
         auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
         std::cout << "Infer time: " << diff << " ms" << std::endl;
@@ -500,7 +503,8 @@ string media_path = "/opt/alice-media/tracker";
 #if defined(SHOW_FRAME) || defined(WRITE_FRAME)
         //double fps = 1000.0 / static_cast<double>(diff);
         std::string fpsText = "FPS: " + std::to_string(fps);
-        cv::putText(frame, fpsText, cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 255, 0), 2);
+		int point_y = frame.cols/2;
+        cv::putText(frame, fpsText, cv::Point(10,point_y ), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 255, 0), 2);
  		if (!status_analytics) {
 			if (!rdx.set(status_channel,"1")) {
 				cout << "Failed to set status - " << host_id << endl;  
@@ -549,7 +553,7 @@ string media_path = "/opt/alice-media/tracker";
         //    string embeddings;//std::vector<float> embeddings;
 	    //    string prob_det;
         //    };
-
+	
         for (auto&& prediction : predictions) 
         {
             if (std::holds_alternative<Detection>(prediction)) 
@@ -581,7 +585,7 @@ string media_path = "/opt/alice-media/tracker";
                 detections.push_back(dnn_obj);
 				
                 //cv::rectangle(frame, detection.bbox, cv::Scalar(255, 0, 0), 2);
-               // draw_label(frame,  class_names[detection.class_id], detection.class_confidence, detection.bbox.x, detection.bbox.y - 1);
+                //draw_label(frame,  class_names[detection.class_id], detection.class_confidence, detection.bbox.x, detection.bbox.y - 1);
             }
         }
 
@@ -656,9 +660,9 @@ string media_path = "/opt/alice-media/tracker";
 					}
 				}
 
-		//cv::imshow("video feed", imgShow);
-        //cv::waitKey(1);
-
+			//cv::imshow("video feed", imgShow);
+        		//cv::waitKey(1);
+			send_out_imageb64(rdx,imgShow,msgi.host_uuid);
 
 
 			}
@@ -670,7 +674,7 @@ string media_path = "/opt/alice-media/tracker";
 
 #ifdef SHOW_FRAME
 
-		send_out_imageb64(rdx,frame,msgi.host_uuid); //it takes a lot of time in my pc core I5 around 13 ms 
+//		send_out_imageb64(rdx,frame,msgi.host_uuid); //it takes a lot of time in my pc core I5 around 13 ms 
 		auto end2 = std::chrono::steady_clock::now();
         auto diff2 = std::chrono::duration_cast<std::chrono::milliseconds>(end2 - start).count();
         std::cout << "Total Infer time : " << static_cast<double>(diff2) << " ms" << std::endl;

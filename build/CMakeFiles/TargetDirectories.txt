@@ -1,3 +1,3 @@
-/app/build/CMakeFiles/computer-vision-triton-cpp-client.dir
-/app/build/CMakeFiles/edit_cache.dir
-/app/build/CMakeFiles/rebuild_cache.dir
+/yolov8-grpc-client/build/CMakeFiles/computer-vision-triton-cpp-client.dir
+/yolov8-grpc-client/build/CMakeFiles/edit_cache.dir
+/yolov8-grpc-client/build/CMakeFiles/rebuild_cache.dir

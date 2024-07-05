@@ -53,10 +53,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /app
+CMAKE_SOURCE_DIR = /yolov8-grpc-client
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /app/build
+CMAKE_BINARY_DIR = /yolov8-grpc-client/build
 
 # Include any dependencies generated for this target.
 include CMakeFiles/computer-vision-triton-cpp-client.dir/depend.make
@@ -72,114 +72,114 @@ include CMakeFiles/computer-vision-triton-cpp-client.dir/flags.make
 CMakeFiles/computer-vision-triton-cpp-client.dir/client.cpp.o: CMakeFiles/computer-vision-triton-cpp-client.dir/flags.make
 CMakeFiles/computer-vision-triton-cpp-client.dir/client.cpp.o: ../client.cpp
 CMakeFiles/computer-vision-triton-cpp-client.dir/client.cpp.o: CMakeFiles/computer-vision-triton-cpp-client.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/app/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/computer-vision-triton-cpp-client.dir/client.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/computer-vision-triton-cpp-client.dir/client.cpp.o -MF CMakeFiles/computer-vision-triton-cpp-client.dir/client.cpp.o.d -o CMakeFiles/computer-vision-triton-cpp-client.dir/client.cpp.o -c /app/client.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/yolov8-grpc-client/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/computer-vision-triton-cpp-client.dir/client.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/computer-vision-triton-cpp-client.dir/client.cpp.o -MF CMakeFiles/computer-vision-triton-cpp-client.dir/client.cpp.o.d -o CMakeFiles/computer-vision-triton-cpp-client.dir/client.cpp.o -c /yolov8-grpc-client/client.cpp
 
 CMakeFiles/computer-vision-triton-cpp-client.dir/client.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/computer-vision-triton-cpp-client.dir/client.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /app/client.cpp > CMakeFiles/computer-vision-triton-cpp-client.dir/client.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /yolov8-grpc-client/client.cpp > CMakeFiles/computer-vision-triton-cpp-client.dir/client.cpp.i
 
 CMakeFiles/computer-vision-triton-cpp-client.dir/client.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/computer-vision-triton-cpp-client.dir/client.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /app/client.cpp -o CMakeFiles/computer-vision-triton-cpp-client.dir/client.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /yolov8-grpc-client/client.cpp -o CMakeFiles/computer-vision-triton-cpp-client.dir/client.cpp.s
 
 CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/EventQueue.cpp.o: CMakeFiles/computer-vision-triton-cpp-client.dir/flags.make
 CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/EventQueue.cpp.o: ../src/tasks/tracker/EventQueue.cpp
 CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/EventQueue.cpp.o: CMakeFiles/computer-vision-triton-cpp-client.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/app/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/EventQueue.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/EventQueue.cpp.o -MF CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/EventQueue.cpp.o.d -o CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/EventQueue.cpp.o -c /app/src/tasks/tracker/EventQueue.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/yolov8-grpc-client/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/EventQueue.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/EventQueue.cpp.o -MF CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/EventQueue.cpp.o.d -o CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/EventQueue.cpp.o -c /yolov8-grpc-client/src/tasks/tracker/EventQueue.cpp
 
 CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/EventQueue.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/EventQueue.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /app/src/tasks/tracker/EventQueue.cpp > CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/EventQueue.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /yolov8-grpc-client/src/tasks/tracker/EventQueue.cpp > CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/EventQueue.cpp.i
 
 CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/EventQueue.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/EventQueue.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /app/src/tasks/tracker/EventQueue.cpp -o CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/EventQueue.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /yolov8-grpc-client/src/tasks/tracker/EventQueue.cpp -o CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/EventQueue.cpp.s
 
 CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/CentroidTracker.cpp.o: CMakeFiles/computer-vision-triton-cpp-client.dir/flags.make
 CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/CentroidTracker.cpp.o: ../src/tasks/tracker/CentroidTracker.cpp
 CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/CentroidTracker.cpp.o: CMakeFiles/computer-vision-triton-cpp-client.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/app/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/CentroidTracker.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/CentroidTracker.cpp.o -MF CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/CentroidTracker.cpp.o.d -o CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/CentroidTracker.cpp.o -c /app/src/tasks/tracker/CentroidTracker.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/yolov8-grpc-client/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/CentroidTracker.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/CentroidTracker.cpp.o -MF CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/CentroidTracker.cpp.o.d -o CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/CentroidTracker.cpp.o -c /yolov8-grpc-client/src/tasks/tracker/CentroidTracker.cpp
 
 CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/CentroidTracker.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/CentroidTracker.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /app/src/tasks/tracker/CentroidTracker.cpp > CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/CentroidTracker.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /yolov8-grpc-client/src/tasks/tracker/CentroidTracker.cpp > CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/CentroidTracker.cpp.i
 
 CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/CentroidTracker.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/CentroidTracker.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /app/src/tasks/tracker/CentroidTracker.cpp -o CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/CentroidTracker.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /yolov8-grpc-client/src/tasks/tracker/CentroidTracker.cpp -o CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/CentroidTracker.cpp.s
 
 CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/Utils.cpp.o: CMakeFiles/computer-vision-triton-cpp-client.dir/flags.make
 CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/Utils.cpp.o: ../src/tasks/tracker/Utils.cpp
 CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/Utils.cpp.o: CMakeFiles/computer-vision-triton-cpp-client.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/app/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/Utils.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/Utils.cpp.o -MF CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/Utils.cpp.o.d -o CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/Utils.cpp.o -c /app/src/tasks/tracker/Utils.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/yolov8-grpc-client/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/Utils.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/Utils.cpp.o -MF CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/Utils.cpp.o.d -o CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/Utils.cpp.o -c /yolov8-grpc-client/src/tasks/tracker/Utils.cpp
 
 CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/Utils.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/Utils.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /app/src/tasks/tracker/Utils.cpp > CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/Utils.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /yolov8-grpc-client/src/tasks/tracker/Utils.cpp > CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/Utils.cpp.i
 
 CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/Utils.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/Utils.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /app/src/tasks/tracker/Utils.cpp -o CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/Utils.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /yolov8-grpc-client/src/tasks/tracker/Utils.cpp -o CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/Utils.cpp.s
 
 CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/poligonTrackerManager.cpp.o: CMakeFiles/computer-vision-triton-cpp-client.dir/flags.make
 CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/poligonTrackerManager.cpp.o: ../src/tasks/tracker/poligonTrackerManager.cpp
 CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/poligonTrackerManager.cpp.o: CMakeFiles/computer-vision-triton-cpp-client.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/app/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/poligonTrackerManager.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/poligonTrackerManager.cpp.o -MF CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/poligonTrackerManager.cpp.o.d -o CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/poligonTrackerManager.cpp.o -c /app/src/tasks/tracker/poligonTrackerManager.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/yolov8-grpc-client/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/poligonTrackerManager.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/poligonTrackerManager.cpp.o -MF CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/poligonTrackerManager.cpp.o.d -o CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/poligonTrackerManager.cpp.o -c /yolov8-grpc-client/src/tasks/tracker/poligonTrackerManager.cpp
 
 CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/poligonTrackerManager.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/poligonTrackerManager.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /app/src/tasks/tracker/poligonTrackerManager.cpp > CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/poligonTrackerManager.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /yolov8-grpc-client/src/tasks/tracker/poligonTrackerManager.cpp > CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/poligonTrackerManager.cpp.i
 
 CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/poligonTrackerManager.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/poligonTrackerManager.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /app/src/tasks/tracker/poligonTrackerManager.cpp -o CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/poligonTrackerManager.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /yolov8-grpc-client/src/tasks/tracker/poligonTrackerManager.cpp -o CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/poligonTrackerManager.cpp.s
 
 CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/Yolo.cpp.o: CMakeFiles/computer-vision-triton-cpp-client.dir/flags.make
 CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/Yolo.cpp.o: ../src/tasks/object_detection/src/Yolo.cpp
 CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/Yolo.cpp.o: CMakeFiles/computer-vision-triton-cpp-client.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/app/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/Yolo.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/Yolo.cpp.o -MF CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/Yolo.cpp.o.d -o CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/Yolo.cpp.o -c /app/src/tasks/object_detection/src/Yolo.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/yolov8-grpc-client/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/Yolo.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/Yolo.cpp.o -MF CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/Yolo.cpp.o.d -o CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/Yolo.cpp.o -c /yolov8-grpc-client/src/tasks/object_detection/src/Yolo.cpp
 
 CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/Yolo.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/Yolo.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /app/src/tasks/object_detection/src/Yolo.cpp > CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/Yolo.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /yolov8-grpc-client/src/tasks/object_detection/src/Yolo.cpp > CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/Yolo.cpp.i
 
 CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/Yolo.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/Yolo.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /app/src/tasks/object_detection/src/Yolo.cpp -o CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/Yolo.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /yolov8-grpc-client/src/tasks/object_detection/src/Yolo.cpp -o CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/Yolo.cpp.s
 
 CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/YoloNas.cpp.o: CMakeFiles/computer-vision-triton-cpp-client.dir/flags.make
 CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/YoloNas.cpp.o: ../src/tasks/object_detection/src/YoloNas.cpp
 CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/YoloNas.cpp.o: CMakeFiles/computer-vision-triton-cpp-client.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/app/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/YoloNas.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/YoloNas.cpp.o -MF CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/YoloNas.cpp.o.d -o CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/YoloNas.cpp.o -c /app/src/tasks/object_detection/src/YoloNas.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/yolov8-grpc-client/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/YoloNas.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/YoloNas.cpp.o -MF CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/YoloNas.cpp.o.d -o CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/YoloNas.cpp.o -c /yolov8-grpc-client/src/tasks/object_detection/src/YoloNas.cpp
 
 CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/YoloNas.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/YoloNas.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /app/src/tasks/object_detection/src/YoloNas.cpp > CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/YoloNas.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /yolov8-grpc-client/src/tasks/object_detection/src/YoloNas.cpp > CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/YoloNas.cpp.i
 
 CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/YoloNas.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/YoloNas.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /app/src/tasks/object_detection/src/YoloNas.cpp -o CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/YoloNas.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /yolov8-grpc-client/src/tasks/object_detection/src/YoloNas.cpp -o CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/YoloNas.cpp.s
 
 CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.o: CMakeFiles/computer-vision-triton-cpp-client.dir/flags.make
 CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.o: ../src/triton/Triton.cpp
 CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.o: CMakeFiles/computer-vision-triton-cpp-client.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/app/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.o -MF CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.o.d -o CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.o -c /app/src/triton/Triton.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/yolov8-grpc-client/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.o -MF CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.o.d -o CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.o -c /yolov8-grpc-client/src/triton/Triton.cpp
 
 CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /app/src/triton/Triton.cpp > CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /yolov8-grpc-client/src/triton/Triton.cpp > CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.i
 
 CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /app/src/triton/Triton.cpp -o CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /yolov8-grpc-client/src/triton/Triton.cpp -o CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.s
 
 # Object files for target computer-vision-triton-cpp-client
 computer__vision__triton__cpp__client_OBJECTS = \
@@ -261,7 +261,7 @@ computer-vision-triton-cpp-client: /usr/lib/x86_64-linux-gnu/libopencv_photo.so.
 computer-vision-triton-cpp-client: /usr/lib/x86_64-linux-gnu/libopencv_imgproc.so.4.5.4d
 computer-vision-triton-cpp-client: /usr/lib/x86_64-linux-gnu/libopencv_core.so.4.5.4d
 computer-vision-triton-cpp-client: CMakeFiles/computer-vision-triton-cpp-client.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/app/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Linking CXX executable computer-vision-triton-cpp-client"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/yolov8-grpc-client/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Linking CXX executable computer-vision-triton-cpp-client"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/computer-vision-triton-cpp-client.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
@@ -273,6 +273,6 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/clean:
 .PHONY : CMakeFiles/computer-vision-triton-cpp-client.dir/clean
 
 CMakeFiles/computer-vision-triton-cpp-client.dir/depend:
-	cd /app/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /app /app /app/build /app/build /app/build/CMakeFiles/computer-vision-triton-cpp-client.dir/DependInfo.cmake --color=$(COLOR)
+	cd /yolov8-grpc-client/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /yolov8-grpc-client /yolov8-grpc-client /yolov8-grpc-client/build /yolov8-grpc-client/build /yolov8-grpc-client/build/CMakeFiles/computer-vision-triton-cpp-client.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/computer-vision-triton-cpp-client.dir/depend
 

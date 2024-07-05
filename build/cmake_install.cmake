@@ -1,4 +1,4 @@
-# Install script for directory: /app
+# Install script for directory: /yolov8-grpc-client
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -50,5 +50,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/app/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/yolov8-grpc-client/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

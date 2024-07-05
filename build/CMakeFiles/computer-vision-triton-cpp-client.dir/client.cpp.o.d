@@ -1,6 +1,7 @@
 CMakeFiles/computer-vision-triton-cpp-client.dir/client.cpp.o: \
- /app/client.cpp /usr/include/stdc-predef.h \
- /app/src/tasks/object_detection/src/Yolo.hpp /app/include/common.hpp \
+ /yolov8-grpc-client/client.cpp /usr/include/stdc-predef.h \
+ /yolov8-grpc-client/src/tasks/object_detection/src/Yolo.hpp \
+ /yolov8-grpc-client/include/common.hpp \
  /usr/include/opencv4/opencv2/core.hpp \
  /usr/include/opencv4/opencv2/core/cvdef.h \
  /usr/include/opencv4/opencv2/core/version.hpp /usr/include/c++/11/limits \
@@ -536,7 +537,8 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/client.cpp.o: \
  /workspace/install/include/grpcpp/impl/codegen/proto_buffer_writer.h \
  /workspace/install/include/grpcpp/impl/codegen/stub_options.h \
  /workspace/install/include/ipc.h \
- /workspace/install/include/http_client.h /app/include/TaskInterface.hpp \
+ /workspace/install/include/http_client.h \
+ /yolov8-grpc-client/include/TaskInterface.hpp \
  /usr/include/opencv4/opencv2/opencv.hpp \
  /usr/include/opencv4/opencv2/calib3d.hpp \
  /usr/include/opencv4/opencv2/features2d.hpp \
@@ -603,9 +605,10 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/client.cpp.o: \
  /usr/include/opencv4/opencv2/video/tracking.hpp \
  /usr/include/opencv4/opencv2/video/background_segm.hpp \
  /usr/include/c++/11/variant \
- /app/src/tasks/object_detection/src/YoloNas.hpp \
- /app/src/tasks/object_detection/src/YOLOv7_NMS.hpp \
- /app/src/triton/Triton.hpp /usr/include/x86_64-linux-gnu/curl/curl.h \
+ /yolov8-grpc-client/src/tasks/object_detection/src/YoloNas.hpp \
+ /yolov8-grpc-client/src/tasks/object_detection/src/YOLOv7_NMS.hpp \
+ /yolov8-grpc-client/src/triton/Triton.hpp \
+ /usr/include/x86_64-linux-gnu/curl/curl.h \
  /usr/include/x86_64-linux-gnu/curl/curlver.h \
  /usr/include/x86_64-linux-gnu/curl/system.h \
  /usr/include/x86_64-linux-gnu/sys/socket.h \
@@ -648,12 +651,13 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/client.cpp.o: \
  /usr/include/rapidjson/error/error.h /usr/include/rapidjson/rapidjson.h \
  /usr/include/rapidjson/internal/strfunc.h \
  /usr/include/rapidjson/stream.h \
- /app/src/tasks/classification/src/TorchvisionClassifier.hpp \
+ /yolov8-grpc-client/src/tasks/classification/src/TorchvisionClassifier.hpp \
  /usr/include/c++/11/numeric /usr/include/c++/11/bits/stl_numeric.h \
  /usr/include/c++/11/pstl/glue_numeric_defs.h /usr/include/dirent.h \
  /usr/include/x86_64-linux-gnu/bits/dirent.h \
  /usr/include/x86_64-linux-gnu/bits/dirent_ext.h \
- /app/lib/redox/include/redox.hpp /app/lib/redox/include/redox/client.hpp \
+ /yolov8-grpc-client/lib/redox/include/redox.hpp \
+ /yolov8-grpc-client/lib/redox/include/redox/client.hpp \
  /usr/local/include/hiredis/hiredis.h /usr/local/include/hiredis/read.h \
  /usr/local/include/hiredis/sds.h /usr/local/include/hiredis/alloc.h \
  /usr/local/include/hiredis/async.h /usr/local/include/hiredis/hiredis.h \
@@ -690,10 +694,10 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/client.cpp.o: \
  /usr/include/x86_64-linux-gnu/bits/types/struct_statx_timestamp.h \
  /usr/include/x86_64-linux-gnu/bits/types/struct_statx.h \
  /usr/local/include/hiredis/hiredis.h /usr/local/include/hiredis/async.h \
- /app/lib/redox/include/redox/utils/logger.hpp \
- /app/lib/redox/include/redox/command.hpp \
- /app/lib/redox/include/redox/subscriber.hpp \
- /app/src/tasks/tracker/EventQueue.hpp \
+ /yolov8-grpc-client/lib/redox/include/redox/utils/logger.hpp \
+ /yolov8-grpc-client/lib/redox/include/redox/command.hpp \
+ /yolov8-grpc-client/lib/redox/include/redox/subscriber.hpp \
+ /yolov8-grpc-client/src/tasks/tracker/EventQueue.hpp \
  /usr/include/c++/11/experimental/filesystem \
  /usr/include/c++/11/experimental/bits/fs_fwd.h \
  /usr/include/c++/11/experimental/bits/fs_path.h \
@@ -951,10 +955,10 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/client.cpp.o: \
  /usr/include/jsoncpp/json/forwards.h /usr/include/jsoncpp/json/reader.h \
  /usr/include/jsoncpp/json/value.h /usr/include/c++/11/stack \
  /usr/include/c++/11/bits/stl_stack.h /usr/include/jsoncpp/json/writer.h \
- /app/src/tasks/tracker/Utils.hpp /usr/include/arpa/inet.h \
+ /yolov8-grpc-client/src/tasks/tracker/Utils.hpp /usr/include/arpa/inet.h \
  /usr/include/netinet/in.h /usr/include/x86_64-linux-gnu/bits/in.h \
  /usr/include/netdb.h /usr/include/rpc/netdb.h \
  /usr/include/x86_64-linux-gnu/bits/netdb.h \
- /app/src/tasks/tracker/CentroidTracker.hpp \
- /app/src/tasks/tracker/poligonTrackerManager.hpp \
- /app/src/tasks/tracker/CentroidTracker.hpp
+ /yolov8-grpc-client/src/tasks/tracker/CentroidTracker.hpp \
+ /yolov8-grpc-client/src/tasks/tracker/poligonTrackerManager.hpp \
+ /yolov8-grpc-client/src/tasks/tracker/CentroidTracker.hpp

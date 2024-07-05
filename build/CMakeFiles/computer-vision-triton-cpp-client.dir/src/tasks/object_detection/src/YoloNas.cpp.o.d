@@ -1,8 +1,9 @@
 CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/YoloNas.cpp.o: \
- /app/src/tasks/object_detection/src/YoloNas.cpp \
+ /yolov8-grpc-client/src/tasks/object_detection/src/YoloNas.cpp \
  /usr/include/stdc-predef.h \
- /app/src/tasks/object_detection/src/YoloNas.hpp \
- /app/include/TaskInterface.hpp /usr/include/opencv4/opencv2/opencv.hpp \
+ /yolov8-grpc-client/src/tasks/object_detection/src/YoloNas.hpp \
+ /yolov8-grpc-client/include/TaskInterface.hpp \
+ /usr/include/opencv4/opencv2/opencv.hpp \
  /usr/include/opencv4/opencv2/opencv_modules.hpp \
  /usr/include/opencv4/opencv2/core.hpp \
  /usr/include/opencv4/opencv2/core/cvdef.h \

@@ -1,6 +1,7 @@
 CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.o: \
- /app/src/triton/Triton.cpp /usr/include/stdc-predef.h \
- /app/src/triton/Triton.hpp /app/include/common.hpp \
+ /yolov8-grpc-client/src/triton/Triton.cpp /usr/include/stdc-predef.h \
+ /yolov8-grpc-client/src/triton/Triton.hpp \
+ /yolov8-grpc-client/include/common.hpp \
  /usr/include/opencv4/opencv2/core.hpp \
  /usr/include/opencv4/opencv2/core/cvdef.h \
  /usr/include/opencv4/opencv2/core/version.hpp /usr/include/c++/11/limits \
@@ -537,8 +538,9 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.o: \
  /workspace/install/include/grpcpp/impl/codegen/stub_options.h \
  /workspace/install/include/ipc.h \
  /workspace/install/include/http_client.h \
- /app/src/tasks/object_detection/src/Yolo.hpp \
- /app/include/TaskInterface.hpp /usr/include/opencv4/opencv2/opencv.hpp \
+ /yolov8-grpc-client/src/tasks/object_detection/src/Yolo.hpp \
+ /yolov8-grpc-client/include/TaskInterface.hpp \
+ /usr/include/opencv4/opencv2/opencv.hpp \
  /usr/include/opencv4/opencv2/calib3d.hpp \
  /usr/include/opencv4/opencv2/features2d.hpp \
  /usr/include/opencv4/opencv2/flann/miniflann.hpp \
