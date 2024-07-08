@@ -9,9 +9,9 @@
           "url_video":"rtsp://10.71.71.47:8554/19-9ec37f65-bcf8-4697-a072-0a26a45393b1/1",
           "name": "Tsaguur-PTZ",
           "task_type": "detection",
-          "model": "yolov8-trt",
+          "model": "yolov8-trt-traffic-2",
           "model_type": "yolov8",
-          "labelsFile": "coco.names",
+          "labelsFile": "traffic.names",
           "input_sizes": "3 640 640",
           "debug": 0,
           "verbose": 0,
@@ -94,16 +94,16 @@
                     "y": 0.0
                   },
                   {
-                    "x": 10.0,
+                    "x": 9.0,
                     "y": 0.0
                   },
                   {
-                    "x": 10.0,
-                    "y": 30.0
+                    "x": 9.0,
+                    "y": 29.0
                   },
                   {
                     "x": 0.0,
-                    "y": 30.0
+                    "y": 29.0
                   }
                 ]
 

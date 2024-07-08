@@ -485,9 +485,9 @@ string media_path = "/opt/alice-media/tracker";
     double fps=0.0;
     while (true) {
 /////////////////////////////
-  		
+  		auto start = std::chrono::steady_clock::now();
 		cap.read(frame) ;
-		auto start = std::chrono::steady_clock::now();
+		
       //  resize(frame, frame, Size(1280, 720));
 		std::string unixTimeStamp = unixTimeStampStr();
 		std::string frameId = unixTimeStamp + "_" + host_id;

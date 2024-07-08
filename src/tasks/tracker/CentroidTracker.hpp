@@ -58,7 +58,7 @@ protected:
     ///  speed
     float speed = 0.0;
     std::deque<double> speed_buffer;
-    std::deque<int> speed_coordinates;
+   std::deque<cv::Point2f> speed_coordinates;
     std::string speed_km_vec;
     int buffer_size = 20; // Adjust the buffer size as needed
     bool lock_speed = false; 

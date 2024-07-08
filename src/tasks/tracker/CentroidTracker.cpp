@@ -2,21 +2,18 @@
 class ViewTransformer {
 public:
     ViewTransformer(const std::vector<cv::Point2f>& source, const std::vector<cv::Point2f>& target) {
-        m = cv::getPerspectiveTransform(source, target);
+        cv::Mat srcMat(source), tgtMat(target);
+        transformMatrix = cv::getPerspectiveTransform(srcMat, tgtMat);
     }
 
     std::vector<cv::Point2f> transform_points(const std::vector<cv::Point2f>& points) {
-        if (points.empty()) {
-            return points;
-        }
-
         std::vector<cv::Point2f> transformed_points;
-        cv::perspectiveTransform(points, transformed_points, m);
+        cv::perspectiveTransform(points, transformed_points, transformMatrix);
         return transformed_points;
     }
 
 private:
-    cv::Mat m;
+    cv::Mat transformMatrix;
 };
 template <typename T>
 std::string to_string_with_precision(const T a_value, const int n = 6)
@@ -251,116 +248,65 @@ void TrackingObject::startTracker(uint _obj_id, string _obj_label) {
 
 	setShiftMethod(MET_HALF);
 }
-double calculate_mean(const std::deque<double>& vec) {
-    double sum = std::accumulate(vec.begin(), vec.end(), 0.0);
-    return sum / vec.size();
-}
-
-// Function to calculate standard deviation
-double calculate_stddev(const std::deque<double>& vec, double mean) {
-    double sum = 0.0;
-    for (double value : vec) {
-        sum += std::pow(value - mean, 2);
-    }
-    return std::sqrt(sum / vec.size());
-}
-
-// Function to filter out peak values
-std::deque<double> filter_peaks(const std::deque<double>& vec) {
-    if (vec.empty()) {
-        return {};
-    }
-
-    // Calculate mean and standard deviation
-    double mean = calculate_mean(vec);
-    double stddev = calculate_stddev(vec, mean);
-
-    // Define the acceptable range
-    double lower_bound = mean - stddev;
-    double upper_bound = mean + stddev;
-
-    // Filter the deque to remove peaks
-    std::deque<double> filtered_vec;
-    for (double value : vec) {
-        if (value >= lower_bound && value <= upper_bound) {
-            filtered_vec.push_back(value);
-        }
-    }
-
-    return filtered_vec;
-}
-
-double TrackingObject::getSmoothedSpeed() {
-    if (speed_buffer.empty()) return 0.0;
-
-    if (speed_buffer.size() > 10 ) {
-        // Sort the deque (optional, but useful for inspection)
-        std::sort(speed_buffer.begin(), speed_buffer.end());
-		 
-        // Filter the deque to remove peak values
-        std::deque<double> filtered_speed_buffer = filter_peaks(speed_buffer);
-
-        // Calculate the mean of the filtered deque
-        double sum = std::accumulate(filtered_speed_buffer.begin(), filtered_speed_buffer.end(), 0.0);
-        speed = sum / filtered_speed_buffer.size();
-        //speed_buffer.pop_back();
-
-        //lock_speed = true;
-    }
-
-    return speed;
-}
 
 
-void TrackingObject::updateSpeed(double fps ,std::vector<cv::Point2f> speed_poligon,std::vector<cv::Point2f> speed_meters ) {
-    for (const auto& point : speed_poligon) {
+
+
+void TrackingObject::updateSpeed(double fps, const std::vector<cv::Point2f> speed_polygon, const std::vector<cv::Point2f> speed_meters) {
+    // Draw the speed polygon for visualization
+    for (const auto& point : speed_polygon) {
         cv::circle(drawable, point, 5, cv::Scalar(0, 0, 255), -1); // Draw red circles
     }
-    for (size_t i = 0; i < speed_poligon.size(); ++i) {
-        cv::line(drawable, speed_poligon[i], speed_poligon[(i + 1) % speed_poligon.size()], cv::Scalar(255, 0, 0), 2); // Draw blue lines
+    for (size_t i = 0; i < speed_polygon.size(); ++i) {
+        cv::line(drawable, speed_polygon[i], speed_polygon[(i + 1) % speed_polygon.size()], cv::Scalar(255, 0, 0), 2); // Draw blue lines
     }
-	double result = cv::pointPolygonTest(speed_poligon, current_position, false);
 
-if (result > 0) {
+    // Check if the current position is within the polygon
+    double result = cv::pointPolygonTest(speed_polygon, current_position, false);
 
-	ViewTransformer view_transformer(speed_poligon, speed_meters);
-	std::vector<cv::Point2f> points_to_transform = { static_cast<cv::Point2f>(current_position) };
-	std::vector<cv::Point2f> transformed_points = view_transformer.transform_points(points_to_transform);
+    if (result > 0) {
+        ViewTransformer view_transformer(speed_polygon, speed_meters);
+        std::vector<cv::Point2f> points_to_transform = { current_position };
+        std::vector<cv::Point2f> transformed_points = view_transformer.transform_points(points_to_transform);
 
-    // Extract the first point from transformed_points and convert to cv::Point
-    cv::Point transformed_point(transformed_points[0].x, transformed_points[0].y);
-    // Calculate the overall distance in meters
-	////
-    //t_previous_position = t_current_position;
-    // Update current position
-   
-	int point_y_int = transformed_point.y;
-	speed_coordinates.push_back(point_y_int);
-	if (speed_coordinates.size()> 18/2) {
-   
-        int coordinate_start = static_cast<int>(speed_coordinates.back());
-		int coordinate_end = static_cast<int>(speed_coordinates.front());
- 	    int distance1 = abs(coordinate_start-coordinate_end);
-		cout << "Distance  : (" <<distance1 << ")" << endl;
-        // Draw previous and current positions
-        circle(drawable, previous_position, 5, Scalar(0, 0, 255), -1); // Red for previous position
-        circle(drawable, current_position, 5, Scalar(0, 255, 0), -1); // Green for current position
-		double time = speed_coordinates.size()/18;
-        // Calculate speed in meters per second
-		cout << "INFER TME : (" <<fps << ")" << endl;
-        double new_speed =  static_cast<int>(distance1 / time); // Convert speed to meters per second
-        std::cout << "The point is inside the polygon." << std::endl;
-		int speed_kmh =  static_cast<int>(new_speed * 3.6);
-		speed_km_vec=to_string(speed_kmh);
-        // Draw the speed on the image
-        string speed_text =  to_string(speed_kmh) ;
-	std::cout << "speed_is  " <<speed_kmh<<"   " <<coordinate_start<<"   "<<coordinate_end << "   "<< speed_coordinates.size()<<"   "<<getId()<<std::endl;
+        if (!transformed_points.empty()) {
+            cv::Point2f transformed_point = transformed_points[0];
 
-        putText(drawable, speed_text, Point(current_position.x, current_position.y - 10), FONT_HERSHEY_SIMPLEX, 1, Scalar(255, 0, 255), 3);
-        
+            // Apply a simple moving average for smoothing
+            if (!speed_coordinates.empty() && std::abs(speed_coordinates.back().y - transformed_point.y) > 10) {
+                // Ignore large jumps
+                transformed_point.y = speed_coordinates.back().y;
+            }
+            speed_coordinates.push_back(transformed_point);
+
+            if (speed_coordinates.size() > fps) {
+                speed_coordinates.pop_front(); // Maintain the deque size
+
+                cv::Point2f coordinate_start = speed_coordinates.back();
+                cv::Point2f coordinate_end = speed_coordinates.front();
+                float distance = cv::norm(coordinate_start - coordinate_end); // Euclidean distance
+
+                std::cout << "Distance: (" << distance << ")" << std::endl;
+
+                // Draw previous and current positions for visualization
+                cv::circle(drawable, previous_position, 5, cv::Scalar(0, 0, 255), -1); // Red for previous position
+                cv::circle(drawable, current_position, 5, cv::Scalar(0, 255, 0), -1); // Green for current position
+
+                double time = static_cast<double>(speed_coordinates.size()) / fps;
+                double speed_mps = distance / time; // Speed in meters per second
+                int speed_kmh = static_cast<int>(speed_mps * 3.6); // Convert to km/h
+                speed_km_vec = std::to_string(speed_kmh);
+
+                std::string speed_text = std::to_string(speed_kmh) + " km/h";
+                std::cout << "Speed: " << speed_kmh << " km/h, Distance: " << distance << ", Coordinates Size: " << speed_coordinates.size() << " Transformed Point: " << transformed_point << " ID: " << getId() << " Current Position: " << current_position << std::endl;
+
+                cv::putText(drawable, speed_text, cv::Point(current_position.x, current_position.y - 10), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 0, 255), 3);
+            }
+        }
     }
 }
-}
+
+
 //(185.30645161290323, 438.4677419354839), (1124.6612903225805, 438.4677419354839), (861.4354838709676, 312.01612903225805), (355.67786187322616, 311.4772942289499)
 
 
@@ -371,11 +317,13 @@ void TrackingObject::setTrackerDNN(const dnn_bbox &dnnData, cv::Point center_det
 	///////
 
 	////
+	
     previous_position = current_position;
     // Update current position
     current_position = center_det;
 
-
+	//std::cout << "speed_is_DNN  " <<center_det<<"   " <<getId()<<"   " <<current_position <<std::endl;
+	
 
 //}else{
 /*
