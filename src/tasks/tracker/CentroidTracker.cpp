@@ -273,13 +273,13 @@ void TrackingObject::updateSpeed(double fps, const std::vector<cv::Point2f> spee
             cv::Point2f transformed_point = transformed_points[0];
 
             // Apply a simple moving average for smoothing
-            if (!speed_coordinates.empty() && std::abs(speed_coordinates.back().y - transformed_point.y) > 10) {
+            if (!speed_coordinates.empty() && std::abs(speed_coordinates.back().y - transformed_point.y) > 5) {
                 // Ignore large jumps
                 transformed_point.y = speed_coordinates.back().y;
             }
             speed_coordinates.push_back(transformed_point);
 
-            if (speed_coordinates.size() > fps) {
+            if (speed_coordinates.size() > 25/2) {
                 speed_coordinates.pop_front(); // Maintain the deque size
 
                 cv::Point2f coordinate_start = speed_coordinates.back();
@@ -292,11 +292,10 @@ void TrackingObject::updateSpeed(double fps, const std::vector<cv::Point2f> spee
                 cv::circle(drawable, previous_position, 5, cv::Scalar(0, 0, 255), -1); // Red for previous position
                 cv::circle(drawable, current_position, 5, cv::Scalar(0, 255, 0), -1); // Green for current position
 
-                double time = static_cast<double>(speed_coordinates.size()) / fps;
+                double time = static_cast<double>(speed_coordinates.size()) / 25;
                 double speed_mps = distance / time; // Speed in meters per second
                 int speed_kmh = static_cast<int>(speed_mps * 3.6); // Convert to km/h
                 speed_km_vec = std::to_string(speed_kmh);
-
                 std::string speed_text = std::to_string(speed_kmh) + " km/h";
                 std::cout << "Speed: " << speed_kmh << " km/h, Distance: " << distance << ", Coordinates Size: " << speed_coordinates.size() << " Transformed Point: " << transformed_point << " ID: " << getId() << " Current Position: " << current_position << std::endl;
 
