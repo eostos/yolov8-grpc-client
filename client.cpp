@@ -19,6 +19,7 @@
 //#include <msgpack.hpp>
 
 #include "EventQueue.hpp"
+#include "bufferPhoto.hpp"
 #include "CentroidTracker.hpp"
 #include "poligonTrackerManager.hpp"
 //////////////////////////
@@ -29,7 +30,10 @@ using namespace redox;
 /////////////////////////////////
 /////////////////////////////////
 string host_id;
+CircularBuffer photo_buffer(30);
+string media_path = "/opt/alice-media/tracker";
 bool read_config = false;
+bool save_img_obj= false;
 thmsg::EventQueue smartQueueEvents;
 thmsg::EventQueue smartQueueFrames;
 /////////////////////////////////
@@ -72,9 +76,11 @@ void join_and_send_outdata_redox(Redox &rdx,
 				std::string encoded = base64_encode(enc_msg, buf.size());
 				final_json["base_64_frame"] = encoded;
 			}else{
+				if(save_img_obj){
 				string url_photo_event = "";
 				save_evidence(img_to_save, media_path ,msg_n.host_uuid, msg_n.frame_id,url_photo_event);
 				final_json["url_photo_event"] = url_photo_event;
+				}
 			}
         }
 	final_json["analityc_type"] = "analityc_type";
@@ -243,7 +249,7 @@ std::unique_ptr<TaskInterface> createDetectorInstance(const std::string& modelTy
 }
 void send_out_imageb64(Redox &rdx,Mat drawings,string host_id) {
 	cv::Mat resized_frame;
-    cv::resize(drawings, resized_frame, cv::Size(360*3, 240*3));
+    cv::resize(drawings, resized_frame, cv::Size(360, 240));
 	std::vector<uchar> buf;
 	 std::vector<int> params = {cv::IMWRITE_JPEG_QUALITY, 95};
 	cv::imencode(".jpg", resized_frame, buf,params);
@@ -270,13 +276,16 @@ std::vector<Result> processSource(const cv::Mat& source,
 	auto [infer_results, infer_shapes] = tritonClient->infer(input_data);
 	auto end1 = std::chrono::steady_clock::now();
     auto diff1 = std::chrono::duration_cast<std::chrono::milliseconds>(end1 - start1).count();
-    std::cout << "infer Total " << diff1 << " ms" << std::endl;
+    std::cout << "infer Function Total " << diff1 << " ms" << std::endl;
 
         // Call your processSource function here
  
 
-
+	auto start2 = std::chrono::steady_clock::now();
     return task->postprocess(cv::Size(source.cols, source.rows), infer_results, infer_shapes);
+	auto end2 = std::chrono::steady_clock::now();
+	auto diff2 = std::chrono::duration_cast<std::chrono::milliseconds>(end2 - start2).count();
+    std::cout << "infer Function Total " << diff2 << " ms" << std::endl;
 
 }
 
@@ -336,7 +345,8 @@ void ProcessVideo(const std::string& sourceName,
      const std::vector<std::string>& class_names,const std::string& id,Json::Value config_params) {
 
 ////////////////////////////////////////////////////
-string media_path = "/opt/alice-media/tracker";
+
+
 
 	string input_url = config_params["url_video"].asString();
 	string grpc_port = config_params["grpc_port"].asString();
@@ -436,7 +446,45 @@ string media_path = "/opt/alice-media/tracker";
 		}
 	};
 	//SUBSCRIPTION
+		auto notifications_msg = [](const string& topic, const string& msg) {
+		std::string str(msg);
+		Json::Reader jreader;
+		Json::Value json_event;
+		jreader.parse(str, json_event,false);
+		////////////////////////////////
+		string unix_time_stamp    = json_event["unix_itme_stamp"].asString();
+		  auto photos_and_timestamps = photo_buffer.get_all();
+    for (const auto& [photo, timestamp] : photos_and_timestamps) {
+        std::cout << "Timestamp: " << timestamp << ", Photo size: " << photo.size() << " bytes\n";
+        // Display the photo
+		if (timestamp==unix_time_stamp) {
+			std::string frameId = unix_time_stamp + "_" + host_id;
+			string url_photo_event = "";
+			save_evidence(photo, media_path ,host_id, frameId,url_photo_event);
+			
+			string channel = "notifications_pub_"+host_id;
+			
+			//cv::imshow("Photo", photo);
+			//cv::waitKey(100); // Display each photo for 100 milliseconds
+			Json::Value final_json;
+			final_json["host_id"] = host_id;
+			final_json["unix_itme_stamp"] = unix_time_stamp;	
+			final_json["photo_evidence"] = url_photo_event;		
+			Json::StreamWriterBuilder builder;
+			std::string string_output_data = Json::writeString(builder, final_json);
+			rdx.publish(channel, string_output_data);
+	
+				
+		 }else {
+			std::cout << "THE REQUEST WASNT FOUND " << " \n";
+		 }
+    }
+		//// we have to search the vector with time stamp and then record 
+		///the foto and then send it into the publisher.
 
+	};
+	string notifications_channel = "notifications_sub"+ host_id;
+	sub.subscribe(notifications_channel, notifications_msg, subbed, unsubbed, err_callback);
 	sub.subscribe("tracker_check_config", config_msg);
 
 	Mat imgShow,imgSave,frame;
@@ -496,9 +544,7 @@ string media_path = "/opt/alice-media/tracker";
         // Call your processSource function here
         std::vector<Result> predictions = processSource(frame, task, tritonClient, modelInfo);
 		//std::vector<Result> predictions;
-        auto end = std::chrono::steady_clock::now();
-        auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-        std::cout << "Infer time: " << diff << " ms" << std::endl;
+
         //smartQueueFrames.addNewItem(msgi);
 #if defined(SHOW_FRAME) || defined(WRITE_FRAME)
         //double fps = 1000.0 / static_cast<double>(diff);
@@ -507,6 +553,7 @@ string media_path = "/opt/alice-media/tracker";
         cv::putText(frame, fpsText, cv::Point(10,point_y ), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 255, 0), 2);
  		if (!status_analytics) {
 			if (!rdx.set(status_channel,"1")) {
+
 				cout << "Failed to set status - " << host_id << endl;  
 			} else {
 				status_analytics = true;
@@ -605,11 +652,12 @@ string media_path = "/opt/alice-media/tracker";
 
 
 			int64 ti = cv::getTickCount();
+			auto starttrack = std::chrono::steady_clock::now();
 			tracking.setDataImages(frame);
            // UpdateObjects(vector<dnn_bbox> _detections, string frame_id)
 			tracking.UpdateObjects(detections,frameId,fps);
 			tracking.evalObjects();
-			
+
 			for (auto &trk_i: trackers) {
 				trk_i->restartPolygons();
 			}
@@ -624,7 +672,7 @@ string media_path = "/opt/alice-media/tracker";
 
 			Json::Value objects_to_report = tracking.reportObjects(save_img);
 			tracking.deactivateObjects();
-			
+
 			if (DEBUG) {
 				cout << " - Number of detections: " << detections.size() << " - " << host_id << endl;
 				cout << " - Number of active trackers: " <<  tracking.getActiveTrackers() << " - " << host_id << endl;
@@ -633,17 +681,24 @@ string media_path = "/opt/alice-media/tracker";
 			if (!objects_to_report[0].isNull()) {
 				//SEND ANALYTICS RESULTS
 				if (DEBUG){
-					imgSave = tracking.getDetsImage();
+					//imgSave = tracking.getDetsImage();
+					imgShow = tracking.getDrawImage();//this is for debug 
 				}else{
 					imgSave = frame;
 				}
-				join_and_send_outdata_redox(rdx,msgi,media_path,objects_to_report,"", "",save_img,imgSave,SEND_B64,to_post,DEBUG);
+				photo_buffer.add(imgShow, unixTimeStamp);///this is for testing 
+				photo_buffer.add(imgSave, unixTimeStamp);///this is for testing 
+				join_and_send_outdata_redox(rdx,msgi,media_path,objects_to_report,"", "",save_img,imgShow,SEND_B64,to_post,DEBUG);//this is for debug 
+				//join_and_send_outdata_redox(rdx,msgi,media_path,objects_to_report,"", "",save_img,imgSave,SEND_B64,to_post,DEBUG);
 				//SET LAST UPDATED TIME
 				if (!rdx.set(update_channel,to_string(getTimeMilis()))) {
 					cout << "Failed to set update time - " << host_id << endl;
 				}
 			}
-			if (!DEBUG) {
+								auto endtrack = std::chrono::steady_clock::now();
+        	auto difftrack = std::chrono::duration_cast<std::chrono::milliseconds>(endtrack - starttrack).count();
+        	std::cout << "Infer time track: " << difftrack << " ms" << std::endl;
+			if (DEBUG) {
 				//float data_fin = (tf-ti)*1000/cv::getTickFrequency();
 				//cout << " - Time elapsed per frame: " << data_fin << "ms - " << host_id << endl;				
 				imgShow = tracking.getDrawImage();
@@ -674,12 +729,12 @@ string media_path = "/opt/alice-media/tracker";
 
 #ifdef SHOW_FRAME
 
-//		send_out_imageb64(rdx,frame,msgi.host_uuid); //it takes a lot of time in my pc core I5 around 13 ms 
+		send_out_imageb64(rdx,frame,msgi.host_uuid); //it takes a lot of time in my pc core I5 around 13 ms 
 		auto end2 = std::chrono::steady_clock::now();
         auto diff2 = std::chrono::duration_cast<std::chrono::milliseconds>(end2 - start).count();
         std::cout << "Total Infer time : " << static_cast<double>(diff2) << " ms" << std::endl;
 		fps = 1000.0 / static_cast<double>(diff2);
-		
+
         //cv::imshow("video feed", frame);
         //cv::waitKey(1);
 #endif

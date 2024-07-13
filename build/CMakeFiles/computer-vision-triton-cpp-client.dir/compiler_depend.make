@@ -1073,6 +1073,7 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/client.cpp.o: ../client.cpp \
   /usr/include/netdb.h \
   /usr/include/rpc/netdb.h \
   /usr/include/x86_64-linux-gnu/bits/netdb.h \
+  ../src/tasks/tracker/bufferPhoto.hpp \
   ../src/tasks/tracker/CentroidTracker.hpp \
   ../src/tasks/tracker/poligonTrackerManager.hpp \
   ../src/tasks/tracker/CentroidTracker.hpp
@@ -5802,6 +5803,8 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.o: ../src
 ../src/tasks/object_detection/src/YoloNas.cpp:
 
 ../src/tasks/tracker/poligonTrackerManager.hpp:
+
+../src/tasks/tracker/bufferPhoto.hpp:
 
 /usr/include/x86_64-linux-gnu/bits/netdb.h:
 

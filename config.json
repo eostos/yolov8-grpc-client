@@ -1,353 +1,135 @@
 [
-    {
-      "type": "config",
-      "params": [
-        {
-          "id": "1",
-          "host_id": "aa317a59-0608-4f27-8ab2-941a469fc654",
-          "url_video1":"rtsp://admin:Mossmerka19*@181.39.152.137/Streaming/Channels/501",
-          "url_video":"rtsp://10.71.71.47:8554/19-9ec37f65-bcf8-4697-a072-0a26a45393b1/1",
-          "name": "Tsaguur-PTZ",
-          "task_type": "detection",
-          "model": "yolov8-trt-traffic-2",
-          "model_type": "yolov8",
-          "labelsFile": "traffic.names",
-          "input_sizes": "3 640 640",
-          "debug": 0,
-          "verbose": 0,
-	       "grpc_port":8001,
-	       "grpc_server":"0.0.0.0",
-          "media_path": "",
-          "server_ip": "127.0.0.1",
-          "server_port": 6379,
-          "send_b64": 0,
-          "topost": "",
-          "speed_detection": true,
-          "poligons": [
-            {
-               "poligon_id": "2",
-               "points": [
-                 {
-                   "x": 0.1,
-                   "y": 0.1
-                 },
-                 {
-                   "x": 0.9,
-                   "y": 0.1
-                 },
-                 {
-                   "x": 0.9,
-                   "y": 0.9
-                 },
-                 {
-                   "x": 0.1,
-                   "y": 0.9
-                 }
-               ]
-             },{
-              "poligon_id": "17",
-              "points": [
-                {
-                  "x": 0.2573,
-                  "y": 0.166
-                },
-                {
-                  "x": 0.7174,
-                  "y": 0.16
-                },
-                {
-                  "x": 0.9366,
-                  "y": 0.65
-                },
-                {
-                  "x": 0.2598,
-                  "y": 0.802
-                }
-              ]
-            }
-
-          ],
-          "poligon_speed": [
-            {
-               "poligon_id": "1",
-               "points": [
-                  {
-                     "x": 874.0,
-                     "y": 213.0
+   {
+       "type": "config",
+       "params": [
+           {
+               "id": "1",
+               "host_id": "71358df2-2c4d-4bd1-b0d9-c908ef03d963",
+               "url_video1": "rtsp://admin:Mossmerka19*@181.39.152.137/Streaming/Channels/501",
+               "url_video": "rtsp://control.guardian.imperium.pe:8554/13-f1c4bd6b-fdc1-4f8c-b9f9-0e4aabeff24b/2",
+               "name": "Tsaguur-PTZ",
+               "task_type": "detection",
+               "model": "yolov8-trt",
+               "model_type": "yolov8",
+               "labelsFile": "coco.names",
+               "input_sizes": "3 640 640",
+               "debug": 0,
+               "verbose": 0,
+               "grpc_port": 8001,
+               "grpc_server": "0.0.0.0",
+               "media_path": "",
+               "server_ip": "127.0.0.1",
+               "server_port": 6379,
+               "send_b64": 0,
+               "topost": "",
+               "speed_detection": true,
+               "poligons": [
+                   {
+                       "poligon_id": "2",
+                       "points": [
+                           {
+                               "x": 0.1,
+                               "y": 0.1
+                           },
+                           {
+                               "x": 0.9,
+                               "y": 0.1
+                           },
+                           {
+                               "x": 0.9,
+                               "y": 0.9
+                           },
+                           {
+                               "x": 0.1,
+                               "y": 0.9
+                           }
+                       ]
                    },
                    {
-                     "x": 1190.0,
-                     "y": 213.0
+                       "poligon_id": "17",
+                       "points": [
+                           {
+                               "x": 0.2573,
+                               "y": 0.166
+                           },
+                           {
+                               "x": 0.7174,
+                               "y": 0.16
+                           },
+                           {
+                               "x": 0.9366,
+                               "y": 0.65
+                           },
+                           {
+                               "x": 0.2598,
+                               "y": 0.802
+                           }
+                       ]
                    },
                    {
-                     "x": 1327.0,
-                     "y": 489.0
-                   },
-                   {
-                     "x": 641.0,
-                     "y": 489.0
+                       "poligon_id": "26",
+                       "points": [
+                           {
+                               "x": 0.0102,
+                               "y": 0.016
+                           },
+                           {
+                               "x": 0.9918,
+                               "y": 0.016
+                           },
+                           {
+                               "x": 0.9918,
+                               "y": 0.984
+                           },
+                           {
+                               "x": 0.0102,
+                               "y": 0.984
+                           }
+                       ]
                    }
                ],
-               "meters": [
-                  {
-                    "x": 0.0,
-                    "y": 0.0
-                  },
-                  {
-                    "x": 9.0,
-                    "y": 0.0
-                  },
-                  {
-                    "x": 9.0,
-                    "y": 29.0
-                  },
-                  {
-                    "x": 0.0,
-                    "y": 29.0
-                  }
-                ]
-
-             }
-          ]
-        },
-        {
-          "id":"2",
-          "host_id": "f9e60c4d-78b6-4cdc-be73-fe63cc50d5bf",
-          "url_video":"rtsp://control.guardian.imperium.pe:8554/ESTACIONAMIENTO-cad14553-724c-40b5-87d8-7f94f186b0cc",
-          "name": "global",
-          "task_type": "detection",
-          "model": "yolov8-trt",
-          "model_type": "yolov8",
-          "labelsFile": "coco.names",
-          "input_sizes": "3 640 640",
-          "debug": 0,
-          "verbose": 0,
-	       "grpc_port":8001,
-	       "grpc_server":"0.0.0.0",
-          "media_path": "",
-          "server_ip": "127.0.0.1",
-          "server_port": 6379,
-          "send_b64": 0,
-          "topost": "",
-          "poligons":[
-             {
-                "poligon_id":"5",
-                "points":[
+               "poligon_speed": [
                    {
-                      "x":0.3207,
-                      "y":0.036
-                   },
-                   {
-                      "x":0.9442,
-                      "y":0.112
-                   },
-                   {
-                      "x":0.9176,
-                      "y":0.444
-                   },
-                   {
-                      "x":0.346,
-                      "y":0.67
+                       "poligon_id": "6",
+                       "points": [
+                           {
+                               "x": 130,
+                               "y": 180.1
+                           },
+                           {
+                               "x": 255,
+                               "y": 180
+                           },
+                           {
+                               "x": 412,
+                               "y": 325
+                           },
+                           {
+                               "x": 186,
+                               "y": 345
+                           }
+                       ],
+                       "meters": [
+                           {
+                               "x": 0,
+                               "y": 0
+                           },
+                           {
+                               "x": 6,
+                               "y": 0
+                           },
+                           {
+                               "x": 6,
+                               "y": 23
+                           },
+                           {
+                               "x": 0,
+                               "y": 23
+                           }
+                       ]
                    }
-                ]
-             }
-          ]
-       },
-       {
-          "id":"3",
-          "host_id":"e684e187-30d3-4c50-ac89-6422b623b086",
-          "name":"MUBIS-PTZ",
-          "debug":0,
-          "media_path":"",
-          "server_ip":"127.0.0.1",
-          "server_port":6379,
-          "send_b64":0,
-          "topost":"",
-          "poligons":[
-             {
-                "poligon_id":"4",
-                "points":[
-                   {
-                      "x":0.1141,
-                      "y":0.152
-                   },
-                   {
-                      "x":0.8086,
-                      "y":0.19
-                   },
-                   {
-                      "x":0.9632,
-                      "y":0.65
-                   },
-                   {
-                      "x":0.1686,
-                      "y":0.992
-                   }
-                ]
-             }
-          ]
-       },
-       {
-          "id":"4",
-          "host_id":"9f6b31ed-1394-422f-8a9e-7884931b7e53",
-          "name":"Baruun4zam-PTZ-1",
-          "debug":1,
-          "url_video":"rtsp://admin:asdf1234@172.16.80.241:554/Streaming/Channels/102",
-          "media_path":"",
-          "server_ip":"127.0.0.1",
-          "server_port":6379,
-          "send_b64":0,
-          "topost":"",
-          "poligons":[
-             {
-                "poligon_id":"2",
-                "points":[
-                   {
-                      "x":0.0102,
-                      "y":0.016
-                   },
-                   {
-                      "x":0.9918,
-                      "y":0.016
-                   },
-                   {
-                      "x":0.9918,
-                      "y":0.984
-                   },
-                   {
-                      "x":0.0102,
-                      "y":0.984
-                   }
-                ]
-             }
-          ]
-       },
-       {
-          "id":"5",
-          "name":	"Baruun4zam-PTZ-2",
-          "host_id":"216d83b6-46c9-4596-9eec-def38c9ddc4b",
-          "url_video":"rtsp://admin:asdf1234@172.16.80.245:554/Streaming/Channels/102",
-          "debug":0,
-          "media_path":"",
-          "server_ip":"127.0.0.1",
-          "server_port":6379,
-          "send_b64":0,
-          "topost":"",
-          "poligons":[
-             {
-                "poligon_id":"7",
-                "points":[
-                   {
-                      "x":0.0748,
-                      "y":0.606
-                   },
-                   {
-                      "x":0.7351,
-                      "y":0.382
-                   },
-                   {
-                      "x":0.9696,
-                      "y":0.77
-                   },
-                   {
-                      "x":0.0102,
-                      "y":0.984
-                   }
-                ]
-             }
-          ]
-       },
-       {
-          "id":"6",
-          "name":"Zuun4zam-PTZ-2",
-          "host_id":"69c33594-c050-41e2-896e-3801146b714a",
-          "url_video":"rtsp://admin:asdf1234@172.16.80.237:554/Streaming/Channels/102",
-          "debug":0,
-          "media_path":"",
-          "server_ip":"127.0.0.1",
-          "server_port":6379,
-          "send_b64":0,
-          "topost":"",
-          "poligons":[
-             {
-                "poligon_id":"1",
-                "points":[
-                   {
-                      "x":0.1141,
-                      "y":0.152
-                   },
-                   {
-                      "x":0.8086,
-                      "y":0.19
-                   },
-                   {
-                      "x":0.9632,
-                      "y":0.65
-                   },
-                   {
-                      "x":0.1686,
-                      "y":0.992
-                   }
-                ]
-             },
-             {
-                "poligon_id":"8",
-                "points":[
-                   {
-                      "x":0.7871,
-                      "y":0.44
-                   },
-                   {
-                      "x":0.9278,
-                      "y":0.448
-                   },
-                   {
-                      "x":0.9518,
-                      "y":0.974
-                   },
-                   {
-                      "x":0.8213,
-                      "y":0.99
-                   }
-                ]
-             }
-          ]
-       },
-       {
-          "id":"7",
-          "name":"Zuun4zam-ptz-1",
-          "host_id":"80b77db1-ba28-474e-87da-92cee14d21a6",
-          "url_video":"rtsp://admin:asdf1234@172.16.80.233:554/Streaming/Channels/102",
-          "debug":0,
-          "media_path":"",
-          "server_ip":"127.0.0.1",
-          "server_port":6379,
-          "send_b64":0,
-          "topost":"",
-          "poligons":[
-             {
-                "poligon_id":"3",
-                "points":[
-                   {
-                      "x":0.0102,
-                      "y":0.016
-                   },
-                   {
-                      "x":0.9918,
-                      "y":0.016
-                   },
-                   {
-                      "x":0.9918,
-                      "y":0.984
-                   },
-                   {
-                      "x":0.0102,
-                      "y":0.984
-                   }
-                ]
-             }
-          ]
-       }
-    ]
- }
+               ]
+           }
+       ]
+   }
 ]

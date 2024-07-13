@@ -279,27 +279,33 @@ void TrackingObject::updateSpeed(double fps, const std::vector<cv::Point2f> spee
             }
             speed_coordinates.push_back(transformed_point);
 
-            if (speed_coordinates.size() > 25/2) {
+            if (speed_coordinates.size() > 10/2) {
                 speed_coordinates.pop_front(); // Maintain the deque size
 
                 cv::Point2f coordinate_start = speed_coordinates.back();
                 cv::Point2f coordinate_end = speed_coordinates.front();
                 float distance = cv::norm(coordinate_start - coordinate_end); // Euclidean distance
 
-                std::cout << "Distance: (" << distance << ")" << std::endl;
+                //std::cout << "Distance: (" << distance << ")" << std::endl;
 
                 // Draw previous and current positions for visualization
                 cv::circle(drawable, previous_position, 5, cv::Scalar(0, 0, 255), -1); // Red for previous position
                 cv::circle(drawable, current_position, 5, cv::Scalar(0, 255, 0), -1); // Green for current position
 
-                double time = static_cast<double>(speed_coordinates.size()) / 25;
+                double time = static_cast<double>(speed_coordinates.size()) / 10;
                 double speed_mps = distance / time; // Speed in meters per second
                 int speed_kmh = static_cast<int>(speed_mps * 3.6); // Convert to km/h
                 speed_km_vec = std::to_string(speed_kmh);
                 std::string speed_text = std::to_string(speed_kmh) + " km/h";
-                std::cout << "Speed: " << speed_kmh << " km/h, Distance: " << distance << ", Coordinates Size: " << speed_coordinates.size() << " Transformed Point: " << transformed_point << " ID: " << getId() << " Current Position: " << current_position << std::endl;
+                //std::cout << "Speed: " << speed_kmh << " km/h, Distance: " << distance << ", Coordinates Size: " << speed_coordinates.size() << " Transformed Point: " << transformed_point << " ID: " << getId() << " Current Position: " << current_position << std::endl;
 
                 cv::putText(drawable, speed_text, cv::Point(current_position.x, current_position.y - 10), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 0, 255), 3);
+
+                // Save image if speed exceeds 50 km/h
+                if (speed_kmh > 50) {
+                   // std::string image_path = "/opt/alice-config/photo/speed_exceeded_" + std::to_string(getId()) + ".jpg";
+                 //   cv::imwrite(image_path, drawable);
+                }
             }
         }
     }
@@ -398,6 +404,8 @@ void TrackingObject::shutDown() {
 	///
 speed_buffer.resize(0);
 speed_coordinates.resize(0);
+speed=0;
+speed_km_vec = "";
 	///
 	numSent 		= 0;
 	id 				= "";
