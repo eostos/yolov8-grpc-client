@@ -30,7 +30,7 @@ using namespace redox;
 /////////////////////////////////
 /////////////////////////////////
 string host_id;
-CircularBuffer photo_buffer(60);
+CircularBuffer photo_buffer(20);
 string media_path = "/opt/alice-media/tracker";
 bool read_config = false;
 bool save_img_obj= false;
@@ -53,15 +53,15 @@ void join_and_send_outdata_redox(Redox &rdx,
 						Mat img_to_save,
 						bool send_b64,
 						string to_post,
-						bool DEBUG){
+						bool DEBUG,std::string  unixTimeStamp){
 
-	lint current_time = getTimeMilis();
-	std::string str_timestamp = std::to_string(current_time);
+	//lint current_time = getTimeMilis();
+	//std::string str_timestamp = std::to_string(current_time);
 	
 	//PHOTO
 	Json::Value final_json;
 	final_json["host_id"] = msg_n.host_uuid;
-	final_json["unix_itme_stamp"] = str_timestamp;
+	final_json["unix_itme_stamp"] = unixTimeStamp;
 	final_json["frame_id"] = msg_n.frame_id;
 	final_json["fps"] = msg_n.fps;
 	final_json["resolution_x"] = msg_n.resolution_x;
@@ -689,7 +689,7 @@ void ProcessVideo(const std::string& sourceName,
 				}
 				photo_buffer.add(imgShow, unixTimeStamp);///this is for testing 
 			//	photo_buffer.add(imgSave, unixTimeStamp);///this is for testing 
-				join_and_send_outdata_redox(rdx,msgi,media_path,objects_to_report,"", "",save_img,imgShow,SEND_B64,to_post,DEBUG);//this is for debug 
+				join_and_send_outdata_redox(rdx,msgi,media_path,objects_to_report,"", "",save_img,imgShow,SEND_B64,to_post,DEBUG,unixTimeStamp);//this is for debug 
 				//join_and_send_outdata_redox(rdx,msgi,media_path,objects_to_report,"", "",save_img,imgSave,SEND_B64,to_post,DEBUG);
 				//SET LAST UPDATED TIME
 				if (!rdx.set(update_channel,to_string(getTimeMilis()))) {
