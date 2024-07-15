@@ -480,7 +480,7 @@ void ProcessVideo(const std::string& sourceName,
 			std::string string_output_data = Json::writeString(builder, final_json);
 			rdx.publish(channel, string_output_data);
 			photo_found=true;
-			std::cout << "THE REQUEST WASNT FOUND " << " \n";
+			std::cout << "THE REQUEST WAS FOUND :) " << " \n";
 				
 		 }
 
