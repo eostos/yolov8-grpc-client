@@ -249,7 +249,7 @@ std::unique_ptr<TaskInterface> createDetectorInstance(const std::string& modelTy
 }
 void send_out_imageb64(Redox &rdx,Mat drawings,string host_id) {
 	cv::Mat resized_frame;
-    cv::resize(drawings, resized_frame, cv::Size(360, 240));
+    cv::resize(drawings, resized_frame, cv::Size(360*3, 240*3));
 	std::vector<uchar> buf;
 	 std::vector<int> params = {cv::IMWRITE_JPEG_QUALITY, 95};
 	cv::imencode(".jpg", resized_frame, buf,params);
@@ -454,6 +454,7 @@ void ProcessVideo(const std::string& sourceName,
 		////////////////////////////////
 		string unix_time_stamp    = json_event["unix_itme_stamp"].asString();
 		  auto photos_and_timestamps = photo_buffer.get_all();
+		   std::cout << "PHOTO WAS REQUIRED :  SEARCHING IN BUFFER\n";
     for (const auto& [photo, timestamp] : photos_and_timestamps) {
         std::cout << "Timestamp: " << timestamp << ", Photo size: " << photo.size() << " bytes\n";
         // Display the photo
@@ -483,7 +484,7 @@ void ProcessVideo(const std::string& sourceName,
 		///the foto and then send it into the publisher.
 
 	};
-	string notifications_channel = "notifications_sub"+ host_id;
+	string notifications_channel = "notifications_sub_"+ host_id;
 	sub.subscribe(notifications_channel, notifications_msg, subbed, unsubbed, err_callback);
 	sub.subscribe("tracker_check_config", config_msg);
 
@@ -729,7 +730,7 @@ void ProcessVideo(const std::string& sourceName,
 
 #ifdef SHOW_FRAME
 
-		send_out_imageb64(rdx,frame,msgi.host_uuid); //it takes a lot of time in my pc core I5 around 13 ms 
+		//send_out_imageb64(rdx,frame,msgi.host_uuid); //it takes a lot of time in my pc core I5 around 13 ms 
 		auto end2 = std::chrono::steady_clock::now();
         auto diff2 = std::chrono::duration_cast<std::chrono::milliseconds>(end2 - start).count();
         std::cout << "Total Infer time : " << static_cast<double>(diff2) << " ms" << std::endl;
