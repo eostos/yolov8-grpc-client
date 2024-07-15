@@ -298,7 +298,7 @@ void TrackingObject::updateSpeed(double fps, const std::vector<cv::Point2f> spee
                 speed_km_vec = std::to_string(speed_kmh);
                 std::string speed_text = std::to_string(speed_kmh) + " km/h";
                 //std::cout << "Speed: " << speed_kmh << " km/h, Distance: " << distance << ", Coordinates Size: " << speed_coordinates.size() << " Transformed Point: " << transformed_point << " ID: " << getId() << " Current Position: " << current_position << std::endl;
-
+				std::cout <<  "Speed: " << speed_kmh << std::endl;
                 cv::putText(drawable, speed_text, cv::Point(current_position.x, current_position.y - 10), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 0, 255), 3);
 
                 // Save image if speed exceeds 50 km/h
