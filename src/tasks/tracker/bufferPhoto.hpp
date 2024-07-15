@@ -6,7 +6,7 @@
 class CircularBuffer {
 public:
     CircularBuffer(size_t size) : size(size), index(0), is_full(false) {
-        buffer.resize(size);
+        buffer.reserve(size);
     }
 
     void add(const cv::Mat& photo, const std::string& timestamp) {
@@ -17,15 +17,20 @@ public:
 
         // Debug print to show where the photo is being added
         std::cout << "Adding photo with timestamp " << timestamp << " at index " << index << std::endl;
-        
-        // Overwrite the oldest photo with the new one
-        buffer[index] = std::make_pair(photo.clone(), timestamp);
+
+        if (is_full) {
+            // Overwrite the oldest photo
+            buffer[index] = std::make_pair(photo.clone(), timestamp);
+        } else {
+            // Add a new photo
+            buffer.push_back(std::make_pair(photo.clone(), timestamp));
+        }
 
         // Update the index to point to the next slot
         index = (index + 1) % size;
 
         // Mark buffer as full if we've wrapped around
-        if (index == 0) {
+        if (index == 0 && !is_full) {
             is_full = true;
         }
     }
@@ -36,11 +41,25 @@ public:
             result.insert(result.end(), buffer.begin() + index, buffer.end());
             result.insert(result.end(), buffer.begin(), buffer.begin() + index);
         } else {
-            result.insert(result.end(), buffer.begin(), buffer.begin() + index);
+            result.insert(result.end(), buffer.begin(), buffer.end());
         }
         return result;
     }
 
+    bool search(const std::string& timestamp) const {
+        auto all_entries = get_all();
+        for (const auto& entry : all_entries) {
+            if (entry.second == timestamp) {
+                std::cout << "Timestamp REQUIRED FOUND IN VECTOR " << entry.second << ", Photo size: " << entry.first.size() << std::endl;
+                return true;
+            } else {
+                std::cout << "Timestamp REQUIRED FOUND IN VECTOR " << entry.second << ", Photo size: " << entry.first.size() << std::endl;
+                std::cout << "THE REQUEST WASN'T FOUND" << std::endl;
+            }
+        }
+        std::cout << "THE REQUEST WASN'T FOUND IN THE BUFFER" << std::endl;
+        return false;
+    }
 
 private:
     size_t size;
