@@ -14,8 +14,17 @@ public:
             std::cerr << "Warning: Trying to add an empty photo to the buffer." << std::endl;
             return;
         }
+
+        // Debug print to show where the photo is being added
+        std::cout << "Adding photo with timestamp " << timestamp << " at index " << index << std::endl;
+        
+        // Overwrite the oldest photo with the new one
         buffer[index] = std::make_pair(photo.clone(), timestamp);
+
+        // Update the index to point to the next slot
         index = (index + 1) % size;
+
+        // Mark buffer as full if we've wrapped around
         if (index == 0) {
             is_full = true;
         }
@@ -31,6 +40,7 @@ public:
         }
         return result;
     }
+
 
 private:
     size_t size;
