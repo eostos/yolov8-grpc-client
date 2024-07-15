@@ -30,7 +30,7 @@ using namespace redox;
 /////////////////////////////////
 /////////////////////////////////
 string host_id;
-CircularBuffer photo_buffer(30);
+CircularBuffer photo_buffer(60);
 string media_path = "/opt/alice-media/tracker";
 bool read_config = false;
 bool save_img_obj= false;
