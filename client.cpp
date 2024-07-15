@@ -30,7 +30,7 @@ using namespace redox;
 /////////////////////////////////
 /////////////////////////////////
 string host_id;
-CircularBuffer photo_buffer(20);
+CircularBuffer photo_buffer(30);
 string media_path = "/opt/alice-media/tracker";
 bool read_config = false;
 bool save_img_obj= false;
@@ -453,31 +453,39 @@ void ProcessVideo(const std::string& sourceName,
 		jreader.parse(str, json_event,false);
 		////////////////////////////////
 		string unix_time_stamp    = json_event["unix_itme_stamp"].asString();
-		  auto photos_and_timestamps = photo_buffer.get_all();
-		   std::cout << "PHOTO WAS REQUIRED :  SEARCHING IN BUFFER " << unix_time_stamp << " \n";
+		string requets_uuid    = json_event["requets_uuid"].asString();
+		auto photos_and_timestamps = photo_buffer.get_all();
+		std::cout << "PHOTO WAS REQUIRED :  SEARCHING IN BUFFER " << unix_time_stamp << " \n";
     for (const auto& [photo, timestamp] : photos_and_timestamps) {
-        std::cout << "Timestamp REQUIRED FOUND IN VECTOR " << timestamp << ", Photo size: " << photo.size() << " bytes\n";
+        //std::cout << "Timestamp REQUIRED FOUND IN VECTOR " << timestamp << ", Photo size: " << photo.size() << " bytes\n";
         // Display the photo
+		string channel = "notifications_pub_"+host_id;
 		if (timestamp==unix_time_stamp) {
 			std::string frameId = unix_time_stamp + "_" + host_id;
 			string url_photo_event = "";
 			save_evidence(photo, media_path ,host_id, frameId,url_photo_event);
 			
-			string channel = "notifications_pub_"+host_id;
+			
 			
 			//cv::imshow("Photo", photo);
 			//cv::waitKey(100); // Display each photo for 100 milliseconds
 			Json::Value final_json;
 			final_json["host_id"] = host_id;
 			final_json["unix_itme_stamp"] = unix_time_stamp;	
-			final_json["photo_evidence"] = url_photo_event;		
+			final_json["photo_evidence"] = url_photo_event;	
+			final_json["requets_uuid"] = requets_uuid;		
 			Json::StreamWriterBuilder builder;
 			std::string string_output_data = Json::writeString(builder, final_json);
 			rdx.publish(channel, string_output_data);
 	
 				
 		 }else {
+			
 			std::cout << "THE REQUEST WASNT FOUND " << " \n";
+			Json::Value final_json;
+			Json::StreamWriterBuilder builder;
+			std::string string_output_data = Json::writeString(builder, final_json);
+			rdx.publish(channel, string_output_data);
 		 }
     }
 		//// we have to search the vector with time stamp and then record 
