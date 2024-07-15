@@ -454,9 +454,9 @@ void ProcessVideo(const std::string& sourceName,
 		////////////////////////////////
 		string unix_time_stamp    = json_event["unix_itme_stamp"].asString();
 		  auto photos_and_timestamps = photo_buffer.get_all();
-		   std::cout << "PHOTO WAS REQUIRED :  SEARCHING IN BUFFER\n";
+		   std::cout << "PHOTO WAS REQUIRED :  SEARCHING IN BUFFER " << unix_time_stamp << " \n";
     for (const auto& [photo, timestamp] : photos_and_timestamps) {
-        std::cout << "Timestamp: " << timestamp << ", Photo size: " << photo.size() << " bytes\n";
+        std::cout << "Timestamp REQUIRED FOUND IN VECTOR " << timestamp << ", Photo size: " << photo.size() << " bytes\n";
         // Display the photo
 		if (timestamp==unix_time_stamp) {
 			std::string frameId = unix_time_stamp + "_" + host_id;
