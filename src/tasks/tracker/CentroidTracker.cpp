@@ -279,7 +279,7 @@ void TrackingObject::updateSpeed(double fps, const std::vector<cv::Point2f> spee
             }
             speed_coordinates.push_back(transformed_point);
 
-            if (speed_coordinates.size() > 25/2) {
+            if (speed_coordinates.size() > 10/2) {
                 speed_coordinates.pop_front(); // Maintain the deque size
 
                 cv::Point2f coordinate_start = speed_coordinates.back();
@@ -292,7 +292,7 @@ void TrackingObject::updateSpeed(double fps, const std::vector<cv::Point2f> spee
                 cv::circle(drawable, previous_position, 5, cv::Scalar(0, 0, 255), -1); // Red for previous position
                 cv::circle(drawable, current_position, 5, cv::Scalar(0, 255, 0), -1); // Green for current position
 
-                double time = static_cast<double>(speed_coordinates.size()) / 25;
+                double time = static_cast<double>(speed_coordinates.size()) / 10;
                 double speed_mps = distance / time; // Speed in meters per second
                 int speed_kmh = static_cast<int>(speed_mps * 3.6); // Convert to km/h
                 speed_km_vec = std::to_string(speed_kmh);
