@@ -456,10 +456,12 @@ void ProcessVideo(const std::string& sourceName,
 		string requets_uuid    = json_event["requets_uuid"].asString();
 		auto photos_and_timestamps = photo_buffer.get_all();
 		std::cout << "PHOTO WAS REQUIRED :  SEARCHING IN BUFFER " << unix_time_stamp << " \n";
+		bool photo_found =false;
+		string channel = "notifications_pub_"+host_id;
     for (const auto& [photo, timestamp] : photos_and_timestamps) {
         //std::cout << "Timestamp REQUIRED FOUND IN VECTOR " << timestamp << ", Photo size: " << photo.size() << " bytes\n";
         // Display the photo
-		string channel = "notifications_pub_"+host_id;
+		
 		if (timestamp==unix_time_stamp) {
 			std::string frameId = unix_time_stamp + "_" + host_id;
 			string url_photo_event = "";
@@ -477,9 +479,13 @@ void ProcessVideo(const std::string& sourceName,
 			Json::StreamWriterBuilder builder;
 			std::string string_output_data = Json::writeString(builder, final_json);
 			rdx.publish(channel, string_output_data);
-	
+			photo_found=true;
+			std::cout << "THE REQUEST WASNT FOUND " << " \n";
 				
-		 }else {
+		 }
+
+    }
+		if (!photo_found) {
 			
 			std::cout << "THE REQUEST WASNT FOUND " << " \n";
 			Json::Value final_json;
@@ -487,7 +493,6 @@ void ProcessVideo(const std::string& sourceName,
 			std::string string_output_data = Json::writeString(builder, final_json);
 			rdx.publish(channel, string_output_data);
 		 }
-    }
 		//// we have to search the vector with time stamp and then record 
 		///the foto and then send it into the publisher.
 
