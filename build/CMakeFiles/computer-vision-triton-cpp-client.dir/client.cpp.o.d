@@ -961,5 +961,6 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/client.cpp.o: \
  /usr/include/x86_64-linux-gnu/bits/netdb.h \
  /yolov8-grpc-client/src/tasks/tracker/bufferPhoto.hpp \
  /yolov8-grpc-client/src/tasks/tracker/CentroidTracker.hpp \
+ /yolov8-grpc-client/src/tasks/tracker/ViewTransformer.hpp \
  /yolov8-grpc-client/src/tasks/tracker/poligonTrackerManager.hpp \
  /yolov8-grpc-client/src/tasks/tracker/CentroidTracker.hpp

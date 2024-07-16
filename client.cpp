@@ -86,9 +86,9 @@ void join_and_send_outdata_redox(Redox &rdx,
 	final_json["analityc_type"] = "analityc_type";
 	final_json["event_type"] = "event_type";
 	
-	if (DEBUG){
-		cout << final_json << endl;
-	}
+	//if (DEBUG){
+	//	cout << final_json << endl;
+	//}
 
 	Json::StreamWriterBuilder builder;
 	std::string string_output_data = Json::writeString(builder, final_json);
@@ -291,6 +291,28 @@ std::vector<Result> processSource(const cv::Mat& source,
 
 
 // Define a function to perform inference on an image
+
+double calculateFPS(cv::VideoCapture& cap, int num_frames = 120) {
+    cv::Mat frame;
+    int frame_count = 0;
+    auto start_time = std::chrono::high_resolution_clock::now();
+
+    while (frame_count < num_frames) {
+        cap >> frame;
+        if (frame.empty()) {
+            std::cerr << "Error: Could not read frame" << std::endl;
+            break;
+        }
+        frame_count++;
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000 / 18));  // Ensuring consistent frame rate
+    }
+
+    auto end_time = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed_time = end_time - start_time;
+    double fps = frame_count / elapsed_time.count();
+
+    return fps;
+}
 void ProcessImage(const std::string& sourceName,
     const std::unique_ptr<TaskInterface>& task, 
     const std::unique_ptr<Triton>&  tritonClient,
@@ -353,6 +375,7 @@ void ProcessVideo(const std::string& sourceName,
 	string grpc_server = config_params["grpc_server"].asString();
 	host_id = config_params["host_id"].asString();
 	bool DEBUG = config_params["debug"].asBool();
+	bool measure_speed = config_params["measure_speed"].asBool();
 	bool SEND_B64 = config_params["send_b64"].asBool();
 	string media_from_config = config_params["media_path"].asString(); 
 	if (media_from_config.size() >0) {
@@ -366,10 +389,7 @@ void ProcessVideo(const std::string& sourceName,
 	int redis_port = config_params["server_port"].asInt();
 	cout << redis_port << " REDIS PORT " << endl;
 	cout << "Config path: " << sourceName << ", id: " << id << ", host_id: " << host_id << endl;
-
-//Redox rdx;
-
-
+	//Redox rdx;
 	//REDOX
 	//CONNECTIONS
 	auto subbed = [](const string& topic) {
@@ -423,6 +443,15 @@ void ProcessVideo(const std::string& sourceName,
 	CentroidTracker tracking;
 	tracking.setTrackingObjects(trackers);
 	tracking.setPoligonForSpeed(config_params["poligon_speed"]);
+	if(measure_speed){
+	std::cout << "SPEED DETECTION ACTIVATED , REMEMBER DO CALIBRATION BEFORE" << std::endl;
+		tracking.setTransformedImage();
+	}else{
+		std::cout << "SPEED DETECTION ** NO ** ACTIVATED " << std::endl;
+	}
+
+	
+	
 	// -----------------------------------------------------------------------------------
 
 	// -----------------------------------------------------------------------------------
@@ -524,7 +553,10 @@ void ProcessVideo(const std::string& sourceName,
         std::cout << "Could not open the video: " << input_url << std::endl;
         return;
     }
-
+	double fps_camera = calculateFPS(cap);
+    std::cout << "Calculated FPS: " << fps_camera << std::endl;
+	cap.release();
+  
 #ifdef WRITE_FRAME
     cv::VideoWriter outputVideo;
     cv::Size S = cv::Size((int)cap.get(cv::CAP_PROP_FRAME_WIDTH), (int)cap.get(cv::CAP_PROP_FRAME_HEIGHT));
@@ -536,12 +568,24 @@ void ProcessVideo(const std::string& sourceName,
         return;
     }
 #endif
+ 	cap.open(input_url);
+    if (!cap.isOpened()) {
+        std::cout << "Could not open after fps calculation: " << input_url << std::endl;
+        return;
+    }
 	if (!cap.isOpened()) {
-		cout << "The camera is not reacheable :  " <<endl;
+		cout << "The camera is not reacheable after fps calculation: :  " <<endl;
 		throw int(42);
 	}else{
-		cout << "Url opened !!! :  " <<endl;
+		cout << "Url opened ,after fps calculation:  !!! :  " <<endl;
 	}
+
+
+
+
+
+	
+	
 	string motion_method = "KNN";
 	FrMs msgi;
     double fps=0.0;
@@ -669,7 +713,7 @@ void ProcessVideo(const std::string& sourceName,
 			auto starttrack = std::chrono::steady_clock::now();
 			tracking.setDataImages(frame);
            // UpdateObjects(vector<dnn_bbox> _detections, string frame_id)
-			tracking.UpdateObjects(detections,frameId,fps);
+			tracking.UpdateObjects(detections,frameId,fps_camera);
 			tracking.evalObjects();
 
 			for (auto &trk_i: trackers) {
@@ -700,8 +744,12 @@ void ProcessVideo(const std::string& sourceName,
 				}else{
 					imgSave = frame;
 				}
+				if(measure_speed){
 				photo_buffer.add(imgShow, unixTimeStamp);///this is for testing 
-			//	photo_buffer.add(imgSave, unixTimeStamp);///this is for testing 
+				//photo_buffer.add(imgSave, unixTimeStamp);///this is for testing 
+					}
+				
+			//	
 				join_and_send_outdata_redox(rdx,msgi,media_path,objects_to_report,"", "",save_img,imgShow,SEND_B64,to_post,DEBUG,unixTimeStamp);//this is for debug 
 				//join_and_send_outdata_redox(rdx,msgi,media_path,objects_to_report,"", "",save_img,imgSave,SEND_B64,to_post,DEBUG);
 				//SET LAST UPDATED TIME
@@ -709,7 +757,7 @@ void ProcessVideo(const std::string& sourceName,
 					cout << "Failed to set update time - " << host_id << endl;
 				}
 			}
-								auto endtrack = std::chrono::steady_clock::now();
+			auto endtrack = std::chrono::steady_clock::now();
         	auto difftrack = std::chrono::duration_cast<std::chrono::milliseconds>(endtrack - starttrack).count();
         	std::cout << "Infer time track: " << difftrack << " ms" << std::endl;
 			if (DEBUG) {

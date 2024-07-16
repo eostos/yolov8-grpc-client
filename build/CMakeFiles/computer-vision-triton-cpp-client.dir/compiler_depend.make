@@ -1075,6 +1075,7 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/client.cpp.o: ../client.cpp \
   /usr/include/x86_64-linux-gnu/bits/netdb.h \
   ../src/tasks/tracker/bufferPhoto.hpp \
   ../src/tasks/tracker/CentroidTracker.hpp \
+  ../src/tasks/tracker/ViewTransformer.hpp \
   ../src/tasks/tracker/poligonTrackerManager.hpp \
   ../src/tasks/tracker/CentroidTracker.hpp
 
@@ -2871,6 +2872,7 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/CentroidTrack
   /usr/include/boost/filesystem/convenience.hpp \
   /usr/include/boost/filesystem/string_file.hpp \
   /usr/include/boost/filesystem/fstream.hpp \
+  ../src/tasks/tracker/ViewTransformer.hpp \
   /usr/include/c++/11/numeric \
   /usr/include/c++/11/bits/stl_numeric.h \
   /usr/include/c++/11/pstl/glue_numeric_defs.h
@@ -5056,6 +5058,7 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/poligonTracke
   /usr/include/boost/filesystem/convenience.hpp \
   /usr/include/boost/filesystem/string_file.hpp \
   /usr/include/boost/filesystem/fstream.hpp \
+  ../src/tasks/tracker/ViewTransformer.hpp \
   /usr/include/c++/11/numeric \
   /usr/include/c++/11/bits/stl_numeric.h \
   /usr/include/c++/11/pstl/glue_numeric_defs.h
@@ -5803,6 +5806,8 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.o: ../src
 ../src/tasks/object_detection/src/YoloNas.cpp:
 
 ../src/tasks/tracker/poligonTrackerManager.hpp:
+
+../src/tasks/tracker/ViewTransformer.hpp:
 
 ../src/tasks/tracker/bufferPhoto.hpp:
 

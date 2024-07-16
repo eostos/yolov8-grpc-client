@@ -1,20 +1,5 @@
 #include "CentroidTracker.hpp"
-class ViewTransformer {
-public:
-    ViewTransformer(const std::vector<cv::Point2f>& source, const std::vector<cv::Point2f>& target) {
-        cv::Mat srcMat(source), tgtMat(target);
-        transformMatrix = cv::getPerspectiveTransform(srcMat, tgtMat);
-    }
 
-    std::vector<cv::Point2f> transform_points(const std::vector<cv::Point2f>& points) {
-        std::vector<cv::Point2f> transformed_points;
-        cv::perspectiveTransform(points, transformed_points, transformMatrix);
-        return transformed_points;
-    }
-
-private:
-    cv::Mat transformMatrix;
-};
 template <typename T>
 std::string to_string_with_precision(const T a_value, const int n = 6)
 {
@@ -252,7 +237,7 @@ void TrackingObject::startTracker(uint _obj_id, string _obj_label) {
 
 
 
-void TrackingObject::updateSpeed(double fps, const std::vector<cv::Point2f> speed_polygon, const std::vector<cv::Point2f> speed_meters) {
+void TrackingObject::updateSpeed(double fps, const std::vector<cv::Point2f> speed_polygon, const std::vector<cv::Point2f> speed_meters, ViewTransformer view_transformer) {
     // Draw the speed polygon for visualization
     for (const auto& point : speed_polygon) {
         cv::circle(drawable, point, 5, cv::Scalar(0, 0, 255), -1); // Draw red circles
@@ -265,7 +250,7 @@ void TrackingObject::updateSpeed(double fps, const std::vector<cv::Point2f> spee
     double result = cv::pointPolygonTest(speed_polygon, current_position, false);
 
     if (result > 0) {
-        ViewTransformer view_transformer(speed_polygon, speed_meters);
+        
         std::vector<cv::Point2f> points_to_transform = { current_position };
         std::vector<cv::Point2f> transformed_points = view_transformer.transform_points(points_to_transform);
 
@@ -279,7 +264,7 @@ void TrackingObject::updateSpeed(double fps, const std::vector<cv::Point2f> spee
             }
             speed_coordinates.push_back(transformed_point);
 
-            if (speed_coordinates.size() > 10/2) {
+            if (speed_coordinates.size() > fps/2) {
                 speed_coordinates.pop_front(); // Maintain the deque size
 
                 cv::Point2f coordinate_start = speed_coordinates.back();
@@ -292,7 +277,7 @@ void TrackingObject::updateSpeed(double fps, const std::vector<cv::Point2f> spee
                 cv::circle(drawable, previous_position, 5, cv::Scalar(0, 0, 255), -1); // Red for previous position
                 cv::circle(drawable, current_position, 5, cv::Scalar(0, 255, 0), -1); // Green for current position
 
-                double time = static_cast<double>(speed_coordinates.size()) / 10;
+                double time = static_cast<double>(speed_coordinates.size()) / fps;
                 double speed_mps = distance / time; // Speed in meters per second
                 int speed_kmh = static_cast<int>(speed_mps * 3.6); // Convert to km/h
                 speed_km_vec = std::to_string(speed_kmh);
@@ -301,11 +286,7 @@ void TrackingObject::updateSpeed(double fps, const std::vector<cv::Point2f> spee
 				std::cout <<  "Speed: " << speed_kmh << std::endl;
                 cv::putText(drawable, speed_text, cv::Point(current_position.x, current_position.y - 10), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 0, 255), 3);
 
-                // Save image if speed exceeds 50 km/h
-                if (speed_kmh > 50) {
-                   // std::string image_path = "/opt/alice-config/photo/speed_exceeded_" + std::to_string(getId()) + ".jpg";
-                 //   cv::imwrite(image_path, drawable);
-                }
+
             }
         }
     }
@@ -466,17 +447,20 @@ void TrackingObject::drawTrack(Mat &draw_trks, int &ix) {
 
 // ---------------------------------------------------------------------
 // ---------------------------------------------------------------------
-
-CentroidTracker::CentroidTracker() {
-	std::cout << "CENTROID TRACKER CONSTRUCTOR" << std::endl;
-	// objects.resize(MAX_TRACKERS);
-	// for (auto &obj: objects) {
-	//     obj->setMaxRouteSize(ROUTE_MAX_SIZE);//Set max of points vector in tracker.
-	//     obj->setMaxDisappeared(MAX_DISAPPEARED);//Set max number of frames with missing detections before deleting the tracker.
-	// }   
+CentroidTracker::CentroidTracker() 
+    : view_transformer(std::vector<cv::Point2f>(4), std::vector<cv::Point2f>(4)) { // Initialize with default 4-point vectors
+    // Default constructor - other initializations if necessary
+	detect_speed = false;
 }
 
 CentroidTracker::~CentroidTracker() {
+    // Destructor body - clean up resources if necessary
+}
+
+void CentroidTracker::setTransformedImage() {
+	
+    view_transformer = ViewTransformer(speed_poligon, speed_meters);
+	detect_speed = true;
 }
 
 void CentroidTracker::drawRoi() {
@@ -630,8 +614,10 @@ void CentroidTracker::UpdateObjects(vector<dnn_bbox> _detections, string frame_i
                     trk_i->setStatus(1);
                     trk_i->setMatched(true);
                     // Calculate speed in pixels/frame
-                    trk_i->updateSpeed(fps,speed_poligon,speed_meters);
-                    detections.erase(detections.begin() + nearest_idx);
+					if(detect_speed){
+                    	trk_i->updateSpeed(fps,speed_poligon,speed_meters,view_transformer);
+                    }
+					detections.erase(detections.begin() + nearest_idx);
                 //OTHERWISE, INCREMENT HE DISAPP COUNTER
                 } else {
                     trk_i->updateDisappeared();
@@ -892,3 +878,4 @@ void CentroidTracker::setPoligonForSpeed(const Json::Value& poligon)
 	}
 
 }
+

@@ -5,6 +5,7 @@
 #include <opencv2/core.hpp>
 
 #include "Utils.hpp"
+#include "ViewTransformer.hpp"
 #include <numeric>
 
 
@@ -119,7 +120,7 @@ public:
     Point calcProjCenter(int SHIFT_METHOD);
     dnn_bbox getRouteBboxTail();
     //
-    void updateSpeed(double fps,std::vector<cv::Point2f> speed_poligon,std::vector<cv::Point2f> speed_meters) ;
+    void updateSpeed(double fps,std::vector<cv::Point2f> speed_poligon,std::vector<cv::Point2f> speed_meters,ViewTransformer view_transformer) ;
     
     Point getCurrentPosition()const;
     double getSmoothedSpeed();
@@ -155,20 +156,26 @@ protected:
     double totalTime;
     vector<dnn_bbox> detections;
     vector<string> ids_with_dets;
+
+    ViewTransformer view_transformer; // Use std::unique_ptr for ViewTransformer
     std::vector<cv::Point2f> speed_poligon;
     std::vector<cv::Point2f> speed_meters;
-
+    bool detect_speed = false ;
     void drawRoi();
     void setDrawRoi();
     vector<dnn_bbox> validateDets(vector<dnn_bbox> &_detections);
 
 public:
+    //CentroidTracker();
     CentroidTracker();
+
+    // Constructor with ViewTransformer initialization
+    CentroidTracker(const std::vector<cv::Point2f>& speed_poligon, const std::vector<cv::Point2f>& speed_meters);
     virtual ~CentroidTracker();
 
     void setTrackingObjects(std::vector<TrackingObject *> o) { objects = o; }
     void drawObjects(cv::Mat &mat);
-
+ 
     void setDataImages(Mat &frame);
     //virtual void UpdateObjects(vector<dnn_bbox> _detections,string frame_id,double fps );
     
@@ -182,5 +189,6 @@ public:
     void deactivateObjects();
     int getActiveTrackers();
     void setPoligonForSpeed(const Json::Value& poligon);
+    void setTransformedImage();
 };
 #endif
