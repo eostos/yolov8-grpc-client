@@ -747,7 +747,7 @@ void ProcessVideo(const std::string& sourceName,
 				if(measure_speed){
 				photo_buffer.add(imgShow, unixTimeStamp);///this is for testing 
 				//photo_buffer.add(imgSave, unixTimeStamp);///this is for testing 
-					}
+				}
 				
 			//	
 				join_and_send_outdata_redox(rdx,msgi,media_path,objects_to_report,"", "",save_img,imgShow,SEND_B64,to_post,DEBUG,unixTimeStamp);//this is for debug 
