@@ -8,6 +8,6 @@
 # Run the object detection Triton client with the passed arguments
 #/opt/alice-config/config_tracker.json 1
 /app/build/computer-vision-triton-cpp-client "$@"
-
+sleep 30
 # Tail to keep the container running (if needed)
-tail -f /dev/null
+#tail -f /dev/null
