@@ -151,7 +151,7 @@ Json::Value PoligonTrackerManager::evaluate() {
         if (status_0 == -1 && status_1 == -1) {
             // std::cout << "doble salida" << std::endl;
             // ----------------------------------------------------------------
-            // se detrmina si hubo una posible entrada por alguno de los lados
+            // se detrmina si hubo uevaluatena posible entrada por alguno de los lados
             // ----------------------------------------------------------------
             size_t n_points = this->_eval_points.size(); 
             for (size_t j = 0; j < n_points; ++j) {
@@ -659,8 +659,34 @@ Json::Value LineTrackerManager::evaluate() {
 
     return json_result;
 }
+bool calculateIntersection(Point2f p0, Point2f p1, Point2f p2, Point2f p3, Point2f& intersection) {
+    Point2f s1, s2;
+    s1.x = p1.x - p0.x; s1.y = p1.y - p0.y;
+    s2.x = p3.x - p2.x; s2.y = p3.y - p2.y;
 
-bool calculateIntersection(Point A, Point B, Point C, Point D, Point2f &out){
+    float denom = -s2.x * s1.y + s1.x * s2.y;
+
+    // Add a small epsilon to handle floating point precision issues
+    const float EPSILON = 1e-9;
+
+    if (fabs(denom) < EPSILON) {
+        return false; // Lines are parallel or collinear
+    }
+
+    float s = (-s1.y * (p0.x - p2.x) + s1.x * (p0.y - p2.y)) / denom;
+    float t = ( s2.x * (p0.y - p2.y) - s2.y * (p0.x - p2.x)) / denom;
+
+    if (s >= 0 && s <= 1 && t >= 0 && t <= 1) {
+        // Intersection detected
+        intersection.x = p0.x + (t * s1.x);
+        intersection.y = p0.y + (t * s1.y);
+        return true;
+    }
+
+    return false; // No intersection
+}
+////this formula was used before with the last team it had some mistakes 
+bool calculateIntersection1(Point A, Point B, Point C, Point D, Point2f &out){
     // Line p0p1 represented as a1x + b1y = c1
     double a1 = B.y - A.y;
     double b1 = A.x - B.x;
@@ -823,6 +849,7 @@ void PoligonTrackerManager::evaluateAreaBbox() {
 void PoligonTrackerManager::evaluateArea() {
     //first points 
     if (this->_eval_points.size() == 0) {
+        
         size_t n = this->_points.size();
         assert(n > 2);
         cv::Point2f suma_puntos;
@@ -850,81 +877,62 @@ void PoligonTrackerManager::evaluateArea() {
         std::vector<float> route_area = to->getBboxArea();//return area of each detection bbox vector
         size_t route_area_size = route_area.size();
 
-        if (route_area_size < 6) {//VERY IMPORTANT TO ADD THE FPS VARIABLE AND CHANGE THIS AUTOMATICLLY AND NOT MANYALLY 
+        if (route_area_size < 3) {//VERY IMPORTANT TO ADD THE FPS VARIABLE AND CHANGE THIS AUTOMATICLLY AND NOT MANYALLY 
             continue;
         }
 
         vector<Point> intersection_polygon1;
         vector<vector<Point2f>> route_poligon = to->getBboxPoligon();
         //vector<Point> route_center = to->getRoute();
-        //cout <<this->getPoligonID()<< " ID , this->_eval_points " << this->_eval_points<< " route_poligon.back() " << route_poligon.back()  << "  end_2"<<endl;
-        //Compara el poligono que esta pisando la punta de tracker con el 
+       // cout <<to->getId()<< " ID , this->_eval_points " << this->_eval_points<< " route_poligon.back() " << route_poligon.back()  << "  end_2"<<endl;
+        
+       //Compara el poligono que esta pisando la punta de tracker con el 
         //this->_eval_points = esto es el poligono el cual se esta evaluando , guardado en el config
         //route_poligon.back() = rect tipo poligono , bounding box , ultimo 
     
         /////
         auto bboxPoints = route_poligon.back(); // This is std::vector<cv::Point2f>
         cv::Point2f bboxCenter((bboxPoints[0].x + bboxPoints[2].x) / 2.0f, (bboxPoints[0].y + bboxPoints[2].y) / 2.0f);
+        auto bboxPointsFront = route_poligon.front(); // This is std::vector<cv::Point2f>
+        cv::Point2f bboxCenterFront((bboxPointsFront[0].x + bboxPointsFront[2].x) / 2.0f, (bboxPointsFront[0].y + bboxPointsFront[2].y) / 2.0f);
+
         double isInside = cv::pointPolygonTest(this->_eval_points, bboxCenter, false);
+        /*
+        A positive value if the point is inside the polygon.
+        Zero if the point is on the polygon's edge.
+        A negative value if the point is outside the polygon.
+        */
+
         bool status_1 = isInside >= 0;
-        if(status_1==1){
-            to->setPolygon(this->getPoligonID());
-            
+        if(status_1==1)
+        {
+            to->setPolygon(this->getPoligonID());    
         }
-        if (route_area_size <  6 || !to->isAwake()) { // we have to fix this because in scenarios that 
+        if (route_area_size <  3 || !to->isAwake()) { // we have to fix this because in scenarios that 
             continue;
-        }
-            //float status_1 = isInside >= 0;  // true if bboxCenter is inside or on edge; false if outside
-        int route_size = route_area.size();
+    }
+        
+        int route_size = route_area.size(); 
+        
+
+        //cout <<to->getId()<< " ID , this->_eval" << bboxCenter  << " pop back "<<bboxCenterFront <<" pop front"<<route_poligon.size()<<" SIZE " <<endl;
           //cout <<route_size <<endl;
-        auto bboxPoints_first = route_poligon[route_size-6];
+
+        ///aquie es donde tengo que hacer la formula para el calculo del segundo punto.
+        auto bboxPoints_first = route_poligon[route_size-3];
+        //auto bboxPoints_first =route_poligon.front();
         cv::Point2f bboxCenter_first((bboxPoints_first[0].x + bboxPoints_first[2].x) / 2.0f, (bboxPoints_first[0].y + bboxPoints_first[2].y) / 2.0f);
         double isInside_0 = cv::pointPolygonTest(this->_eval_points, bboxCenter_first, false);
-        // int width = 640; // Example width, adjust as needed
-        //int height = 480; // Example height, adjust as needed
-        // cv::Mat darkImage = cv::Mat::zeros(cv::Size(width, height), CV_8UC3);
-        //auto drawPolygon = [&darkImage](const std::vector<cv::Point2f>& points, const cv::Scalar& color) {
-        //std::vector<cv::Point> intPoints;
-        //for (const auto& p : points) {
-        //    intPoints.push_back(cv::Point(static_cast<int>(p.x), static_cast<int>(p.y)));
-        //}
-        //const cv::Point* pts = (const cv::Point*) cv::Mat(intPoints).data;
-        //int npts = cv::Mat(intPoints).rows;
 
-        //cv::polylines(darkImage, &pts, &npts, 1, true, color, 2, cv::LINE_AA);
-        //};
-
-        // Draw evaluation polygon (_eval_points)
-        //drawPolygon(this->_eval_points, cv::Scalar(0, 255, 0)); // Green
-
-        //for (size_t i = 0; i < number_tracker; ++i) {
-        ///    TrackingObject* to = this->_trackers[i];
-        //    if (!to->isActive()) { continue; }
-
-            // Draw the last bounding box (route_poligon.back())
-        //    if (!to->getBboxPoligon().empty()) {
-        //        drawPolygon(to->getBboxPoligon().back(), cv::Scalar(0, 0, 255)); // Red
-        //    }
-
-            // Draw the first bounding box (route_poligon.front())
-        //    if (!to->getBboxPoligon().empty()) {
-        //        drawPolygon(route_poligon[route_size-2], cv::Scalar(255, 0, 0)); // Blue
-        //    }
-        //}
-
-        // Display the result
-        //cv::imshow("Evaluation Visualization", darkImage);
-        //cv::waitKey(1); 
         bool status_0 = isInside_0 >= 0;
         if (status_0 == 1 && status_1 == 1) { continue; }
-
+        // If both points are inside, skip to the next tracker
         std::string type_event;
         bool flag = false;
 
         if ((status_0 == 0 && status_1 == 1)) {
             flag = true;
             type_event = "IN";
-
             
         } 
 
@@ -936,8 +944,8 @@ void PoligonTrackerManager::evaluateArea() {
         if (flag) {
             vector<Point> route_center = to->getRoute();
             size_t route_center_size = route_center.size();
-
-            Point p1 = route_center[route_center_size-1];
+            if (route_center_size < 2) continue;
+            Point p1 = route_center.back();
             Point p0 = route_center[route_center_size-2];     
   
 
@@ -951,7 +959,7 @@ void PoligonTrackerManager::evaluateArea() {
             p1_ext.y = 1.5*p1.y - 0.5*p0.y;
 
             int lado = -1;
-            cv::Point2f inter_point;     
+         
 
             size_t n_points = this->_eval_points.size();
             for (size_t j = 0; j < n_points; ++j) {
@@ -959,18 +967,25 @@ void PoligonTrackerManager::evaluateArea() {
                 cv::Point2f p3 = _eval_points[(j + 1) % n_points];
                 cv::Point2f pout;
                 bool k = calculateIntersection(p0_ext,p1_ext,p2,p3,pout);
+                // cout <<to->getId()<< " ID , this->_eval" << bboxCenter  << " pop back "<<bboxCenterFront <<" pop front "<<route_poligon.size()<<" SIZE " <<j <<"  LADO  : " <<p2 <<" P2 "<<p3 <<" P3 "<<endl;
                 if(k){
                     lado = j;
                     Json::Value event_poligon;
                     event_poligon["type_event"] = type_event;
                     event_poligon["side"] = lado;
                     //cout <<this->getPoligonID()<< " ID , this->_eval_points   , LADO :  " << lado <<"  TYPE  : " <<type_event<< "   " <<to->getId() << " Tracker ID _ Time" <<to_string(getTimeMilis())<<endl;
-                    if(this->getPoligonID()=="17" && lado==2 && type_event=="OUT"){
-                    cout <<this->getPoligonID()<< " ID , this->_eval_points   , LADO :  " << lado <<"  TYPE  : " <<type_event<< "   " <<to->getId() << " Tracker ID _ Time" <<to_string(getTimeMilis())<<endl;
-                    }
-                    if(this->getPoligonID()=="17" && lado==0&& type_event=="IN"){
-                    cout <<this->getPoligonID()<< " ID , this->_eval_points   , LADO :  " << lado <<"  TYPE  : " <<type_event<< "   " <<to->getId() << " Tracker ID _ Time" <<to_string(getTimeMilis())<<endl;
-                    }
+                    //cout <<to->getId()<< " ID , this->_eval" << bboxCenter  << " pop back "<<bboxCenterFront <<" pop front "<<route_poligon.size()<<" SIZE " <<lado <<"  LADO  : " <<endl;
+ 
+            
+                   // if(this->getPoligonID()=="29" && lado==2){
+                    //    Mat drawable =to->getDrawImageFromTracker();
+                    //    cv::circle(drawable, pout, 5, cv::Scalar(0, 0, 255), -1); // Draw red circles
+                    //    cout <<to->getId()<< " ID , this->_eval" << bboxCenter  << " pop back "<<bboxCenterFront <<" pop front "<<route_poligon.size()<<" SIZE " <<j <<"  LADO  : " <<p2 <<" P2 "<<p3 <<" P3 "<< " Intersection  " << pout<<endl;
+                        //cout <<this->getPoligonID()<< " ID , this->_eval_points   , LADO :  " << lado <<"  TYPE  : " <<type_event<< "   " <<to->getId() << " Tracker ID _ Time" <<to_string(getTimeMilis())<< " Intersection  " << pout<<endl;
+                    //}
+                   // if(this->getPoligonID()=="29" && lado==0&& type_event=="IN"){
+                    //cout <<this->getPoligonID()<< " ID , this->_eval_points   , LADO :  " << lado <<"  TYPE  : " <<type_event<< "   " <<to->getId() << " Tracker ID _ Time" <<to_string(getTimeMilis())<<endl;
+                    //}
                     Json::Value temp_point;
                     // se normaliza el punto de intercepcion con respecto a las dimensiones de la imagen
                     temp_point["x"] = pout.x / static_cast<float>(this->getSize().width);

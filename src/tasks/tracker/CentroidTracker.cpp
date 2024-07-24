@@ -13,6 +13,8 @@ TrackingObject::TrackingObject() {
 	active = false;
 	awake = false;
 	matched = false;
+	speed_km_vec = "0";
+	speed = 0.0 ;
 
 
 
@@ -159,7 +161,9 @@ void TrackingObject::setTrackingData(Mat &img_trkr, Mat &img_draw) {
 	img = img_trkr;
 	drawable = img_draw;
 }
-
+Mat TrackingObject::getDrawImageFromTracker() {
+	return drawable;
+}
 float TrackingObject::calcDistance(cv::Point center_det) {
 	float distance = -1;
 	if (route.size() > 0) {
@@ -279,7 +283,7 @@ void TrackingObject::updateSpeed(double fps, const std::vector<cv::Point2f> spee
 
                 double time = static_cast<double>(speed_coordinates.size()) / fps;
                 double speed_mps = distance / time; // Speed in meters per second
-                int speed_kmh = static_cast<int>(speed_mps * 3.6); // Convert to km/h
+                speed_kmh = static_cast<int>(speed_mps * 3.6); // Convert to km/h
                 speed_km_vec = std::to_string(speed_kmh);
                 std::string speed_text = std::to_string(speed_kmh) + " km/h";
                 //std::cout << "Speed: " << speed_kmh << " km/h, Distance: " << distance << ", Coordinates Size: " << speed_coordinates.size() << " Transformed Point: " << transformed_point << " ID: " << getId() << " Current Position: " << current_position << std::endl;
@@ -441,7 +445,7 @@ void TrackingObject::drawTrack(Mat &draw_trks, int &ix) {
 	Scalar TXT_COLOR = isMatched() ? EB_GRN : EB_RED;
 	rectangle(draw_trks, last_box, BOX_COLOR, 2, 8, 0);
 	drawRoute(draw_trks);
-	//putText(draw_trks, strid, pt0, FONT_HERSHEY_SIMPLEX, 0.75, TXT_COLOR, 2); //it daw the tracker 
+	putText(draw_trks, strid, pt0, FONT_HERSHEY_SIMPLEX, 0.75, TXT_COLOR, 2); //it daw the tracker 
 	//putText(draw_trks, strprob, pt0, FONT_HERSHEY_SIMPLEX, 0.75, TXT_COLOR, 2);
 }
 
@@ -668,8 +672,8 @@ void CentroidTracker::UpdateObjects(vector<dnn_bbox> _detections, string frame_i
 Mat CentroidTracker::getDrawImage() {
 	return draw_img;
 }
-string TrackingObject::getSpeed() {
-	return speed_km_vec;
+int TrackingObject::getSpeed() {
+	return speed_kmh;
 }
 Mat CentroidTracker::getDetsImage() {
 	return dets_img;

@@ -60,7 +60,8 @@ protected:
     float speed = 0.0;
     std::deque<double> speed_buffer;
    std::deque<cv::Point2f> speed_coordinates;
-    std::string speed_km_vec;
+    std::string speed_km_vec="0";
+    int speed_kmh=0;
     int buffer_size = 20; // Adjust the buffer size as needed
     bool lock_speed = false; 
 public:
@@ -112,7 +113,7 @@ public:
     bool isToDelete();
     void setToDelete(bool toDelete);
     void setShiftMethod(int METHOD);
-    string getSpeed();
+    int getSpeed();
     //
     void setTrackingData(Mat &img_trkr, Mat &img_draw);
     float calcDistance(cv::Point center_det);
@@ -121,7 +122,7 @@ public:
     dnn_bbox getRouteBboxTail();
     //
     void updateSpeed(double fps,std::vector<cv::Point2f> speed_poligon,std::vector<cv::Point2f> speed_meters,ViewTransformer view_transformer) ;
-    
+     Mat getDrawImageFromTracker();
     Point getCurrentPosition()const;
     double getSmoothedSpeed();
 ///////
@@ -141,7 +142,7 @@ class CentroidTracker {
 
 protected:
     bool DEBUG = 0;
-    int MAX_TRACKERS   = 25;       // Max number of trackers allowed
+    int MAX_TRACKERS   = 50;       // Max number of trackers allowed
     int MAX_DIST    = 100;          // Max distance between detections of same object
     int ROUTE_MAX_SIZE = 250;       // Max route size for tracker
     int MAX_DISAPPEARED = 20;      //MAX NUMBER OF CONSECUTIVE FRAMES A GIVEN OBJECT HAS TO BE LOST/DISAPPEARED FOR UNTIL WE REMOVE IT

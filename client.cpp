@@ -67,7 +67,8 @@ void join_and_send_outdata_redox(Redox &rdx,
 	final_json["resolution_x"] = msg_n.resolution_x;
 	final_json["resolution_y"] = msg_n.resolution_y;
 	final_json["topost"] = to_post;
-	final_json["analytics_results"] = trackers;      //may work better with "json_str"
+	final_json["analytics_results"] = trackers; 
+	//cout << trackers << endl;     //may work better with "json_str"
         if(save_img){
 			if(send_b64){
 				std::vector<uchar> buf;
@@ -367,7 +368,7 @@ void ProcessVideo(const std::string& sourceName,
      const std::vector<std::string>& class_names,const std::string& id,Json::Value config_params) {
 
 ////////////////////////////////////////////////////
-
+	namedWindow( "video feed", 0 );
 
 
 	string input_url = config_params["url_video"].asString();
@@ -375,6 +376,7 @@ void ProcessVideo(const std::string& sourceName,
 	string grpc_server = config_params["grpc_server"].asString();
 	host_id = config_params["host_id"].asString();
 	bool DEBUG = config_params["debug"].asBool();
+	save_img_obj = config_params["save_img_obj"].asBool();
 	bool measure_speed = config_params["measure_speed"].asBool();
 	bool SEND_B64 = config_params["send_b64"].asBool();
 	string media_from_config = config_params["media_path"].asString(); 
@@ -594,17 +596,17 @@ void ProcessVideo(const std::string& sourceName,
   		auto start = std::chrono::steady_clock::now();
 		cap.read(frame) ;
 		
-      //  resize(frame, frame, Size(1280, 720));
+      	//resize(frame, frame, Size(1280, 720));
 		std::string unixTimeStamp = unixTimeStampStr();
 		std::string frameId = unixTimeStamp + "_" + host_id;
 		//msgi.mat_frame = frame;
-//////////////////////////////////
+		//////////////////////////////////
         // Call your processSource function here
         std::vector<Result> predictions = processSource(frame, task, tritonClient, modelInfo);
 		//std::vector<Result> predictions;
 
         //smartQueueFrames.addNewItem(msgi);
-#if defined(SHOW_FRAME) || defined(WRITE_FRAME)
+
         //double fps = 1000.0 / static_cast<double>(diff);
         std::string fpsText = "FPS: " + std::to_string(fps);
 		int point_y = frame.cols/2;
@@ -630,10 +632,10 @@ void ProcessVideo(const std::string& sourceName,
 			read_config=false; 
 
 			// --------------------------------------------------------------------
-			// DELETE CURRENT POLYGONS
-			free_poligon_trackers(poligon_tracker_manager);
-			poligon_tracker_manager.clear(); 
-		//	// CREATE NEW POLYGONS
+			// DELETE CURRENT POLYGONS 22 JULY 2024 
+			//	free_poligon_trackers(poligon_tracker_manager);
+			//	poligon_tracker_manager.clear(); 
+			
 			poligon_tracker_manager = get_poligons_trackers(config_params["poligons"]);
 			// --------------------------------------------------------------------
 		for (int i = 0, m = (int)poligon_tracker_manager.size(); i < m; ++i) 
@@ -724,8 +726,6 @@ void ProcessVideo(const std::string& sourceName,
 				poligon_tracker_manager[i]->setSize(frame.size());
 				//poligon_tracker_manager[i]->evaluateAreabbox();
 				poligon_tracker_manager[i]->evaluateArea();
-
-				
 			}
 
 			Json::Value objects_to_report = tracking.reportObjects(save_img);
@@ -739,17 +739,19 @@ void ProcessVideo(const std::string& sourceName,
 			if (!objects_to_report[0].isNull()) {
 				//SEND ANALYTICS RESULTS
 				if (DEBUG){
-					//imgSave = tracking.getDetsImage();
-					imgShow = tracking.getDrawImage();//this is for debug 
+					imgSave = tracking.getDetsImage();
+					//imgSave = tracking.getDrawImage();//this is for debug 
 				}else{
 					imgSave = frame;
 				}
+
 				if(measure_speed){
-				photo_buffer.add(imgShow, unixTimeStamp);///this is for testing 
-				//photo_buffer.add(imgSave, unixTimeStamp);///this is for testing 
-				}
+				photo_buffer.add(imgSave, unixTimeStamp);///this is for testing 
 				
-			//	
+				//photo_buffer.add(imgSave, unixTimeStamp);///this is for testing 
+				}else{
+				photo_buffer.add(frame, unixTimeStamp);///this is for production 
+				}
 				join_and_send_outdata_redox(rdx,msgi,media_path,objects_to_report,"", "",save_img,imgShow,SEND_B64,to_post,DEBUG,unixTimeStamp);//this is for debug 
 				//join_and_send_outdata_redox(rdx,msgi,media_path,objects_to_report,"", "",save_img,imgSave,SEND_B64,to_post,DEBUG);
 				//SET LAST UPDATED TIME
@@ -776,10 +778,9 @@ void ProcessVideo(const std::string& sourceName,
 						cv::line(imgShow, p0, p1, EB_GRN, 1);
 					}
 				}
-
+			
 			//cv::imshow("video feed", imgShow);
-        		//cv::waitKey(1);
-			send_out_imageb64(rdx,imgShow,msgi.host_uuid);
+        	//cv::waitKey(0);
 
 
 			}
@@ -787,19 +788,19 @@ void ProcessVideo(const std::string& sourceName,
 
 
 
-#endif
 
-#ifdef SHOW_FRAME
 
-		//send_out_imageb64(rdx,frame,msgi.host_uuid); //it takes a lot of time in my pc core I5 around 13 ms 
+
+
+		send_out_imageb64(rdx,frame,msgi.host_uuid); //it takes a lot of time in my pc core I5 around 13 ms 
 		auto end2 = std::chrono::steady_clock::now();
         auto diff2 = std::chrono::duration_cast<std::chrono::milliseconds>(end2 - start).count();
-        std::cout << "Total Infer time : " << static_cast<double>(diff2) << " ms" << std::endl;
+        std::cout << " Time LOOP : " << static_cast<double>(diff2) << " ms" << std::endl;
 		fps = 1000.0 / static_cast<double>(diff2);
 
-        //cv::imshow("video feed", frame);
-        //cv::waitKey(1);
-#endif
+       // cv::imshow("video feed", frame);
+       // cv::waitKey(0);
+
 
 #ifdef WRITE_FRAME
         outputVideo.write(frame);

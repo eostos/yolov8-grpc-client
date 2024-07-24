@@ -7,13 +7,13 @@
                "host_id": "71358df2-2c4d-4bd1-b0d9-c908ef03d963",
                "url_video1": "rtsp://admin:Mossmerka19*@181.39.152.137/Streaming/Channels/501",
                "url_video2": "rtsp://control.guardian.imperium.pe:8554/13-f1c4bd6b-fdc1-4f8c-b9f9-0e4aabeff24b/2",
-               "url_video": "boxes4.mp4",
+               "url_video": "output.mp4",
                "name": "Tsaguur-PTZ",
                "task_type": "detection",
                "model": "yolov8-trt-traffic-2",
-               "model": "yolov8-trt-boxes",
+               "model2": "yolov8-trt-boxes",
                "model_type": "yolov8",
-               "labelsFile": "coco.names",
+               "labelsFile": "traffic.names",
                "input_sizes": "3 640 640",
                "debug": 1,
                "measure_speed" : 0,
@@ -21,75 +21,78 @@
                "grpc_port": 8001,
                "grpc_server": "0.0.0.0",
                "media_path": "",
+               "save_img_obj": false,
                "server_ip": "127.0.0.1",
                "server_port": 6379,
                "send_b64": 0,
                "topost": "",
                "speed_detection": true,
                "poligons": [
-                   {
-                       "poligon_id": "2",
-                       "points": [
-                           {
-                               "x": 0.1,
-                               "y": 0.1
-                           },
-                           {
-                               "x": 0.9,
-                               "y": 0.1
-                           },
-                           {
-                               "x": 0.9,
-                               "y": 0.9
-                           },
-                           {
-                               "x": 0.1,
-                               "y": 0.9
-                           }
-                       ]
-                   },
-                   {
-                       "poligon_id": "17",
-                       "points": [
-                           {
-                               "x": 0.2573,
-                               "y": 0.166
-                           },
-                           {
-                               "x": 0.7174,
-                               "y": 0.16
-                           },
-                           {
-                               "x": 0.9366,
-                               "y": 0.65
-                           },
-                           {
-                               "x": 0.2598,
-                               "y": 0.802
-                           }
-                       ]
-                   },
-                   {
-                       "poligon_id": "26",
-                       "points": [
-                           {
-                               "x": 0.0102,
-                               "y": 0.016
-                           },
-                           {
-                               "x": 0.9918,
-                               "y": 0.016
-                           },
-                           {
-                               "x": 0.9918,
-                               "y": 0.984
-                           },
-                           {
-                               "x": 0.0102,
-                               "y": 0.984
-                           }
-                       ]
-                   }
+
+                {
+                    "poligon_id": "29",
+                    "points": [
+                        {
+                            "x": 0.2063,
+                            "y": 0.142
+                        },
+                        {
+                            "x": 0.8329,
+                            "y": 0.172
+                        },
+                        {
+                            "x": 0.9975,
+                            "y": 0.624
+                        },
+                        {
+                            "x": 0.1278,
+                            "y": 0.81
+                        }
+                    ]
+                },
+                {
+                    "poligon_id":"30",
+                    "points":[
+                       {
+                          "x":0.2215,
+                          "y":0.134
+                       },
+                       {
+                          "x":0.5671,
+                          "y":0.136
+                       },
+                       {
+                          "x":0.7646,
+                          "y":0.69
+                       },
+                       {
+                          "x":0.1063,
+                          "y":0.774
+                       }
+                    ]
+                 },
+                 {
+                     "poligon_id": "31",
+                     "points": [
+                         {
+                             "x": 0.2127,
+                             "y": 0.134
+                         },
+                         {
+                             "x": 0.7873,
+                             "y": 0.142
+                         },
+                         {
+                             "x": 0.9354,
+                             "y": 0.634
+                         },
+                         {
+                             "x": 0.1949,
+                             "y": 0.762
+                         }
+                     ]
+                 }
+
                ],
                "poligon_speed": [
                    {
