@@ -368,7 +368,7 @@ void ProcessVideo(const std::string& sourceName,
      const std::vector<std::string>& class_names,const std::string& id,Json::Value config_params) {
 
 ////////////////////////////////////////////////////
-	namedWindow( "video feed", 0 );
+	//namedWindow( "video feed", 0 );
 
 
 	string input_url = config_params["url_video"].asString();
