@@ -352,7 +352,7 @@ void TrackingObject::setTrackerDNN(const dnn_bbox &dnnData, cv::Point center_det
 	}
 	//
 	//If gun -> max_distance*4
-	if(obj_label=="gun"){max_distance *= 4;}
+	if(obj_label=="bag"){max_distance *= 3;}
 
 	last_updated = getTimeMilis();
 	duration = last_updated - timestamp_in;
@@ -537,106 +537,75 @@ double CentroidTracker::getFps(){
 return totalTime;
 
 }
-void CentroidTracker::UpdateObjects(vector<dnn_bbox> _detections, string frame_id, double fps ) {
-    /*
-    @ Draw Search Radius
-    */
-    //for (auto &trk_i: objects) {
-    //    if (trk_i->isActive()) {
-            //trk_i->drawSearchRadius(draw_img);
-    //    }
-    //}
-    /*
-    @ Add all Detections to active trackers
-    */
-   
+void CentroidTracker::UpdateObjects(vector<dnn_bbox> _detections, string frame_id, double fps ,bool DEBUG) {
     detections = validateDets(_detections);
-    for(auto detection: detections){
-        Rect det_bbox = detection.bbox;
-       // cv::rectangle(dets_img, det_bbox, Scalar(255,64,64), 4, 8, 0);
-    }
-    // Set all trackers as NOT matched
-    for (auto &trk_i: objects) {
-        if (trk_i->isActive()) {
-            trk_i->setMatched(false);
+
+    // Precompute centers
+    std::vector<cv::Point> det_centers(detections.size());
+    for (size_t i = 0; i < detections.size(); ++i)
+        det_centers[i] = getRectCenter(detections[i].bbox);
+
+    // Para dibujar detecciones (solo si DEBUG)
+   
+    if (DEBUG) {
+        for (size_t i = 0; i < detections.size(); ++i) {
+            Rect det_bbox = detections[i].bbox;
+            cv::rectangle(dets_img, det_bbox, Scalar(255,64,64), 4, 8, 0);
         }
     }
-    /*
-    @ Update disappeared time if there are not detections
-    */  
-    if (detections.size() < 1) {
-        for (auto &trk_i: objects) {
-            if (trk_i->isActive()) {
+
+    std::vector<bool> detection_matched(detections.size(), false);
+
+    // Set all trackers as NOT matched
+    for (auto &trk_i: objects)
+        if (trk_i->isActive()) trk_i->setMatched(false);
+
+    if (detections.empty()) {
+        for (auto &trk_i: objects)
+            if (trk_i->isActive()) trk_i->updateDisappeared();
+    } else {
+        int METHOD = MET_HALF;
+        for (auto &trk_i : objects) {
+            if (!trk_i->isActive()) continue;
+
+            float min_dist = 10000;
+            int nearest_idx = -1;
+            bool is_found = false;
+
+            for (size_t i = 0; i < detections.size(); ++i) {
+                if (detection_matched[i]) continue; // skip already assigned
+
+                float dist = trk_i->calcDistAlt(det_centers[i], METHOD);
+                float max_dist = trk_i->getMaxDistance();
+
+                if (dist < min_dist && dist < max_dist && detections[i].obj_id == trk_i->getObjId() && !trk_i->isMatched()) {
+                    min_dist = dist;
+                    is_found = true;
+                    nearest_idx = i;
+                }
+            }
+
+            if (is_found) {
+                trk_i->setTrackerDNN(detections[nearest_idx], det_centers[nearest_idx]);
+                trk_i->setStatus(1);
+                trk_i->setMatched(true);
+                if (detect_speed)
+                    trk_i->updateSpeed(fps, speed_poligon, speed_meters, view_transformer);
+                detection_matched[nearest_idx] = true; // mark as assigned
+            } else {
                 trk_i->updateDisappeared();
             }
         }
-    } else {
-        //SEARCH DETS NEAR TO EACH OBJECT
-        //DEFINE THE INERTIA METHOD TO SHIFT THE CENTER OF THE SEARCH AREA
-        int METHOD = MET_HALF;
-        for (auto &trk_i: objects) {
-            if (trk_i->isActive()) {
-                float min_dist = 10000;
-                int nearest_idx = -1;
-                bool is_found = false;
-                //trk_i->drawSearchRadius(draw_img, METHOD);
-                //- PROYECTAR UN CENTRO VIRTUAL USANDO LA TRAYECTORIA PREVIA DE ROUTE (try flow)
-                //- AQUÍ SERÍA POSIBLE USAR MINIFLOW
-                for (int i=0; i<detections.size();i++) {
-                    Point center_det = getRectCenter(detections[i].bbox);
-                    //- vvvv ÉSTE CALCULO SE DEBE HACER CON EL CENTRO PROYECTADO
-                    //float dist = trk_i->calcDistance(projected_center);
-                    float dist = trk_i->calcDistAlt(center_det, METHOD);
-                    //float dist = distanceP(projected_center, center_det);
-                    float max_dist = trk_i->getMaxDistance();
-                    bool C1 = (dist<min_dist);
-                    bool C2 = (dist<max_dist);
-                    bool C3 = (detections[i].obj_id == trk_i->getObjId());
-    /*
-    //treat truck as car
-    string aux_id0 = detections[i].label;
-    string aux_id1 = trk_i->getRouteBboxTail().label;
-    //aux0 = aux0==7 ? 2 : aux0;
-    //aux1 = aux1==7 ? 2 : aux1;
-    //bool C3 = (aux_id0 == aux_id1);
-    if ( ( aux_id0=="car" && aux_id1=="truck" ) || ( aux_id0=="truck" && aux_id1=="car" ) ) {
-        C3 = 1;
-    cout << " xx aux_id0 " << aux_id0 << endl;
-    cout << " xx aux_id1 " << aux_id1 << endl;
-    }*/
-                    bool C4 = (trk_i->isUpdated());
-                    bool C5 = !(trk_i->isMatched());
-                    if (C1 && C2 && C3 && C5) {
-                        min_dist = dist;
-                        is_found = true;
-                        nearest_idx = i;
-                    }
-                }
-                // IF FOUND, REMOVE THE DETECTION_i, AND UPDATE THE TRACKER
-                if (is_found) {
-                    trk_i->setTrackerDNN(detections[nearest_idx], getRectCenter(detections[nearest_idx].bbox));
-                    trk_i->setStatus(1);
-                    trk_i->setMatched(true);
-                    // Calculate speed in pixels/frame
-					if(detect_speed){
-                    	trk_i->updateSpeed(fps,speed_poligon,speed_meters,view_transformer);
-                    }
-					detections.erase(detections.begin() + nearest_idx);
-                //OTHERWISE, INCREMENT HE DISAPP COUNTER
-                } else {
-                    trk_i->updateDisappeared();
-                }
-            }
-        }
+
         // UNMATCHED DETECTIONS WILL TRIGGER THE CREATION OF NEW TRACKERS
-        for (auto &detection: detections) {
-            if (detection.prob > 0.1) {
+        for (size_t i = 0; i < detections.size(); ++i) {
+            if (!detection_matched[i] && detections[i].prob > 0.1f) {
                 for (auto &trk_i: objects) {
                     if (!trk_i->isActive()) {
-                        trk_i->startTracker(detection.obj_id,detection.label);
+                        trk_i->startTracker(detections[i].obj_id, detections[i].label);
                         trk_i->setInitFrameId(frame_id);
-                        trk_i->setTrackerDNN(detection, getRectCenter(detection.bbox));
-                        cout << "*-*-*-*-*-*-* Create tracker : "<< trk_i->getId() <<endl;
+                        trk_i->setTrackerDNN(detections[i], det_centers[i]);
+                        cout << "*-*-*-*-*-*-* Create tracker : " << trk_i->getId() << endl;
                         break;
                     }
                 }
@@ -644,28 +613,24 @@ void CentroidTracker::UpdateObjects(vector<dnn_bbox> _detections, string frame_i
         }
     }
 
-    /*
-    @ Draw Images
-    */
-    int ix = 0;
-    
-    for (auto &trk_i: objects) {
-        if (trk_i->isActive()) {
-            trk_i->drawTrack(draw_img, ix);
-            // Display the speed
-
-
-            //string speed_text = "Speed: " + to_string(trk_i->getSpeed()) + " px/frame";
-            //Point speed_point = trk_i->getCurrentPosition();
-            //putText(draw_img, speed_text, speed_point, FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0,255,0), 2);
+    // Dibuja trayectorias y estado solo si DEBUG
+    if (DEBUG) {
+        int ix = 0;
+        for (auto &trk_i: objects) {
+            if (trk_i->isActive()) {
+                trk_i->drawTrack(draw_img, ix);
+                //string speed_text = "Speed: " + to_string(trk_i->getSpeed()) + " px/frame";
+                //Point speed_point = trk_i->getCurrentPosition();
+                //putText(draw_img, speed_text, speed_point, FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0,255,0), 2);
+            }
+            Scalar TXT_COLOR = EB_BLU;
+            string NUMDET = "#D: " + to_string(_detections.size());
+            string NUMTRK = "#T: " + to_string(getActiveTrackers());
+            Point pt0(10, 60);
+            Point pt1(10, 90);
+            putText(draw_img, NUMDET , pt0, FONT_HERSHEY_SIMPLEX, 0.75, TXT_COLOR, 2);
+            putText(draw_img, NUMTRK , pt1, FONT_HERSHEY_SIMPLEX, 0.75, TXT_COLOR, 2);
         }
-        Scalar TXT_COLOR = EB_BLU;
-        string NUMDET = "#D: " + to_string(_detections.size());
-        string NUMTRK = "#T: " + to_string(getActiveTrackers());
-        Point pt0(10, 60);
-        Point pt1(10, 90);
-        putText(draw_img, NUMDET , pt0, FONT_HERSHEY_SIMPLEX, 0.75, TXT_COLOR, 2);
-        putText(draw_img, NUMTRK , pt1, FONT_HERSHEY_SIMPLEX, 0.75, TXT_COLOR, 2);
     }
 }
 

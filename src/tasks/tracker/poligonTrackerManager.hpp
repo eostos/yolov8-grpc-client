@@ -13,7 +13,8 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/opencv.hpp> 
 #include "CentroidTracker.hpp"
-
+#include <chrono>
+using Clock = std::chrono::high_resolution_clock;
 
 struct PoligonEvent {
     std::string type;

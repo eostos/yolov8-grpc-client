@@ -847,19 +847,25 @@ void PoligonTrackerManager::evaluateAreaBbox() {
     }
 }
 void PoligonTrackerManager::evaluateArea() {
-    //first points 
-    if (this->_eval_points.size() == 0) {
-        
+    bool DEBUG = false;
+    bool PROFILE_LOOP = false;
+    bool PROFILE_INTERSECTION = false;
+    bool PROFILE_POLYGONTEST = false;
+
+    // Timer global
+    auto t_eval_start = Clock::now();
+
+    if (this->_eval_points.empty()) {
         size_t n = this->_points.size();
         assert(n > 2);
-        cv::Point2f suma_puntos;
+        cv::Point2f suma_puntos(0, 0);
+        this->_eval_points.reserve(n);
         for (size_t i = 0; i < n; ++i) {
             cv::Point2f pf;
             pf.x = this->_points[i].x * this->_size.width;
             pf.y = this->_points[i].y * this->_size.height;
             this->_eval_points.push_back(pf);
-            suma_puntos.x += pf.x;
-            suma_puntos.y += pf.y;
+            suma_puntos += pf;
         }
         this->_center_point.x = suma_puntos.x / n;
         this->_center_point.y = suma_puntos.y / n;
@@ -867,137 +873,118 @@ void PoligonTrackerManager::evaluateArea() {
     }
 
     size_t number_tracker = this->_trackers.size();
-    //number of trackers
+
+    auto t_loop_start = Clock::now();
     for (size_t i = 0; i < number_tracker; ++i) {
+        auto t_tracker_start = Clock::now();
+
         TrackingObject *to = this->_trackers[i];
 
-        // si el tracker NO esta activo se ignora
-        if (!to->isActive()) { continue; }
-        
-        std::vector<float> route_area = to->getBboxArea();//return area of each detection bbox vector
+        if (!to->isActive()) continue;
+
+        const std::vector<float>& route_area = to->getBboxArea();
         size_t route_area_size = route_area.size();
+        if (route_area_size < 3) continue;
 
-        if (route_area_size < 3) {//VERY IMPORTANT TO ADD THE FPS VARIABLE AND CHANGE THIS AUTOMATICLLY AND NOT MANYALLY 
-            continue;
-        }
+        const std::vector<std::vector<Point2f>>& route_poligon = to->getBboxPoligon();
+        if (route_poligon.empty()) continue;
 
-        vector<Point> intersection_polygon1;
-        vector<vector<Point2f>> route_poligon = to->getBboxPoligon();
-        //vector<Point> route_center = to->getRoute();
-       // cout <<to->getId()<< " ID , this->_eval_points " << this->_eval_points<< " route_poligon.back() " << route_poligon.back()  << "  end_2"<<endl;
-        
-       //Compara el poligono que esta pisando la punta de tracker con el 
-        //this->_eval_points = esto es el poligono el cual se esta evaluando , guardado en el config
-        //route_poligon.back() = rect tipo poligono , bounding box , ultimo 
-    
-        /////
-        auto bboxPoints = route_poligon.back(); // This is std::vector<cv::Point2f>
+        auto& bboxPoints = route_poligon.back();
         cv::Point2f bboxCenter((bboxPoints[0].x + bboxPoints[2].x) / 2.0f, (bboxPoints[0].y + bboxPoints[2].y) / 2.0f);
-        auto bboxPointsFront = route_poligon.front(); // This is std::vector<cv::Point2f>
-        cv::Point2f bboxCenterFront((bboxPointsFront[0].x + bboxPointsFront[2].x) / 2.0f, (bboxPointsFront[0].y + bboxPointsFront[2].y) / 2.0f);
 
+        // Perfila pointPolygonTest
+        auto t_poly_start = Clock::now();
         double isInside = cv::pointPolygonTest(this->_eval_points, bboxCenter, false);
-        /*
-        A positive value if the point is inside the polygon.
-        Zero if the point is on the polygon's edge.
-        A negative value if the point is outside the polygon.
-        */
+        auto t_poly_end = Clock::now();
+        if (PROFILE_POLYGONTEST)
+            std::cout << "[Profile] Tracker " << i << " pointPolygonTest: " 
+                << std::chrono::duration_cast<std::chrono::microseconds>(t_poly_end-t_poly_start).count()
+                << " us\n";
 
         bool status_1 = isInside >= 0;
-        if(status_1==1)
-        {
-            to->setPolygon(this->getPoligonID());    
+        if (status_1) {
+            to->setPolygon(this->getPoligonID());
         }
-        if (route_area_size <  3 || !to->isAwake()) { // we have to fix this because in scenarios that 
-            continue;
-    }
-        
-        int route_size = route_area.size(); 
-        
 
-        //cout <<to->getId()<< " ID , this->_eval" << bboxCenter  << " pop back "<<bboxCenterFront <<" pop front"<<route_poligon.size()<<" SIZE " <<endl;
-          //cout <<route_size <<endl;
+        if (route_area_size < 3 || !to->isAwake()) continue;
 
-        ///aquie es donde tengo que hacer la formula para el calculo del segundo punto.
-        auto bboxPoints_first = route_poligon[route_size-3];
-        //auto bboxPoints_first =route_poligon.front();
+        auto& bboxPoints_first = route_poligon[route_area_size - 3];
         cv::Point2f bboxCenter_first((bboxPoints_first[0].x + bboxPoints_first[2].x) / 2.0f, (bboxPoints_first[0].y + bboxPoints_first[2].y) / 2.0f);
+
+        // Perfila pointPolygonTest
+        auto t_poly0_start = Clock::now();
         double isInside_0 = cv::pointPolygonTest(this->_eval_points, bboxCenter_first, false);
+        auto t_poly0_end = Clock::now();
+        if (PROFILE_POLYGONTEST)
+            std::cout << "[Profile] Tracker " << i << " pointPolygonTest0: " 
+                << std::chrono::duration_cast<std::chrono::microseconds>(t_poly0_end-t_poly0_start).count()
+                << " us\n";
 
         bool status_0 = isInside_0 >= 0;
-        if (status_0 == 1 && status_1 == 1) { continue; }
-        // If both points are inside, skip to the next tracker
+        if (status_0 && status_1) continue; // ambos dentro, omite
+
         std::string type_event;
         bool flag = false;
-
         if ((status_0 == 0 && status_1 == 1)) {
             flag = true;
             type_event = "IN";
-            
-        } 
-
+        }
         if ((status_0 == 1 && status_1 == 0)) {
             flag = true;
             type_event = "OUT";
-        } 
+        }
 
         if (flag) {
-            vector<Point> route_center = to->getRoute();
+            const std::vector<Point>& route_center = to->getRoute();
             size_t route_center_size = route_center.size();
             if (route_center_size < 2) continue;
-            Point p1 = route_center.back();
-            Point p0 = route_center[route_center_size-2];     
-  
+            const Point& p1 = route_center.back();
+            const Point& p0 = route_center[route_center_size - 2];
 
-
-            Point p0_ext;
-            p0_ext.x = 1.5*p0.x - 0.5*p1.x;
-            p0_ext.y = 1.5*p0.y - 0.5*p1.y;
-
-            Point p1_ext;
-            p1_ext.x = 1.5*p1.x - 0.5*p0.x;
-            p1_ext.y = 1.5*p1.y - 0.5*p0.y;
+            Point p0_ext(1.5*p0.x - 0.5*p1.x, 1.5*p0.y - 0.5*p1.y);
+            Point p1_ext(1.5*p1.x - 0.5*p0.x, 1.5*p1.y - 0.5*p0.y);
 
             int lado = -1;
-         
-
             size_t n_points = this->_eval_points.size();
+
+            // Profiling loop for intersection
+            auto t_intersect_start = Clock::now();
             for (size_t j = 0; j < n_points; ++j) {
                 cv::Point2f p2 = _eval_points[j];
                 cv::Point2f p3 = _eval_points[(j + 1) % n_points];
                 cv::Point2f pout;
-                bool k = calculateIntersection(p0_ext,p1_ext,p2,p3,pout);
-                // cout <<to->getId()<< " ID , this->_eval" << bboxCenter  << " pop back "<<bboxCenterFront <<" pop front "<<route_poligon.size()<<" SIZE " <<j <<"  LADO  : " <<p2 <<" P2 "<<p3 <<" P3 "<<endl;
-                if(k){
+                bool k = calculateIntersection(p0_ext, p1_ext, p2, p3, pout);
+
+                if (k) {
                     lado = j;
                     Json::Value event_poligon;
                     event_poligon["type_event"] = type_event;
                     event_poligon["side"] = lado;
-                    //cout <<this->getPoligonID()<< " ID , this->_eval_points   , LADO :  " << lado <<"  TYPE  : " <<type_event<< "   " <<to->getId() << " Tracker ID _ Time" <<to_string(getTimeMilis())<<endl;
-                    //cout <<to->getId()<< " ID , this->_eval" << bboxCenter  << " pop back "<<bboxCenterFront <<" pop front "<<route_poligon.size()<<" SIZE " <<lado <<"  LADO  : " <<endl;
- 
-            
-                   // if(this->getPoligonID()=="29" && lado==2){
-                    //    Mat drawable =to->getDrawImageFromTracker();
-                    //    cv::circle(drawable, pout, 5, cv::Scalar(0, 0, 255), -1); // Draw red circles
-                    //    cout <<to->getId()<< " ID , this->_eval" << bboxCenter  << " pop back "<<bboxCenterFront <<" pop front "<<route_poligon.size()<<" SIZE " <<j <<"  LADO  : " <<p2 <<" P2 "<<p3 <<" P3 "<< " Intersection  " << pout<<endl;
-                        //cout <<this->getPoligonID()<< " ID , this->_eval_points   , LADO :  " << lado <<"  TYPE  : " <<type_event<< "   " <<to->getId() << " Tracker ID _ Time" <<to_string(getTimeMilis())<< " Intersection  " << pout<<endl;
-                    //}
-                   // if(this->getPoligonID()=="29" && lado==0&& type_event=="IN"){
-                    //cout <<this->getPoligonID()<< " ID , this->_eval_points   , LADO :  " << lado <<"  TYPE  : " <<type_event<< "   " <<to->getId() << " Tracker ID _ Time" <<to_string(getTimeMilis())<<endl;
-                    //}
+
                     Json::Value temp_point;
-                    // se normaliza el punto de intercepcion con respecto a las dimensiones de la imagen
                     temp_point["x"] = pout.x / static_cast<float>(this->getSize().width);
                     temp_point["y"] = pout.y / static_cast<float>(this->getSize().height);
-                    //
                     event_poligon["interception_point"] = temp_point;
                     event_poligon["poligon_id"] = this->getPoligonID();
                     to->setPolygonEvent(event_poligon);
                     break;
                 }
             }
-    }
+            auto t_intersect_end = Clock::now();
+            if (PROFILE_INTERSECTION)
+                std::cout << "[Profile] Tracker " << i << " intersection loop: " 
+                    << std::chrono::duration_cast<std::chrono::microseconds>(t_intersect_end-t_intersect_start).count()
+                    << " us\n";
+        }
 
-}
+        auto t_tracker_end = Clock::now();
+        if (PROFILE_LOOP)
+            std::cout << "[Profile] Tracker " << i << " total: " 
+                << std::chrono::duration_cast<std::chrono::microseconds>(t_tracker_end-t_tracker_start).count()
+                << " us\n";
+    }
+    auto t_eval_end = Clock::now();
+    std::cout << "[Profile] Total evaluateArea: " 
+              << std::chrono::duration_cast<std::chrono::milliseconds>(t_eval_end-t_eval_start).count()
+              << " ms\n";
 }

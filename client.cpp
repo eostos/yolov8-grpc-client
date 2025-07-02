@@ -273,8 +273,8 @@ std::vector<Result> processSource(const cv::Mat& source,
     std::cout << "preproccess " << diff << " ms" << std::endl;
 
 	auto start1 = std::chrono::steady_clock::now();
-	//auto [infer_results, infer_shapes] = tritonClient->inferAsync(input_data);
-	auto [infer_results, infer_shapes] = tritonClient->infer(input_data);
+	auto [infer_results, infer_shapes] = tritonClient->inferAsync(input_data);
+	//auto [infer_results, infer_shapes] = tritonClient->infer(input_data);
 	auto end1 = std::chrono::steady_clock::now();
     auto diff1 = std::chrono::duration_cast<std::chrono::milliseconds>(end1 - start1).count();
     std::cout << "infer Function Total " << diff1 << " ms" << std::endl;
@@ -433,7 +433,7 @@ void ProcessVideo(const std::string& sourceName,
 	if (!rdx.set(status_channel,"0")) {
 		cout << "Failed to set status - " << host_id << endl;  
 	}
-	const size_t MAX_NUM_TRACKERS = 50;//originally was in 25
+	const size_t MAX_NUM_TRACKERS = 200;//originally was in 25
 	std::vector<TrackingObject *> trackers(MAX_NUM_TRACKERS);
 	for (size_t i = 0; i < MAX_NUM_TRACKERS; ++i) {
 		trackers[i] = new TrackingObject();///
@@ -596,7 +596,7 @@ void ProcessVideo(const std::string& sourceName,
   		auto start = std::chrono::steady_clock::now();
 		cap.read(frame) ;
 		
-      	//resize(frame, frame, Size(1280, 720));
+      	resize(frame, frame, Size(640, 480));
 		std::string unixTimeStamp = unixTimeStampStr();
 		std::string frameId = unixTimeStamp + "_" + host_id;
 		//msgi.mat_frame = frame;
@@ -609,8 +609,9 @@ void ProcessVideo(const std::string& sourceName,
 
         //double fps = 1000.0 / static_cast<double>(diff);
         std::string fpsText = "FPS: " + std::to_string(fps);
-		int point_y = frame.cols/2;
-        cv::putText(frame, fpsText, cv::Point(10,point_y ), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 255, 0), 2);
+		int point_y = frame.cols*0.10;
+		int point_x = frame.cols*0.10;
+        cv::putText(frame, fpsText, cv::Point(point_x,point_y ), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 255, 0), 2);
  		if (!status_analytics) {
 			if (!rdx.set(status_channel,"1")) {
 
@@ -711,30 +712,70 @@ void ProcessVideo(const std::string& sourceName,
 
 
 
-			int64 ti = cv::getTickCount();
-			auto starttrack = std::chrono::steady_clock::now();
-			tracking.setDataImages(frame);
-           // UpdateObjects(vector<dnn_bbox> _detections, string frame_id)
-			tracking.UpdateObjects(detections,frameId,fps_camera);
-			tracking.evalObjects();
+// … dentro de tu bucle principal …
 
-			for (auto &trk_i: trackers) {
-				trk_i->restartPolygons();
-			}
+using Clock = std::chrono::high_resolution_clock;
 
-			for (int i = 0, m = (int)poligon_tracker_manager.size(); i < m; ++i) {
-				poligon_tracker_manager[i]->setSize(frame.size());
-				//poligon_tracker_manager[i]->evaluateAreabbox();
-				poligon_tracker_manager[i]->evaluateArea();
-			}
+// Marca inicio total
+auto t_start_total = Clock::now();
 
-			Json::Value objects_to_report = tracking.reportObjects(save_img);
-			tracking.deactivateObjects();
+// 1) setDataImages
+auto t0 = Clock::now();
+tracking.setDataImages(frame);
+auto t1 = Clock::now();
 
-			if (DEBUG) {
-				cout << " - Number of detections: " << detections.size() << " - " << host_id << endl;
-				cout << " - Number of active trackers: " <<  tracking.getActiveTrackers() << " - " << host_id << endl;
-			}
+// 2) UpdateObjects
+auto t2 = Clock::now();
+tracking.UpdateObjects(detections, frameId, fps_camera);
+auto t3 = Clock::now();
+
+// 3) evalObjects
+auto t4 = Clock::now();
+tracking.evalObjects();
+auto t5 = Clock::now();
+
+// 4) restartPolygons
+auto t6 = Clock::now();
+for (auto &trk_i : trackers) {
+    trk_i->restartPolygons();
+}
+auto t7 = Clock::now();
+
+// 5) polygon manager loop
+auto t8 = Clock::now();
+for (int i = 0, m = (int)poligon_tracker_manager.size(); i < m; ++i) {
+    poligon_tracker_manager[i]->setSize(frame.size());
+    poligon_tracker_manager[i]->evaluateArea();
+}
+auto t9 = Clock::now();
+
+// 6) reportObjects
+auto t10 = Clock::now();
+Json::Value objects_to_report = tracking.reportObjects(save_img);
+auto t11 = Clock::now();
+
+// 7) deactivateObjects
+auto t12 = Clock::now();
+tracking.deactivateObjects();
+auto t13 = Clock::now();
+
+// Marca fin total
+auto t_end_total = Clock::now();
+
+// Convierte a ms
+auto ms = [&](auto tA, auto tB){
+    return std::chrono::duration_cast<std::chrono::microseconds>(tB - tA).count()/1000.0;
+};
+
+std::cout << std::fixed << std::setprecision(3)
+    << "setDataImages:      " << ms(t0, t1)  << " ms | "
+    << "UpdateObjects:      " << ms(t2, t3)  << " ms | "
+    << "evalObjects:        " << ms(t4, t5)  << " ms\n"
+    << "restartPolygons:    " << ms(t6, t7)  << " ms | "
+    << "polyMgr loop:       " << ms(t8, t9)  << " ms | "
+    << "reportObjects:      " << ms(t10, t11)<< " ms | "
+    << "deactivateObjects:  " << ms(t12, t13)<< " ms\n"
+    << "Total tracking time:" << ms(t_start_total, t_end_total) << " ms\n";
 
 			if (!objects_to_report[0].isNull()) {
 				//SEND ANALYTICS RESULTS
@@ -752,6 +793,7 @@ void ProcessVideo(const std::string& sourceName,
 				}else{
 				photo_buffer.add(frame, unixTimeStamp);///this is for production 
 				}
+
 				join_and_send_outdata_redox(rdx,msgi,media_path,objects_to_report,"", "",save_img,imgShow,SEND_B64,to_post,DEBUG,unixTimeStamp);//this is for debug 
 				//join_and_send_outdata_redox(rdx,msgi,media_path,objects_to_report,"", "",save_img,imgSave,SEND_B64,to_post,DEBUG);
 				//SET LAST UPDATED TIME
@@ -759,9 +801,7 @@ void ProcessVideo(const std::string& sourceName,
 					cout << "Failed to set update time - " << host_id << endl;
 				}
 			}
-			auto endtrack = std::chrono::steady_clock::now();
-        	auto difftrack = std::chrono::duration_cast<std::chrono::milliseconds>(endtrack - starttrack).count();
-        	std::cout << "Infer time track: " << difftrack << " ms" << std::endl;
+
 			if (DEBUG) {
 				//float data_fin = (tf-ti)*1000/cv::getTickFrequency();
 				//cout << " - Time elapsed per frame: " << data_fin << "ms - " << host_id << endl;				
@@ -778,7 +818,7 @@ void ProcessVideo(const std::string& sourceName,
 						cv::line(imgShow, p0, p1, EB_GRN, 1);
 					}
 				}
-			
+			//send_out_imageb64(rdx,imgShow,msgi.host_uuid); //it takes a lot of time in my pc core I5 around 13 ms 
 			//cv::imshow("video feed", imgShow);
         	//cv::waitKey(0);
 
@@ -839,6 +879,7 @@ int main(int argc, const char* argv[])
 		config_path = argv[1];
 		id = argv[2];
 	}
+
 	Json::Value config_params = readConfig(config_path,"config", id);
 	
 	
