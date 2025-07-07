@@ -636,7 +636,7 @@ void CentroidTracker::UpdateObjects(vector<dnn_bbox> _detections, string frame_i
                         trk_i->startTracker(detection.obj_id,detection.label);
                         trk_i->setInitFrameId(frame_id);
                         trk_i->setTrackerDNN(detection, getRectCenter(detection.bbox));
-                        cout << "*-*-*-*-*-*-* Create tracker : "<< trk_i->getId() <<endl;
+                        //cout << "*-*-*-*-*-*-* Create tracker : "<< trk_i->getId() <<endl;
                         break;
                     }
                 }

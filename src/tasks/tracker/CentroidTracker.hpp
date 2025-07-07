@@ -132,6 +132,7 @@ public:
     bool lifeControl();
     void shutDown();
     //
+    std::string getLabel() const { return obj_label; }
     void drawRoute(Mat &draw_trks);
     void drawSearchRadius(Mat &draw_trks, int SHIFT_METHOD);
     void drawTrack(Mat &draw_trks, int &ix);

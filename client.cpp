@@ -512,7 +512,8 @@ void ProcessVideo(const std::string& sourceName,
 			rdx.publish(channel, string_output_data);
 			photo_found=true;
 			std::cout << "THE REQUEST WAS FOUND :) " << " \n";
-				
+			std::cout << "CHECKING URL MEDIA  : " << url_photo_event<<" \n";
+			
 		 }
 
     }
@@ -691,7 +692,7 @@ void ProcessVideo(const std::string& sourceName,
                 dnn_bbox dnn_obj = dnn_bbox{detection.bbox,detection.class_confidence, id, class_names[detection.class_id],"photo_object_cutted","uuid","embeddings",std::to_string(detection.class_confidence)};
                 detections.push_back(dnn_obj);
 				
-                //cv::rectangle(frame, detection.bbox, cv::Scalar(255, 0, 0), 2);
+               // cv::rectangle(frame, detection.bbox, cv::Scalar(255, 0, 0), 2);
                 //draw_label(frame,  class_names[detection.class_id], detection.class_confidence, detection.bbox.x, detection.bbox.y - 1);
             }
         }
@@ -715,7 +716,7 @@ void ProcessVideo(const std::string& sourceName,
 			auto starttrack = std::chrono::steady_clock::now();
 			tracking.setDataImages(frame);
            // UpdateObjects(vector<dnn_bbox> _detections, string frame_id)
-			tracking.UpdateObjects(detections,frameId,fps_camera);
+			tracking.UpdateObjects(detections,frameId,fps_camera,true);
 			tracking.evalObjects();
 
 			for (auto &trk_i: trackers) {
@@ -778,7 +779,7 @@ void ProcessVideo(const std::string& sourceName,
 						cv::line(imgShow, p0, p1, EB_GRN, 1);
 					}
 				}
-			
+			send_out_imageb64(rdx,imgShow,msgi.host_uuid); //it takes a lot of time in my pc core I5 around 13 ms 
 			//cv::imshow("video feed", imgShow);
         	//cv::waitKey(0);
 
@@ -792,7 +793,7 @@ void ProcessVideo(const std::string& sourceName,
 
 
 
-		send_out_imageb64(rdx,frame,msgi.host_uuid); //it takes a lot of time in my pc core I5 around 13 ms 
+		//send_out_imageb64(rdx,frame,msgi.host_uuid); //it takes a lot of time in my pc core I5 around 13 ms 
 		auto end2 = std::chrono::steady_clock::now();
         auto diff2 = std::chrono::duration_cast<std::chrono::milliseconds>(end2 - start).count();
         std::cout << " Time LOOP : " << static_cast<double>(diff2) << " ms" << std::endl;

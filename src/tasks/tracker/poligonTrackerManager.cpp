@@ -960,13 +960,31 @@ void PoligonTrackerManager::evaluateArea() {
                     Json::Value event_poligon;
                     event_poligon["type_event"] = type_event;
                     event_poligon["side"] = lado;
-
+                    cout <<this->getPoligonID()<< " ID ,   , LADO :  " << lado <<" TYPE " <<type_event<<" "<<to->getLabel()<<" TRK ID "<< to->getId()<<endl;
                     Json::Value temp_point;
                     temp_point["x"] = pout.x / static_cast<float>(this->getSize().width);
                     temp_point["y"] = pout.y / static_cast<float>(this->getSize().height);
                     event_poligon["interception_point"] = temp_point;
                     event_poligon["poligon_id"] = this->getPoligonID();
                     to->setPolygonEvent(event_poligon);
+                    /*
+                                        cv::Mat frame = to->getDrawImageFromTracker();
+                    cv::Rect bbox = to->getRouteBboxTail().bbox;
+
+                
+
+                    cv::Mat frame_with_box = frame.clone();
+                    cv::rectangle(frame_with_box, bbox, cv::Scalar(0, 255, 0), 2);
+
+                    std::string filename = "/opt/alice-media/trackers/" + to->getLabel() + "_" + to->getId() +  unixTimeStampStr() + ".jpg";
+                    cv::imwrite(filename, frame_with_box);
+
+                    std::cout << "Saved image: " << filename << std::endl;
+                    
+                    */
+
+ 
+
                     break;
                 }
             }
