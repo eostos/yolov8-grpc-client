@@ -12,7 +12,7 @@
                 "model_type": "yolov8",
                 "labelsFile": "water-jugs.names",
                 "input_sizes": "3 640 640",
-                "crop_video":  [[200, 200], [1280, 720]],
+                "crop_video":  [[400, 400], [1900, 720]],
                 "debug": 0,
                 "verbose": 0,
                 "grpc_port": 8001,

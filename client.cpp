@@ -838,7 +838,7 @@ void ProcessVideo(const std::string& sourceName,
 						cv::line(imgShow, p0, p1, EB_GRN, 1);
 					}
 				}
-			//send_out_imageb64(rdx,imgShow,msgi.host_uuid); //it takes a lot of time in my pc core I5 around 13 ms 
+			send_out_imageb64(rdx,imgShow,msgi.host_uuid); //it takes a lot of time in my pc core I5 around 13 ms 
 			//cv::imshow("video feed", imgShow);
         	//cv::waitKey(0);
 
@@ -852,7 +852,9 @@ void ProcessVideo(const std::string& sourceName,
 
 
 
+		if (!DEBUG) {
 		send_out_imageb64(rdx,frame,msgi.host_uuid); //it takes a lot of time in my pc core I5 around 13 ms 
+		}
 		auto end2 = std::chrono::steady_clock::now();
         auto diff2 = std::chrono::duration_cast<std::chrono::milliseconds>(end2 - start).count();
         std::cout << " Time LOOP : " << static_cast<double>(diff2) << " ms" << std::endl;
