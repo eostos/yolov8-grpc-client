@@ -389,6 +389,48 @@ void ProcessVideo(const std::string& sourceName,
 	string to_post = config_params["topost"].asString();
 	string redis_ip = config_params["server_ip"].asString();
 	int redis_port = config_params["server_port"].asInt();
+
+	// Lee el rol y configuración de fusión desde el config
+	bool fusion_active = config_params.get("fusion_active", false).asBool();
+	std::string fusion_role = config_params.get("fusion_role", "publicador").asString();
+	bool publish_tracks = config_params.get("publish_tracks", true).asBool();
+	bool publish_events = config_params.get("publish_events", false).asBool();
+	std::vector<cv::Point2f> img_pts, world_pts;
+	for (const auto& pt : config_params["homography_image_points"])
+    img_pts.emplace_back(pt[0].asFloat(), pt[1].asFloat());
+	for (const auto& pt : config_params["homography_world_points"])
+    world_pts.emplace_back(pt[0].asFloat(), pt[1].asFloat());
+	// Si es fusionador, cargar lista de cámaras para fusionar
+	std::vector<Json::Value> fusion_cameras;
+	if (fusion_active && fusion_role == "fusionador" && config_params.isMember("fusion_cameras")) {
+		fusion_cameras = get_list_of_json(config_params["fusion_cameras"]);
+	}
+
+	if (redis_ip.empty() || redis_port <= 0) {
+		std::cerr << "Invalid Redis configuration: IP or port is not set correctly." << std::endl;
+		exit(-1);
+	}
+
+	cv::Rect roi;
+	bool crop_enabled = false;
+
+	// Antes del loop, cuando lees el config:
+	if (config_params.isMember("crop_video") && config_params["crop_video"].size() == 2) {
+		auto crop_video = config_params["crop_video"];
+		int x1 = crop_video[0][0].asInt();
+		int y1 = crop_video[0][1].asInt();
+		int x2 = crop_video[1][0].asInt();
+		int y2 = crop_video[1][1].asInt();
+		// Validación básica
+		if (x2 > x1 && y2 > y1) {
+			roi = cv::Rect(x1, y1, x2 - x1, y2 - y1);
+			crop_enabled = true;
+		}
+	}
+
+
+
+
 	cout << redis_port << " REDIS PORT " << endl;
 	cout << "Config path: " << sourceName << ", id: " << id << ", host_id: " << host_id << endl;
 	//Redox rdx;
@@ -533,7 +575,7 @@ void ProcessVideo(const std::string& sourceName,
 	sub.subscribe(notifications_channel, notifications_msg, subbed, unsubbed, err_callback);
 	sub.subscribe("tracker_check_config", config_msg);
 
-	Mat imgShow,imgSave,frame;
+	Mat imgShow,imgSave,original, frame;
 	int64 thFPS;
 	thFPS = getTickCount();
 	float fps_calc = -1;
@@ -595,7 +637,21 @@ void ProcessVideo(const std::string& sourceName,
     while (true) {
 /////////////////////////////
   		auto start = std::chrono::steady_clock::now();
-		cap.read(frame) ;
+		cap.read(original) ;
+		if (crop_enabled) {
+			// Valida que el ROI esté dentro del frame
+			if (original.cols >= roi.x + roi.width && original.rows >= roi.y + roi.height) {
+				frame = original(roi);
+			} else {
+				std::cerr << "Frame is smaller than required ROI, using complete frame" << std::endl;
+				frame = original;
+			}
+		} else {
+			frame = original;
+		}
+
+
+		
 		
       	//resize(frame, frame, Size(1280, 720));
 		std::string unixTimeStamp = unixTimeStampStr();
@@ -692,8 +748,8 @@ void ProcessVideo(const std::string& sourceName,
                 dnn_bbox dnn_obj = dnn_bbox{detection.bbox,detection.class_confidence, id, class_names[detection.class_id],"photo_object_cutted","uuid","embeddings",std::to_string(detection.class_confidence)};
                 detections.push_back(dnn_obj);
 				
-               // cv::rectangle(frame, detection.bbox, cv::Scalar(255, 0, 0), 2);
-                //draw_label(frame,  class_names[detection.class_id], detection.class_confidence, detection.bbox.x, detection.bbox.y - 1);
+            // cv::rectangle(frame, detection.bbox, cv::Scalar(255, 0, 0), 2);
+            //draw_label(frame,  class_names[detection.class_id], detection.class_confidence, detection.bbox.x, detection.bbox.y - 1);
             }
         }
 
@@ -720,15 +776,6 @@ void ProcessVideo(const std::string& sourceName,
 			tracking.evalObjects();
 			//cout << " - Number of active trackers: " <<  tracking.getActiveTrackers() << " - " << host_id << endl;
 			//cout << " - Number of active trackers: " <<  tracking.getActiveTrackers() << " - " << host_id << endl;
-			// In this part of the code we can publish the trackers by redis but if the client is configurated
-			//the client will receive the data and then it will be processed by the client  doing a fussion 
-			//   +-------------------------+
-			//	|   Cliente Coordinador   |
-			//	| - Suscribe a tracks_*   |
-			//	| - Proyecta todos los    |
-			//	|   tracks al plano global|
-			//	| - Fusiona objetos       |
-			//	+-------------------------+
 
 
 			for (auto &trk_i: trackers) {
@@ -791,9 +838,9 @@ void ProcessVideo(const std::string& sourceName,
 						cv::line(imgShow, p0, p1, EB_GRN, 1);
 					}
 				}
-			send_out_imageb64(rdx,imgShow,msgi.host_uuid); //it takes a lot of time in my pc core I5 around 13 ms 
-			cv::imshow("video feed", imgShow);
-        	cv::waitKey(0);
+			//send_out_imageb64(rdx,imgShow,msgi.host_uuid); //it takes a lot of time in my pc core I5 around 13 ms 
+			//cv::imshow("video feed", imgShow);
+        	//cv::waitKey(0);
 
 
 			}
@@ -805,7 +852,7 @@ void ProcessVideo(const std::string& sourceName,
 
 
 
-		//send_out_imageb64(rdx,frame,msgi.host_uuid); //it takes a lot of time in my pc core I5 around 13 ms 
+		send_out_imageb64(rdx,frame,msgi.host_uuid); //it takes a lot of time in my pc core I5 around 13 ms 
 		auto end2 = std::chrono::steady_clock::now();
         auto diff2 = std::chrono::duration_cast<std::chrono::milliseconds>(end2 - start).count();
         std::cout << " Time LOOP : " << static_cast<double>(diff2) << " ms" << std::endl;

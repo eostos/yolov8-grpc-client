@@ -1,0 +1,130 @@
+[
+    {
+        "type": "config",
+        "params": [
+            {
+                "id": "1",
+                "host_id": "f9e60c4d-78b6-4cdc-be73-fe63cc50d5bf",
+                "url_video": "/opt/alice-media/copan-water/bags-loading-complete.mp4",
+                "name": "FusionadorCam",
+                "task_type": "detection",
+                "model": "water-jugs",
+                "model_type": "yolov8",
+                "labelsFile": "water-jugs.names",
+                "input_sizes": "3 640 640",
+                "crop_video":  [[200, 200], [1280, 720]],
+                "debug": 0,
+                "verbose": 0,
+                "grpc_port": 8001,
+                "grpc_server": "0.0.0.0",
+                "media_path": "",
+                "server_ip": "127.0.0.1",
+                "server_port": 6379,
+                "send_b64": 0,
+                "topost": "",
+                "publish_tracks": true,
+                "publish_events": true,
+                "fusion_role": "fusionador",
+                "fusion_active": true,
+                "fusion_output_channel": "tracker_fused_streaming",
+                "match_distance_thresh": 0.6,
+                "match_time_thresh": 1.0,
+                "fusion_cameras": [
+                    {
+                        "host_id": "FUSIONADOR-UUID-1111",
+                        "redis_channel": "tracks_camA"
+                    }
+                ],
+                "homography_image_points": [ [120, 540], [1620, 530], [1620, 220], [120, 240] ],
+                "homography_world_points": [ [0, 0], [2.5, 0], [2.5, 5], [0, 5] ],
+                "poligons": [
+                    {
+                        "poligon_id": "57",
+                        "points": [
+                            { "x": 0.27, "y": 0.3788 },
+                            { "x": 0.6705, "y": 0.3387 },
+                            { "x": 0.7807, "y": 0.9739 },
+                            { "x": 0.2104, "y": 0.994 }
+                        ]
+                    }
+                ],
+                "measure_speed": false,
+                "poligon_speed": [
+                    {
+                        "poligon_id": "6",
+                        "points": [
+                            {"x": 130,"y": 180.1},
+                            {"x": 255,"y": 180},
+                            {"x": 412, "y": 325},
+                            {"x": 186, "y": 345}
+                        ],
+                        "meters": [
+                            {"x": 0, "y": 0},
+                            {"x": 6, "y": 0},
+                            {"x": 6, "y": 23},
+                            {"x": 0, "y": 23}
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "type": "config",
+        "params": [
+            {
+                "id": "2",
+                "host_id": "PUBLICADOR-UUID-2222",
+                "url_video": "/opt/alice-media/copan-water/cam-publicador.mp4",
+                "name": "PublicadorCam",
+                "task_type": "detection",
+                "model": "water-jugs",
+                "model_type": "yolov8",
+                "labelsFile": "water-jugs.names",
+                "input_sizes": "3 640 640",
+                "debug": 1,
+                "verbose": 0,
+                "grpc_port": 8001,
+                "grpc_server": "0.0.0.0",
+                "media_path": "",
+                "server_ip": "127.0.0.1",
+                "server_port": 6379,
+                "send_b64": 0,
+                "topost": "",
+                "publish_tracks": true,
+                "publish_events": false,
+                "fusion_role": "publicador",
+                "homography_image_points": [ [110, 520], [1610, 525], [1610, 210], [110, 215] ],
+                "homography_world_points": [ [0, 0], [2.5, 0], [2.5, 5], [0, 5] ],
+                "poligons": [
+                    {
+                        "poligon_id": "58",
+                        "points": [
+                            { "x": 0.256, "y": 0.4329 },
+                            { "x": 0.654, "y": 0.3848 },
+                            { "x": 0.7845, "y": 0.998 },
+                            { "x": 0.2129, "y": 0.982 }
+                        ]
+                    }
+                ],
+                "poligon_speed": [
+                    {
+                        "poligon_id": "6",
+                        "points": [
+                            {"x": 130,"y": 180.1},
+                            {"x": 255,"y": 180},
+                            {"x": 412, "y": 325},
+                            {"x": 186, "y": 345}
+                        ],
+                        "meters": [
+                            {"x": 0, "y": 0},
+                            {"x": 6, "y": 0},
+                            {"x": 6, "y": 23},
+                            {"x": 0, "y": 23}
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+]
