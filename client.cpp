@@ -437,7 +437,7 @@ void ProcessVideo(const std::string& sourceName,
 	std::vector<TrackingObject *> trackers(MAX_NUM_TRACKERS);
 	for (size_t i = 0; i < MAX_NUM_TRACKERS; ++i) {
 		trackers[i] = new TrackingObject();///
-		trackers[i]->setMaxRouteSize(250);
+		trackers[i]->setMaxRouteSize(50);
 		trackers[i]->setMaxDisappeared(20);//originally was in 10
 	}
 
@@ -718,6 +718,18 @@ void ProcessVideo(const std::string& sourceName,
            // UpdateObjects(vector<dnn_bbox> _detections, string frame_id)
 			tracking.UpdateObjects(detections,frameId,fps_camera,true);
 			tracking.evalObjects();
+			//cout << " - Number of active trackers: " <<  tracking.getActiveTrackers() << " - " << host_id << endl;
+			//cout << " - Number of active trackers: " <<  tracking.getActiveTrackers() << " - " << host_id << endl;
+			// In this part of the code we can publish the trackers by redis but if the client is configurated
+			//the client will receive the data and then it will be processed by the client  doing a fussion 
+			//   +-------------------------+
+			//	|   Cliente Coordinador   |
+			//	| - Suscribe a tracks_*   |
+			//	| - Proyecta todos los    |
+			//	|   tracks al plano global|
+			//	| - Fusiona objetos       |
+			//	+-------------------------+
+
 
 			for (auto &trk_i: trackers) {
 				trk_i->restartPolygons();
@@ -780,8 +792,8 @@ void ProcessVideo(const std::string& sourceName,
 					}
 				}
 			send_out_imageb64(rdx,imgShow,msgi.host_uuid); //it takes a lot of time in my pc core I5 around 13 ms 
-			//cv::imshow("video feed", imgShow);
-        	//cv::waitKey(0);
+			cv::imshow("video feed", imgShow);
+        	cv::waitKey(0);
 
 
 			}
