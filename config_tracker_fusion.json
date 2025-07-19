@@ -5,38 +5,39 @@
             {
                 "id": "1",
                 "host_id": "f9e60c4d-78b6-4cdc-be73-fe63cc50d5bf",
-                "url_video": "/opt/alice-media/copan-water/bags-loading-complete.mp4",
+                "url_video1": "/opt/alice-media/copan-water/jugs-hard-tocount-1280x720.mp4",
+                "url_video": "/opt/alice-media/copan-water/ghost-jug-2.mp4",
                 "name": "FusionadorCam",
                 "task_type": "detection",
                 "model": "water-jugs",
                 "model_type": "yolov8",
                 "labelsFile": "water-jugs.names",
                 "input_sizes": "3 640 640",
-                "crop_video":  [[400, 400], [1900, 720]],
-                "debug": 0,
-                "verbose": 0,
+                "crop_video":  [],
+                "debug": 1,
+                "verbose": 1,
                 "grpc_port": 8001,
                 "grpc_server": "0.0.0.0",
-                "media_path": "",
+                "media_path":"/opt/alice-media/",
                 "server_ip": "127.0.0.1",
                 "server_port": 6379,
                 "send_b64": 0,
                 "topost": "",
-                "publish_tracks": true,
+                "publish_objects": false,
                 "publish_events": true,
                 "fusion_role": "fusionador",
-                "fusion_active": true,
-                "fusion_output_channel": "tracker_fused_streaming",
+                "fusion_classes": ["jug","bag"],
                 "match_distance_thresh": 0.6,
                 "match_time_thresh": 1.0,
                 "fusion_cameras": [
                     {
-                        "host_id": "FUSIONADOR-UUID-1111",
-                        "redis_channel": "tracks_camA"
+                        "host_id": "PUBLICADOR-UUID-2222",
+                        "redis_channel": "objects_device_PUBLICADOR-UUID-2222"
                     }
                 ],
-                "homography_image_points": [ [120, 540], [1620, 530], [1620, 220], [120, 240] ],
-                "homography_world_points": [ [0, 0], [2.5, 0], [2.5, 5], [0, 5] ],
+                "homography_image_points": [[285, 189], [881, 116], [959, 400], [284, 481] ],
+                "homography_world_points": [ [0, 0], [300, 0], [300, 250], [0, 250] ],
+                "homography_world_points1": [ [300, 0], [0, 0], [0, 250], [300, 250] ],
                 "poligons": [
                     {
                         "poligon_id": "57",
@@ -45,6 +46,14 @@
                             { "x": 0.6705, "y": 0.3387 },
                             { "x": 0.7807, "y": 0.9739 },
                             { "x": 0.2104, "y": 0.994 }
+                        ]
+                    },                    {
+                        "poligon_id": "58",
+                        "points": [
+                            {"x": 0.256,"y": 0.4329},
+                            {"x": 0.654,"y": 0.3848},
+                            {"x": 0.7845,"y": 0.998},
+                            {"x": 0.2129,"y": 0.982}
                         ]
                     }
                 ],
@@ -74,36 +83,37 @@
         "params": [
             {
                 "id": "2",
-                "host_id": "PUBLICADOR-UUID-2222",
-                "url_video": "/opt/alice-media/copan-water/cam-publicador.mp4",
-                "name": "PublicadorCam",
+                "host_id": "345e810a-eb11-4a9e-8abf-6068851355c6",
+                "url_video": "rtsp://admin:admin123@192.168.1.176:554/Streaming/Channels/1601",
+                "name": "cargue1-op",
                 "task_type": "detection",
                 "model": "water-jugs",
                 "model_type": "yolov8",
                 "labelsFile": "water-jugs.names",
+                "fusion_classes": ["jug","bag"],
                 "input_sizes": "3 640 640",
                 "debug": 1,
                 "verbose": 0,
                 "grpc_port": 8001,
                 "grpc_server": "0.0.0.0",
-                "media_path": "",
+                "media_path":"/opt/alice-media/",
                 "server_ip": "127.0.0.1",
                 "server_port": 6379,
                 "send_b64": 0,
                 "topost": "",
-                "publish_tracks": true,
-                "publish_events": false,
+                "publish_objects": false,
+                "publish_events": true,
                 "fusion_role": "publicador",
-                "homography_image_points": [ [110, 520], [1610, 525], [1610, 210], [110, 215] ],
-                "homography_world_points": [ [0, 0], [2.5, 0], [2.5, 5], [0, 5] ],
+                "homography_image_points": [ [285, 189], [881, 116], [959, 400], [284, 481] ],
+                "homography_world_points": [ [300, 0], [0, 0], [0, 250], [300, 250] ],
+                "crop_video": [[500, 350], [1780, 1070]],
                 "poligons": [
                     {
-                        "poligon_id": "58",
-                        "points": [
-                            { "x": 0.256, "y": 0.4329 },
-                            { "x": 0.654, "y": 0.3848 },
-                            { "x": 0.7845, "y": 0.998 },
-                            { "x": 0.2129, "y": 0.982 }
+                        "poligon_id": "4",
+                        "points": [{"x": 0.2937,"y": 0.1265},
+                                   {"x": 0.8101,"y": 0.186},
+                                   {"x": 0.8228,"y": 0.42},
+                                   {"x": 0.2734,"y": 0.318}
                         ]
                     }
                 ],

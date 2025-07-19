@@ -30,7 +30,7 @@ using namespace redox;
 /////////////////////////////////
 /////////////////////////////////
 string host_id;
-CircularBuffer photo_buffer(30);
+CircularBuffer photo_buffer(90);
 string media_path = "/opt/alice-media/tracker";
 bool read_config = false;
 bool save_img_obj= false;
@@ -250,9 +250,10 @@ std::unique_ptr<TaskInterface> createDetectorInstance(const std::string& modelTy
 }
 void send_out_imageb64(Redox &rdx,Mat drawings,string host_id) {
 	cv::Mat resized_frame;
-    cv::resize(drawings, resized_frame, cv::Size(360*3, 240*3));
+   // cv::resize(drawings, resized_frame, cv::Size(360*3, 240*3));
+	cv::resize(drawings, resized_frame, cv::Size(1280, 720));
 	std::vector<uchar> buf;
-	 std::vector<int> params = {cv::IMWRITE_JPEG_QUALITY, 95};
+	 std::vector<int> params = {cv::IMWRITE_JPEG_QUALITY, 100};
 	cv::imencode(".jpg", resized_frame, buf,params);
 	auto *enc_msg = reinterpret_cast<unsigned char*>(buf.data());
 	std::string encoded = base64_encode(enc_msg, buf.size());
@@ -391,9 +392,16 @@ void ProcessVideo(const std::string& sourceName,
 	int redis_port = config_params["server_port"].asInt();
 
 	// Lee el rol y configuración de fusión desde el config
-	bool fusion_active = config_params.get("fusion_active", false).asBool();
-	std::string fusion_role = config_params.get("fusion_role", "publicador").asString();
-	bool publish_tracks = config_params.get("publish_tracks", true).asBool();
+	std::vector<std::string> fusion_classes;
+	if (config_params.isMember("fusion_classes") && config_params["fusion_classes"].isArray()) {
+		for (const auto& val : config_params["fusion_classes"]) {
+			if (val.isString()) {
+				fusion_classes.push_back(val.asString());
+			}
+		}
+	}
+	std::string fusion_role = config_params.get("fusion_role", "none").asString();
+	bool publish_tracks = config_params.get("publish_objects", true).asBool();
 	bool publish_events = config_params.get("publish_events", false).asBool();
 	std::vector<cv::Point2f> img_pts, world_pts;
 	for (const auto& pt : config_params["homography_image_points"])
@@ -402,7 +410,7 @@ void ProcessVideo(const std::string& sourceName,
     world_pts.emplace_back(pt[0].asFloat(), pt[1].asFloat());
 	// Si es fusionador, cargar lista de cámaras para fusionar
 	std::vector<Json::Value> fusion_cameras;
-	if (fusion_active && fusion_role == "fusionador" && config_params.isMember("fusion_cameras")) {
+	if ( fusion_role == "fusionador" && config_params.isMember("fusion_cameras")) {
 		fusion_cameras = get_list_of_json(config_params["fusion_cameras"]);
 	}
 
@@ -634,9 +642,30 @@ void ProcessVideo(const std::string& sourceName,
 	string motion_method = "KNN";
 	FrMs msgi;
     double fps=0.0;
+
+
+
+
+	//*****************************************************
+	// HOMOGRPHY 
+	// 
+	//  */
+	// Assuming img_pts, world_pts are std::vector<cv::Point2f> already filled from config
+	cv::Mat H;
+	if(img_pts.size() == 4 && world_pts.size() == 4) {
+		H = cv::findHomography(img_pts, world_pts);
+	} else {
+		std::cerr << "Homography: Need exactly 4 points for both image and world" << std::endl;
+	}
+
+
+	std::vector<cv::Point2f> img_pts_vec = img_pts;
+	std::vector<cv::Point2f> world_proj;
+	cv::perspectiveTransform(img_pts_vec, world_proj, H);
     while (true) {
 /////////////////////////////
   		auto start = std::chrono::steady_clock::now();
+
 		cap.read(original) ;
 		if (crop_enabled) {
 			// Valida que el ROI esté dentro del frame
@@ -694,6 +723,7 @@ void ProcessVideo(const std::string& sourceName,
 			//	poligon_tracker_manager.clear(); 
 			
 			poligon_tracker_manager = get_poligons_trackers(config_params["poligons"]);
+			cv::Mat world_vis = cv::Mat::zeros(300, 500, CV_8UC3);
 			// --------------------------------------------------------------------
 		for (int i = 0, m = (int)poligon_tracker_manager.size(); i < m; ++i) 
 		{
@@ -717,7 +747,10 @@ void ProcessVideo(const std::string& sourceName,
         //    string embeddings;//std::vector<float> embeddings;
 	    //    string prob_det;
         //    };
-	
+		std::vector<cv::Point> roi_polygon;
+		for (const auto& pt : img_pts) roi_polygon.push_back(pt);
+  		cv::polylines(frame, roi_polygon, true, cv::Scalar(0,255,255), 2);
+		cv::Mat world_vis = cv::Mat::zeros(300, 300, CV_8UC3);
         for (auto&& prediction : predictions) 
         {
             if (std::holds_alternative<Detection>(prediction)) 
@@ -747,11 +780,52 @@ void ProcessVideo(const std::string& sourceName,
 				
                 dnn_bbox dnn_obj = dnn_bbox{detection.bbox,detection.class_confidence, id, class_names[detection.class_id],"photo_object_cutted","uuid","embeddings",std::to_string(detection.class_confidence)};
                 detections.push_back(dnn_obj);
+
+            	//
+			 
+
 				
-            // cv::rectangle(frame, detection.bbox, cv::Scalar(255, 0, 0), 2);
-            //draw_label(frame,  class_names[detection.class_id], detection.class_confidence, detection.bbox.x, detection.bbox.y - 1);
+				// Only process if inside homography region
+				//draw_label(frame,  class_names[detection.class_id], detection.class_confidence, detection.bbox.x, detection.bbox.y - 1);
+				if(fusion_role=="fusionador"||fusion_role=="publicador")//if we choose none it wouldnt do nothing and the software continue 
+				{
+				
+					if (std::find(fusion_classes.begin(), fusion_classes.end(), class_names[detection.class_id]) != fusion_classes.end()) {
+						cv::Point2f center(detection.bbox.x + detection.bbox.width/2.0f,detection.bbox.y + detection.bbox.height/2.0f);
+						//get the fussion clasess and do the fusion 
+						if (cv::pointPolygonTest(roi_polygon, center, false) >= 0) {
+							
+							// Map center to real world using homography
+							std::vector<cv::Point2f> src = {center}, dst;
+							cv::perspectiveTransform(src, dst, H);
+
+							// Draw for debug: original center and mapped point (optional)
+							cv::circle(frame, center, 5, cv::Scalar(0,0,255), 3); // red dot
+							// Optional: save dst[0] for real world analysis
+							cv::Point2f world_pt = dst[0]; 
+							cv::circle(frame, center, 5, cv::Scalar(0,0,255), 3); // Red dot in image
+
+							// ---- Project to world_vis ----
+							float scale =1.0;   // Set this according to your canvas & world dimensions
+							int margin = 1;
+							int x_canvas = static_cast<int>(world_pt.x * scale) + margin;
+							int y_canvas = static_cast<int>(world_pt.y * scale) + margin;
+
+							// Draw on world image
+							cv::circle(world_vis, cv::Point(x_canvas, y_canvas), 8, cv::Scalar(0,0,255), -1); // Red dot in world canvas
+							
+						}
+					}
+				}
+
             }
+			
         }
+
+
+// Map img_pts to world using H
+
+
 
 		///*Filling the object of detection for send it to web//
 				msgi.host_uuid      =host_id;
@@ -838,11 +912,35 @@ void ProcessVideo(const std::string& sourceName,
 						cv::line(imgShow, p0, p1, EB_GRN, 1);
 					}
 				}
-			send_out_imageb64(rdx,imgShow,msgi.host_uuid); //it takes a lot of time in my pc core I5 around 13 ms 
-			//cv::imshow("video feed", imgShow);
-        	//cv::waitKey(0);
 
 
+				// Suppose 'frame' is your main image and 'world_vis' is your homography visualization (already drawn)
+				// 1. Draw the polygon on world_vis
+				if(fusion_role=="fusionador" || fusion_role=="publicador" )
+				{
+					cout<<" Fusionador or Publicador role detected, drawing world projection." << endl;
+					for (size_t i = 0; i < world_proj.size(); ++i) {
+						cv::line(world_vis, world_proj[i], world_proj[(i+1)%world_proj.size()], cv::Scalar(255,0,0), 2);
+						cv::circle(world_vis, world_proj[i], 5, cv::Scalar(0,255,0), -1);
+					}
+
+					int new_height = imgShow.rows;
+					int new_width = (world_vis.cols * new_height) / world_vis.rows;
+					cv::Mat world_resized;
+					cv::resize(world_vis, world_resized, cv::Size(new_width, new_height));
+
+					// 3. Concatenate frame and world_resized side by side
+					cv::Mat combined;
+					cv::hconcat(imgShow, world_resized, combined);
+
+					send_out_imageb64(rdx,combined,msgi.host_uuid); //it takes a lot of time in my pc core I5 around 13 ms 
+					//cv::imshow("video feed", imgShow);
+					//cv::waitKey(0);
+				} else {
+					send_out_imageb64(rdx,imgShow,msgi.host_uuid); //it takes a lot of time in my pc core I5 around 13 ms 
+					//cv::imshow
+
+				}
 			}
 
 
