@@ -103,7 +103,7 @@
                 "topost": "",
                 "publish_objects": false,
                 "publish_events": true,
-                "fusion_role": "publicador",
+                "fusion_role": "fusionador",
                 "homography_image_points": [ [285, 189], [881, 116], [959, 400], [284, 481] ],
                 "homography_world_points": [ [300, 0], [0, 0], [0, 250], [300, 250] ],
                 "crop_video": [[500, 350], [1780, 1070]],
