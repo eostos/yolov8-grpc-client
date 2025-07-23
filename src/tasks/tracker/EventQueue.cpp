@@ -119,6 +119,7 @@ deque<FrMs> EventQueue::takeAllMsg()
         cout << " 1 th_frames_deq size: " << _th_events_buf.size() << endl;
     //SWAP THE BUFFER WITH A DUMMY BUFFER
     swap(out_item, _th_events_buf);
+    
     //
     if (_debugFlag)
         cout << " 2 th_frames_deq size: " << _th_events_buf.size() << endl;

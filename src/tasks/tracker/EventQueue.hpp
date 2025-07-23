@@ -46,6 +46,7 @@ struct FrameMsg {
     int     resolution_y = 0;
     cv::Mat mat_frame;
     Json::Value analytics_results;
+     std::vector<cv::Point2f> coordinates;// = Json::Value(Json::arrayValue);
     string analytic_type = "default-type";
     string event_type = "default-type";
 
@@ -80,7 +81,7 @@ private:
     bool _debugFlag = 0;
     bool _debugMini = 1;
     deque<FrMs> _th_events_buf;
-    const int   _NUMITEMS = 20;
+    const int   _NUMITEMS = 2;
     string      _PORT = "";
     bool _runthread = true;
     //bool _freshFlag = false;

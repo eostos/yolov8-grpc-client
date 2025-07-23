@@ -5,8 +5,10 @@
             {
                 "id": "1",
                 "host_id": "f9e60c4d-78b6-4cdc-be73-fe63cc50d5bf",
-                "url_video1": "/opt/alice-media/copan-water/jugs-hard-tocount-1280x720.mp4",
-                "url_video": "/opt/alice-media/copan-water/ghost-jug-2.mp4",
+                "url_video": "/opt/alice-media/copan-water/jugs-hard-tocount-1280x720.mp4",
+                "url_video1": "/opt/alice-media/copan-water/ghost-jug-2.mp4",
+                "url_video2": "rtsp://admin:technical1415@192.168.1.204:554/Streaming/Channels/102",
+
                 "name": "FusionadorCam",
                 "task_type": "detection",
                 "model": "water-jugs",
@@ -25,14 +27,14 @@
                 "topost": "",
                 "publish_objects": false,
                 "publish_events": true,
-                "fusion_role": "fusionador",
+                "fusion_role": "fusion",
                 "fusion_classes": ["jug","bag"],
                 "match_distance_thresh": 0.6,
                 "match_time_thresh": 1.0,
                 "fusion_cameras": [
                     {
-                        "host_id": "PUBLICADOR-UUID-2222",
-                        "redis_channel": "objects_device_PUBLICADOR-UUID-2222"
+                        "host_id": "71358df2-2c4d-4bd1-b0d9-c908ef03d963",
+                        "redis_channel": "objects_device_"
                     }
                 ],
                 "homography_image_points": [[285, 189], [881, 116], [959, 400], [284, 481] ],
@@ -75,25 +77,22 @@
                         ]
                     }
                 ]
-            }
-        ]
-    },
-    {
-        "type": "config",
-        "params": [
+            },
             {
                 "id": "2",
-                "host_id": "345e810a-eb11-4a9e-8abf-6068851355c6",
-                "url_video": "rtsp://admin:admin123@192.168.1.176:554/Streaming/Channels/1601",
+                "host_id": "71358df2-2c4d-4bd1-b0d9-c908ef03d963",
+                "url_video1": "rtsp://admin:admin123@192.168.1.176:554/Streaming/Channels/1601",
+                "url_video": "/opt/alice-media/copan-water/jugs-hard-tocount-1280x720.mp4",
+                "url_video3":"/opt/alice-media/copan-water/ghost-jug-2.mp4",
                 "name": "cargue1-op",
                 "task_type": "detection",
                 "model": "water-jugs",
                 "model_type": "yolov8",
                 "labelsFile": "water-jugs.names",
-                "fusion_classes": ["jug","bag"],
                 "input_sizes": "3 640 640",
+                "crop_video": [[500, 350], [1780, 1070]],
                 "debug": 1,
-                "verbose": 0,
+                "verbose": 1,
                 "grpc_port": 8001,
                 "grpc_server": "0.0.0.0",
                 "media_path":"/opt/alice-media/",
@@ -101,12 +100,21 @@
                 "server_port": 6379,
                 "send_b64": 0,
                 "topost": "",
-                "publish_objects": false,
-                "publish_events": true,
-                "fusion_role": "fusionador",
-                "homography_image_points": [ [285, 189], [881, 116], [959, 400], [284, 481] ],
-                "homography_world_points": [ [300, 0], [0, 0], [0, 250], [300, 250] ],
-                "crop_video": [[500, 350], [1780, 1070]],
+                "publish_objects": true,
+                "publish_events": false,
+                "fusion_role": "publisher",
+                "fusion_classes": ["jug","bag"],
+                "match_distance_thresh": 0.6,
+                "match_time_thresh": 1.0,
+                "fusion_cameras": [
+                    {
+                        "host_id": "PUBLICADOR-UUID-2222",
+                        "redis_channel": "objects_device_PUBLICADOR-UUID-2222"
+                    }
+                ],
+                "homography_image_points": [[285, 189], [881, 116], [959, 400], [284, 481] ],
+                "homography_world_points": [ [0, 0], [300, 0], [300, 250], [0, 250] ],
+
                 "poligons": [
                     {
                         "poligon_id": "4",
@@ -134,7 +142,10 @@
                         ]
                     }
                 ]
-            }
+
+        ]
+            }        
         ]
     }
+
 ]
