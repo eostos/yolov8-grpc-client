@@ -940,6 +940,7 @@ auto lam_gotmsg = [](const std::string& topic, const std::string& msg) {
 									cv::Point2f world_pt = dst[0];
 									// --- aquí guardas el punto ---
 									world_points_vec.push_back(world_pt);
+									cv::circle(world_vis, world_pt, 4, cv::Scalar(0,0,255), -1);
 									// Si quieres guardar también el id del objeto:
 									// world_points_vec.emplace_back(world_pt.x, world_pt.y, detection.class_id);
 								}
@@ -1123,10 +1124,11 @@ auto lam_gotmsg = [](const std::string& topic, const std::string& msg) {
 					cout << "Failed to set update time - " << host_id << endl;
 				}
 			}
+		if (DEBUG) {
 			auto endtrack = std::chrono::steady_clock::now();
         	auto difftrack = std::chrono::duration_cast<std::chrono::milliseconds>(endtrack - starttrack).count();
         	std::cout << "Infer time track: " << difftrack << " ms" << std::endl;
-			if (DEBUG) {
+			
 				//float data_fin = (tf-ti)*1000/cv::getTickFrequency();
 				//cout << " - Time elapsed per frame: " << data_fin << "ms - " << host_id << endl;				
 				imgShow = tracking.getDrawImage();
@@ -1167,6 +1169,7 @@ auto lam_gotmsg = [](const std::string& topic, const std::string& msg) {
 					
 					if(fusion_role=="publisher" )
 					{
+						
 					cv::resize(world_vis, world_resized, cv::Size(new_width, new_height));
 					// 2. Send the resized world_resized frame to Redis
 					//send_resize_frame_redis(world_resized, msgi.host_uuid, fps, new_width/2, new_height/2, motion_method, unixTimeStamp, frameId,rdx,redis_channel);
@@ -1180,7 +1183,7 @@ auto lam_gotmsg = [](const std::string& topic, const std::string& msg) {
 
 					
 					if(fusion_role=="fusion" )
-						{
+					{
 							// Tamaños base
 							int center_w = imgShow.cols;
 							int center_h = imgShow.rows;
@@ -1226,12 +1229,10 @@ auto lam_gotmsg = [](const std::string& topic, const std::string& msg) {
 							int total_w = center_w + side_w;
 							int total_h = center_h;
 							cv::Mat combined = cv::Mat::zeros(total_h, total_w, CV_8UC3);
-
 							// Pega imgShow a la izquierda
 							imgShow.copyTo(combined(cv::Rect(0, 0, center_w, center_h)));
 							// Pega la columna derecha (vertical)
 							right_side.copyTo(combined(cv::Rect(center_w, 0, side_w, center_h)));
-
 							// Envía a redis o muestra
 							send_out_imageb64(rdx, combined, msgi.host_uuid);
 							// cv::imshow("combined", combined); // Si quieres ver en local
@@ -1239,12 +1240,12 @@ auto lam_gotmsg = [](const std::string& topic, const std::string& msg) {
 						}
 					//cv::imshow("video feed", imgShow);
 					//cv::waitKey(0);
-				} else {
-					send_out_imageb64(rdx,imgShow,msgi.host_uuid); //it takes a lot of time in my pc core I5 around 13 ms 
-					//cv::imshow
+					} else {
+						send_out_imageb64(rdx,imgShow,msgi.host_uuid); //it takes a lot of time in my pc core I5 around 13 ms 
+						//cv::imshow
 
-				}
-			}
+					}
+		}
 
 
 
