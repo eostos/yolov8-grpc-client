@@ -29,7 +29,7 @@
                 "publish_events": true,
                 "fusion_role": "fusion",
                 "fusion_classes": ["jug","bag"],
-                "match_distance_thresh": 0.6,
+                "match_distance_thresh": 20.6,
                 "match_time_thresh": 1.0,
                 "fusion_cameras": [
                     {

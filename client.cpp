@@ -756,7 +756,7 @@ auto lam_gotmsg = [](const std::string& topic, const std::string& msg) {
 	std::vector<cv::Point2f> world_proj;
 	cv::perspectiveTransform(img_pts_vec, world_proj, H);
 	
-	
+	cv::Mat H_inv = H.inv();
     while (true) {
 /////////////////////////////
   		auto start = std::chrono::steady_clock::now();
@@ -963,56 +963,69 @@ auto lam_gotmsg = [](const std::string& topic, const std::string& msg) {
 		if(fusion_role=="fusion" ) 
 		{
 			for (const auto& pt : coordinates_vec)     cv::circle(world_vis, pt, 6, cv::Scalar(255,0,0), 3); // Azul
-				for (auto&& prediction : predictions) 
-				{
-					if (std::holds_alternative<Detection>(prediction)) 
-					{
-						Detection detection = std::get<Detection>(prediction);
-						if(detection.class_confidence < 0.3) 
-						{
-							continue; // Skip detections with low confidence
-						}	
-						//std::cout << "Detecting cars : "  << detection.bbox<<std::endl;
-						//std::cout << "Detecting cars : "  << class_names[detection.class_id]<<std::endl;
-						//std::cout << "Detecting cars : "  << detection.class_id<<std::endl;
-						//std::cout << "Detecting cars : "  << detection.class_confidence<<std::endl;
-						///////
-						Json::Value partInfo;
-						//Rect ri = dnn_det_i.bbox;
-						float FX = (float)1.0/frame.cols;
-						float FY = (float)1.0/frame.rows;
-						partInfo["bbox"]["x"] = to_string_with_precision(detection.bbox.x * FX, 4);
-						partInfo["bbox"]["y"] = to_string_with_precision(detection.bbox.y * FY, 4);
-						partInfo["bbox"]["w"] = to_string_with_precision(detection.bbox.width * FX, 4);
-						partInfo["bbox"]["h"] = to_string_with_precision(detection.bbox.height * FY, 4);
-						partInfo["prob"]      = to_string_with_precision(  detection.class_confidence, 4);
-						partInfo["obj_id"] 	= obj_id;
-						partInfo["tag"]	=  class_names[detection.class_id];
-						parts[idx] = partInfo;
-						idx++;						
-						////
-						uint id = stoul(obj_id);//this was a fake 
-						//dnn_bbox dnn_obj = dnn_bbox{detection.bbox,detection.class_confidence, id, class_names[detection.class_id],"photo_object_cutted","uuid","embeddings",std::to_string(detection.class_confidence)};
-						//detections.push_back(dnn_obj);
-						if (fusion_role=="fusion") {
-							if (std::find(fusion_classes.begin(), fusion_classes.end(), class_names[detection.class_id]) != fusion_classes.end()) {
-								cv::Point2f center(detection.bbox.x + detection.bbox.width/2.0f, detection.bbox.y + detection.bbox.height/2.0f);
-								if (cv::pointPolygonTest(roi_polygon, center, false) >= 0) {
-									std::vector<cv::Point2f> src = {center}, dst;
-									cv::perspectiveTransform(src, dst, H);
-									cv::Point2f world_pt = dst[0];
-									cv::circle(world_vis, world_pt, 4, cv::Scalar(0,0,255), -1);
-									// --- aquí guardas el punto ---
-									world_points_vec.push_back(world_pt);
-									// Si quieres guardar también el id del objeto:
-									// world_points_vec.emplace_back(world_pt.x, world_pt.y, detection.class_id);
-								}
-							}
-						}
+			std::vector<cv::Point2f> image_points;
 
+// Transformar de vuelta
+			cv::perspectiveTransform(coordinates_vec, image_points, H_inv);
+
+			// Ahora image_points contiene los puntos originales en la imagen
+			for (const auto& pt : image_points) {
+				cv::circle(frame, pt, 5, cv::Scalar(255, 0, 255), 2); // Dibujar en la imagen original
+			}
+
+				std::vector<cv::Point2f> centers_to_transform;
+				std::vector<std::pair<cv::Point2f, Detection>> filtered_detections;
+				for (auto&& prediction : predictions) {
+					if (!std::holds_alternative<Detection>(prediction)) continue;
+					Detection detection = std::get<Detection>(prediction);
+
+					if (detection.class_confidence < 0.3) continue;
+
+					if (std::find(fusion_classes.begin(), fusion_classes.end(), class_names[detection.class_id]) != fusion_classes.end()) {
+						cv::Point2f center(detection.bbox.x + detection.bbox.width/2.0f,
+										detection.bbox.y + detection.bbox.height/2.0f);
+						if (cv::pointPolygonTest(roi_polygon, center, false) >= 0) {
+							centers_to_transform.push_back(center);
+							filtered_detections.emplace_back(center, detection);
+						}
 					}
-					
 				}
+
+				// Ahora transformas todos los centros en un solo paso
+				std::vector<cv::Point2f> transformed_centers;
+				cv::perspectiveTransform(centers_to_transform, transformed_centers,H);
+
+				// Los guardas y dibujas
+				for (size_t i = 0; i < transformed_centers.size(); ++i) {
+					const auto& world_pt = transformed_centers[i];
+					world_points_vec.push_back(world_pt);
+					cv::circle(world_vis, world_pt, 4, cv::Scalar(0, 0, 255), -1);
+				}
+
+				std::set<int> matched_coords_idx;
+				float match_threshold = 20.0;
+
+				for (size_t i = 0; i < world_points_vec.size(); ++i) {
+					const cv::Point2f& det_pt = world_points_vec[i];
+					int best_j = -1;
+					float best_dist = match_threshold;
+
+					for (size_t j = 0; j < coordinates_vec.size(); ++j) {
+						if (matched_coords_idx.count(j)) continue;
+						float dist = cv::norm(det_pt - coordinates_vec[j]);
+						if (dist < best_dist) {
+							best_dist = dist;
+							best_j = j;
+						}
+					}
+
+					if (best_j != -1) {
+						cv::line(world_vis, det_pt, coordinates_vec[best_j], cv::Scalar(0, 255, 0), 2);
+						cv::Point2f merged_pt = (det_pt + coordinates_vec[best_j]) * 0.5f;
+						cv::circle(world_vis, merged_pt, 6, cv::Scalar(0, 255, 255), -1);
+						matched_coords_idx.insert(best_j);
+					}
+}
 
 		}
 		if(fusion_role=="none" ) 
