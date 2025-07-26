@@ -429,11 +429,15 @@ void ProcessVideo(const std::string& sourceName,
 	std::string fusion_role = config_params.get("fusion_role", "none").asString();
 	bool publish_objects = config_params.get("publish_objects", true).asBool();
 	bool publish_events = config_params.get("publish_events", false).asBool();
-	std::vector<cv::Point2f> img_pts, world_pts;
-	for (const auto& pt : config_params["homography_image_points"])
+	std::vector<cv::Point2f> img_pts, world_pts,roi_polygon;
+	std::vector<cv::Point> roi_polygon_int;
+	if(fusion_role== "publisher"){
+	for (const auto& pt : config_params["homography_pub"])
     img_pts.emplace_back(pt[0].asFloat(), pt[1].asFloat());
-	for (const auto& pt : config_params["homography_world_points"])
+	for (const auto& pt : config_params["homography_fus"])
     world_pts.emplace_back(pt[0].asFloat(), pt[1].asFloat());
+	}
+
 	// Si es fusionador, cargar lista de cámaras para fusionar
 	std::vector<Json::Value> fusion_cameras;
 	std::string redis_channel_camera_1;
@@ -444,10 +448,17 @@ void ProcessVideo(const std::string& sourceName,
 			for (const auto& cam : fusion_cameras) {
 			host_id_camera_1 = cam["host_id"].asString();
 			redis_channel = cam["redis_channel"].asString();
+			for (const auto& pt : config_params["fusion_cameras"][0]["roi_polygon"]) {
+			roi_polygon.emplace_back(pt[0].asFloat(), pt[1].asFloat());
+			std::cout << "Added point: (" << pt[0].asFloat() << ", " << pt[1].asFloat() << ")" << std::endl;
+		}
 			redis_channel_camera_1=redis_channel_camera_1+host_id_camera_1;
 			std::cout << "Host: " << host_id_camera_1 << ", Channel: " << redis_channel_camera_1 << std::endl;
 		}
-
+		
+		for (const auto& pt : roi_polygon) {
+			roi_polygon_int.emplace_back(static_cast<int>(pt.x), static_cast<int>(pt.y));
+		}
 	}
 
 	if (redis_ip.empty() || redis_port <= 0) {
@@ -743,20 +754,22 @@ auto lam_gotmsg = [](const std::string& topic, const std::string& msg) {
 	// HOMOGRPHY 
 	// 
 	//  */
-	// Assuming img_pts, world_pts are std::vector<cv::Point2f> already filled from config
+
 	cv::Mat H;
 	if(img_pts.size() == 4 && world_pts.size() == 4) {
 		H = cv::findHomography(img_pts, world_pts);
 	} else {
-		std::cerr << "Homography: Need exactly 4 points for both image and world" << std::endl;
+		std::cout  << "Homography: Need exactly 4 points for both image and world" << std::endl;
 	}
 
 
-	std::vector<cv::Point2f> img_pts_vec = img_pts;
-	std::vector<cv::Point2f> world_proj;
-	cv::perspectiveTransform(img_pts_vec, world_proj, H);
+
+
+	//std::vector<cv::Point2f> img_pts_vec = img_pts;
+	//std::vector<cv::Point2f> world_proj;
+	//cv::perspectiveTransform(img_pts_vec, world_proj, H);
 	
-	cv::Mat H_inv = H.inv();
+	//cv::Mat H_inv = H.inv();
     while (true) {
 /////////////////////////////
   		auto start = std::chrono::steady_clock::now();
@@ -858,9 +871,10 @@ auto lam_gotmsg = [](const std::string& topic, const std::string& msg) {
         //    string embeddings;//std::vector<float> embeddings;
 	    //    string prob_det;
         //    };
-		std::vector<cv::Point> roi_polygon;
-		for (const auto& pt : img_pts) roi_polygon.push_back(pt);
-  		cv::polylines(frame, roi_polygon, true, cv::Scalar(0,255,255), 2);
+
+		if(DEBUG){
+  		cv::polylines(frame, roi_polygon_int, true, cv::Scalar(0,255,255), 2);
+		}
 		cv::Mat world_vis = cv::Mat::zeros(300, 300, CV_8UC3);
 		//IF NO PUBLISH EVENTS , THE ANALYTICS WONT SEND THE EVENTS BY REDIS.
 		if(!publish_events && fusion_role=="publisher" ) 
@@ -874,28 +888,30 @@ auto lam_gotmsg = [](const std::string& topic, const std::string& msg) {
 						{
 							continue; // Skip detections with low confidence
 						}	
+						
+            			
 							if (std::find(fusion_classes.begin(), fusion_classes.end(), class_names[detection.class_id]) != fusion_classes.end()) 
-							{
+							{   cv::rectangle(frame, detection.bbox, cv::Scalar(255, 0, 0), 2);
+								draw_label(frame,  class_names[detection.class_id], detection.class_confidence, detection.bbox.x, detection.bbox.y - 1);
 								cv::Point2f center(detection.bbox.x + detection.bbox.width/2.0f, detection.bbox.y + detection.bbox.height/2.0f);
 								/// IS THE POINT INSIDE THE ROI POLYGON ?
-								if (cv::pointPolygonTest(roi_polygon, center, false) >= 0) 
-								{
+
 									std::vector<cv::Point2f> src = {center}, dst;
 									cv::perspectiveTransform(src, dst, H);
 									cv::Point2f world_pt = dst[0];
 									// --- aquí guardas el punto ---
 									world_points_vec.push_back(world_pt);
 									// Si quieres guardar también el id del objeto:
-								}
+								
 							}
 					}
 				}
-			for (const auto& pt : world_points_vec) {
-					Json::Value pt_json;
-					pt_json["x"] = pt.x;
-					pt_json["y"] = pt.y;
-					world_points_json.append(pt_json);
-			}
+				for (const auto& pt : world_points_vec) {
+						Json::Value pt_json;
+						pt_json["x"] = pt.x;
+						pt_json["y"] = pt.y;
+						world_points_json.append(pt_json);
+				}
 			send_meter_coordinates_json(msgi.host_uuid, fps, motion_method,unixTimeStamp, frameId, rdx, redis_channel, world_points_json);
 		}
 		if(publish_events && fusion_role=="publisher"){
@@ -931,21 +947,7 @@ auto lam_gotmsg = [](const std::string& topic, const std::string& msg) {
 						uint id = stoul(obj_id);//this was a fake 
 						dnn_bbox dnn_obj = dnn_bbox{detection.bbox,detection.class_confidence, id, class_names[detection.class_id],"photo_object_cutted","uuid","embeddings",std::to_string(detection.class_confidence)};
 						detections.push_back(dnn_obj);
-						if (fusion_role=="publisher") {
-							if (std::find(fusion_classes.begin(), fusion_classes.end(), class_names[detection.class_id]) != fusion_classes.end()) {
-								cv::Point2f center(detection.bbox.x + detection.bbox.width/2.0f, detection.bbox.y + detection.bbox.height/2.0f);
-								if (cv::pointPolygonTest(roi_polygon, center, false) >= 0) {
-									std::vector<cv::Point2f> src = {center}, dst;
-									cv::perspectiveTransform(src, dst, H);
-									cv::Point2f world_pt = dst[0];
-									// --- aquí guardas el punto ---
-									world_points_vec.push_back(world_pt);
-									cv::circle(world_vis, world_pt, 4, cv::Scalar(0,0,255), -1);
-									// Si quieres guardar también el id del objeto:
-									// world_points_vec.emplace_back(world_pt.x, world_pt.y, detection.class_id);
-								}
-							}
-						}
+
 
 					}
 					
@@ -962,16 +964,12 @@ auto lam_gotmsg = [](const std::string& topic, const std::string& msg) {
 		}
 		if(fusion_role=="fusion" ) 
 		{
-			for (const auto& pt : coordinates_vec)     cv::circle(world_vis, pt, 6, cv::Scalar(255,0,0), 3); // Azul
+			if(DEBUG){
+			for (const auto& pt : coordinates_vec)     cv::circle(frame, pt, 6, cv::Scalar(255,0,0), 3); // Azul
+			}
 			std::vector<cv::Point2f> image_points;
 
-// Transformar de vuelta
-			cv::perspectiveTransform(coordinates_vec, image_points, H_inv);
 
-			// Ahora image_points contiene los puntos originales en la imagen
-			for (const auto& pt : image_points) {
-				cv::circle(frame, pt, 5, cv::Scalar(255, 0, 255), 2); // Dibujar en la imagen original
-			}
 
 				std::vector<cv::Point2f> centers_to_transform;
 				std::vector<std::pair<cv::Point2f, Detection>> filtered_detections;
@@ -984,6 +982,7 @@ auto lam_gotmsg = [](const std::string& topic, const std::string& msg) {
 					if (std::find(fusion_classes.begin(), fusion_classes.end(), class_names[detection.class_id]) != fusion_classes.end()) {
 						cv::Point2f center(detection.bbox.x + detection.bbox.width/2.0f,
 										detection.bbox.y + detection.bbox.height/2.0f);
+
 						if (cv::pointPolygonTest(roi_polygon, center, false) >= 0) {
 							centers_to_transform.push_back(center);
 							filtered_detections.emplace_back(center, detection);
@@ -991,41 +990,9 @@ auto lam_gotmsg = [](const std::string& topic, const std::string& msg) {
 					}
 				}
 
-				// Ahora transformas todos los centros en un solo paso
-				std::vector<cv::Point2f> transformed_centers;
-				cv::perspectiveTransform(centers_to_transform, transformed_centers,H);
 
-				// Los guardas y dibujas
-				for (size_t i = 0; i < transformed_centers.size(); ++i) {
-					const auto& world_pt = transformed_centers[i];
-					world_points_vec.push_back(world_pt);
-					cv::circle(world_vis, world_pt, 4, cv::Scalar(0, 0, 255), -1);
-				}
 
-				std::set<int> matched_coords_idx;
-				float match_threshold = 20.0;
 
-				for (size_t i = 0; i < world_points_vec.size(); ++i) {
-					const cv::Point2f& det_pt = world_points_vec[i];
-					int best_j = -1;
-					float best_dist = match_threshold;
-
-					for (size_t j = 0; j < coordinates_vec.size(); ++j) {
-						if (matched_coords_idx.count(j)) continue;
-						float dist = cv::norm(det_pt - coordinates_vec[j]);
-						if (dist < best_dist) {
-							best_dist = dist;
-							best_j = j;
-						}
-					}
-
-					if (best_j != -1) {
-						cv::line(world_vis, det_pt, coordinates_vec[best_j], cv::Scalar(0, 255, 0), 2);
-						cv::Point2f merged_pt = (det_pt + coordinates_vec[best_j]) * 0.5f;
-						cv::circle(world_vis, merged_pt, 6, cv::Scalar(0, 255, 255), -1);
-						matched_coords_idx.insert(best_j);
-					}
-}
 
 		}
 		if(fusion_role=="none" ) 
@@ -1158,110 +1125,11 @@ auto lam_gotmsg = [](const std::string& topic, const std::string& msg) {
 					}
 				}
 
-
-				// Suppose 'frame' is your main image and 'world_vis' is your homography visualization (already drawn)
-				// 1. Draw the polygon on world_vis
-				if(fusion_role=="fusion" || fusion_role=="publisher" )
-				{	
-					//cout<<" Fusionador or Publicador role detected, drawing world projection." << endl;
-					for (size_t i = 0; i < world_proj.size(); ++i) {
-						cv::line(world_vis, world_proj[i], world_proj[(i+1)%world_proj.size()], cv::Scalar(255,0,0), 2);
-						cv::circle(world_vis, world_proj[i], 5, cv::Scalar(0,255,0), -1);
-					}
-
-					int new_height = imgShow.rows;
-					int new_width = (world_vis.cols * new_height) / world_vis.rows;
-
-					int center_h = imgShow.rows;
-					int center_w = imgShow.cols;
-
-					// Resize world_vis para que tenga la misma altura que imgShow o la mitad, según lo requieras
-					int side_h = center_h / 2;
-					int side_w = (world_vis.cols * side_h) / world_vis.rows; // mantener aspecto
-					cv::Mat world_resized;
-					
-					if(fusion_role=="publisher" )
-					{
-						
-					cv::resize(world_vis, world_resized, cv::Size(new_width, new_height));
-					// 2. Send the resized world_resized frame to Redis
-					//send_resize_frame_redis(world_resized, msgi.host_uuid, fps, new_width/2, new_height/2, motion_method, unixTimeStamp, frameId,rdx,redis_channel);
-										// 3. Concatenate frame and world_resized side by side
-					cv::Mat combined;
-					cv::hconcat(imgShow, world_resized, combined);
-					send_out_imageb64(rdx,combined,msgi.host_uuid); //it takes a lot of time in my pc core I5 around 13 ms 
-					}
-
-					//
-
-					
-					if(fusion_role=="fusion" )
-					{
-							// Tamaños base
-							int center_w = imgShow.cols;
-							int center_h = imgShow.rows;
-							int side_w = center_w / 2;
-							int side_h = center_h / 2;
-
-							// Redimensionar side panels
-							cv::Mat world_resized, img_other_resized;
-							cv::resize(world_vis, world_resized, cv::Size(side_w, side_h));
-							if (image_from_2_camera.empty()) {
-								img_other_resized = cv::Mat::zeros(side_w, side_h, CV_8UC3);
-							} else {
-								cv::resize(image_from_2_camera, img_other_resized, cv::Size(side_w, side_h));
-
-							}
-							if (world_resized.channels() != 3) {
-								cv::cvtColor(world_resized, world_resized, cv::COLOR_GRAY2BGR);
-							}
-							if (img_other_resized.channels() != 3) {
-								cv::cvtColor(img_other_resized, img_other_resized, cv::COLOR_GRAY2BGR);
-							}
-							if (world_resized.type() != img_other_resized.type()) {
-								img_other_resized.convertTo(img_other_resized, world_resized.type());
-							}
-							if (world_resized.cols != img_other_resized.cols) {
-								cv::resize(img_other_resized, img_other_resized, cv::Size(world_resized.cols, img_other_resized.rows));
-							}
-							if (world_resized.rows != img_other_resized.rows) {
-								// Opcional: solo si quieres forzar mismo alto, pero para vconcat solo importa el ancho.
-								// Lo principal es que los anchos (cols) sean iguales.
-							}
-
-							// Une las dos imágenes de la derecha (vertical)
-							cv::Mat right_side;
-							cv::vconcat(world_resized, img_other_resized, right_side);
-
-							// Si por algún motivo el alto no coincide exactamente (puede pasar por divisiones), ajusta:
-							if (right_side.rows != center_h) {
-								cv::resize(right_side, right_side, cv::Size(side_w, center_h));
-							}
-
-							// Crea el canvas final
-							int total_w = center_w + side_w;
-							int total_h = center_h;
-							cv::Mat combined = cv::Mat::zeros(total_h, total_w, CV_8UC3);
-							// Pega imgShow a la izquierda
-							imgShow.copyTo(combined(cv::Rect(0, 0, center_w, center_h)));
-							// Pega la columna derecha (vertical)
-							right_side.copyTo(combined(cv::Rect(center_w, 0, side_w, center_h)));
-							// Envía a redis o muestra
-							send_out_imageb64(rdx, combined, msgi.host_uuid);
-							// cv::imshow("combined", combined); // Si quieres ver en local
-
-						}
-					//cv::imshow("video feed", imgShow);
-					//cv::waitKey(0);
-					} else {
 						send_out_imageb64(rdx,imgShow,msgi.host_uuid); //it takes a lot of time in my pc core I5 around 13 ms 
 						//cv::imshow
 
-					}
 		}
-
-
-
+		
 
 
 

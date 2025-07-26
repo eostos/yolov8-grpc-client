@@ -8,7 +8,6 @@
                 "url_video": "/opt/alice-media/copan-water/jugs-hard-tocount-1280x720.mp4",
                 "url_video1": "/opt/alice-media/copan-water/ghost-jug-2.mp4",
                 "url_video2": "rtsp://admin:technical1415@192.168.1.204:554/Streaming/Channels/102",
-
                 "name": "FusionadorCam",
                 "task_type": "detection",
                 "model": "water-jugs",
@@ -34,12 +33,13 @@
                 "fusion_cameras": [
                     {
                         "host_id": "71358df2-2c4d-4bd1-b0d9-c908ef03d963",
-                        "redis_channel": "objects_device_"
+                        "redis_channel": "objects_device_",
+                        "roi_polygon": [[864, 125], [903, 559], [286, 645], [244, 165]]
                     }
                 ],
-                "homography_image_points": [[285, 189], [881, 116], [959, 400], [284, 481] ],
-                "homography_world_points": [ [0, 0], [300, 0], [300, 250], [0, 250] ],
-                "homography_world_points1": [ [300, 0], [0, 0], [0, 250], [300, 250] ],
+                "homography_pub": [[791, 525], [201, 539], [226, 179], [752, 135] ],
+                "homography_fus": [ [527, 150], [1011, 203], [1145, 487], [500, 413] ],
+
                 "poligons": [
                     {
                         "poligon_id": "57",
@@ -82,7 +82,7 @@
                 "id": "2",
                 "host_id": "71358df2-2c4d-4bd1-b0d9-c908ef03d963",
                 "url_video1": "rtsp://admin:admin123@192.168.1.176:554/Streaming/Channels/1601",
-                "url_video": "/opt/alice-media/copan-water/jugs-hard-tocount-1280x720.mp4",
+                "url_video": "/opt/alice-media/copan-water/new-camera.mp4",
                 "url_video3":"/opt/alice-media/copan-water/ghost-jug-2.mp4",
                 "name": "cargue1-op",
                 "task_type": "detection",
@@ -103,17 +103,19 @@
                 "publish_objects": true,
                 "publish_events": false,
                 "fusion_role": "publisher",
-                "fusion_classes": ["jug","bag"],
+                "fusion_classes": ["jug"],
                 "match_distance_thresh": 0.6,
                 "match_time_thresh": 1.0,
                 "fusion_cameras": [
                     {
+                        
                         "host_id": "PUBLICADOR-UUID-2222",
-                        "redis_channel": "objects_device_PUBLICADOR-UUID-2222"
+                        "redis_channel": "objects_device_PUBLICADOR-UUID-2222",
+                        "roi_polygon": [[0.27, 0.3788], [0.6705, 0.3387], [0.7807, 0.9739], [0.2104, 0.994]]
                     }
                 ],
-                "homography_image_points": [[285, 189], [881, 116], [959, 400], [284, 481] ],
-                "homography_world_points": [ [0, 0], [300, 0], [300, 250], [0, 250] ],
+                "homography_pub": [ [105, 115], [1100, 17], [1082, 634], [259, 515] ],
+                "homography_fus": [[1016, 443], [184, 566], [319, 157], [713, 70] ],
 
                 "poligons": [
                     {
