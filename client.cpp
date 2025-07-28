@@ -758,6 +758,7 @@ auto lam_gotmsg = [](const std::string& topic, const std::string& msg) {
 	cv::Mat H;
 	if(img_pts.size() == 4 && world_pts.size() == 4) {
 		H = cv::findHomography(img_pts, world_pts);
+		std::cout << "Homography Matrix H:\n" << H << std::endl;
 	} else {
 		std::cout  << "Homography: Need exactly 4 points for both image and world" << std::endl;
 	}
@@ -833,7 +834,7 @@ auto lam_gotmsg = [](const std::string& topic, const std::string& msg) {
 			//	poligon_tracker_manager.clear(); 
 			
 			poligon_tracker_manager = get_poligons_trackers(config_params["poligons"]);
-			cv::Mat world_vis = cv::Mat::zeros(300, 500, CV_8UC3);
+			
 			// --------------------------------------------------------------------
 		for (int i = 0, m = (int)poligon_tracker_manager.size(); i < m; ++i) 
 		{
@@ -848,10 +849,13 @@ auto lam_gotmsg = [](const std::string& topic, const std::string& msg) {
 				//auto smartQueue_size = abs(smartQueue.getListSize());
 			if (eventsQueue_size<1){
 				cout << "Waiting for events, please turn on the camera publisher" << endl;
-				continue;
-			}
+				//continue;
+				
+			}else{
 				msg_n = smartQueueEvents.takeOldestItem();
 				coordinates_vec = msg_n.coordinates;
+			}
+	
 				//cv::imshow("Image from other camera", image_from_2_camera);
 				//cv::imwrite("image_from_other_camera.jpg", image_from_2_camera);
 				//cv::waitKey(1); // Para mostrar la imagen de la otra cámara
@@ -875,7 +879,7 @@ auto lam_gotmsg = [](const std::string& topic, const std::string& msg) {
 		if(DEBUG){
   		cv::polylines(frame, roi_polygon_int, true, cv::Scalar(0,255,255), 2);
 		}
-		cv::Mat world_vis = cv::Mat::zeros(300, 300, CV_8UC3);
+
 		//IF NO PUBLISH EVENTS , THE ANALYTICS WONT SEND THE EVENTS BY REDIS.
 		if(!publish_events && fusion_role=="publisher" ) 
 		{
@@ -947,7 +951,20 @@ auto lam_gotmsg = [](const std::string& topic, const std::string& msg) {
 						uint id = stoul(obj_id);//this was a fake 
 						dnn_bbox dnn_obj = dnn_bbox{detection.bbox,detection.class_confidence, id, class_names[detection.class_id],"photo_object_cutted","uuid","embeddings",std::to_string(detection.class_confidence)};
 						detections.push_back(dnn_obj);
+						if (std::find(fusion_classes.begin(), fusion_classes.end(), class_names[detection.class_id]) != fusion_classes.end()) 
+							{   cv::rectangle(frame, detection.bbox, cv::Scalar(255, 0, 0), 2);
+								draw_label(frame,  class_names[detection.class_id], detection.class_confidence, detection.bbox.x, detection.bbox.y - 1);
+								cv::Point2f center(detection.bbox.x + detection.bbox.width/2.0f, detection.bbox.y + detection.bbox.height/2.0f);
+								/// IS THE POINT INSIDE THE ROI POLYGON ?
 
+									std::vector<cv::Point2f> src = {center}, dst;
+									cv::perspectiveTransform(src, dst, H);
+									cv::Point2f world_pt = dst[0];
+									// --- aquí guardas el punto ---
+									world_points_vec.push_back(world_pt);
+									// Si quieres guardar también el id del objeto:
+								
+							}
 
 					}
 					
@@ -964,10 +981,30 @@ auto lam_gotmsg = [](const std::string& topic, const std::string& msg) {
 		}
 		if(fusion_role=="fusion" ) 
 		{
-			if(DEBUG){
-			for (const auto& pt : coordinates_vec)     cv::circle(frame, pt, 6, cv::Scalar(255,0,0), 3); // Azul
-			}
-			std::vector<cv::Point2f> image_points;
+				if (DEBUG) {
+					for (const auto& pt : coordinates_vec) {
+						//cout<< "Point from other camera: OPENING FUSSSIONNN" << endl;
+						int size = 12;      // Tamaño del cuadrado
+						int line_len = 5;   // Largo de cada esquina
+
+						int x = static_cast<int>(pt.x);
+						int y = static_cast<int>(pt.y);
+
+						// Esquina superior izquierda
+						cv::line(frame, cv::Point(x - size, y - size), cv::Point(x - size + line_len, y - size), cv::Scalar(0, 255, 0), 2);
+						cv::line(frame, cv::Point(x - size, y - size), cv::Point(x - size, y - size + line_len), cv::Scalar(0, 255, 0), 2);
+						// Esquina superior derecha
+						cv::line(frame, cv::Point(x + size, y - size), cv::Point(x + size - line_len, y - size), cv::Scalar(0, 255, 0), 2);
+						cv::line(frame, cv::Point(x + size, y - size), cv::Point(x + size, y - size + line_len), cv::Scalar(0, 255, 0), 2);
+						// Esquina inferior izquierda
+						cv::line(frame, cv::Point(x - size, y + size), cv::Point(x - size + line_len, y + size), cv::Scalar(0, 255, 0), 2);
+						cv::line(frame, cv::Point(x - size, y + size), cv::Point(x - size, y + size - line_len), cv::Scalar(0, 255, 0), 2);
+						// Esquina inferior derecha
+						cv::line(frame, cv::Point(x + size, y + size), cv::Point(x + size - line_len, y + size), cv::Scalar(0, 255, 0), 2);
+						cv::line(frame, cv::Point(x + size, y + size), cv::Point(x + size, y + size - line_len), cv::Scalar(0, 255, 0), 2);
+					}
+				}
+							std::vector<cv::Point2f> image_points;
 
 
 
@@ -978,6 +1015,24 @@ auto lam_gotmsg = [](const std::string& topic, const std::string& msg) {
 					Detection detection = std::get<Detection>(prediction);
 
 					if (detection.class_confidence < 0.3) continue;
+						///////
+						Json::Value partInfo;
+						//Rect ri = dnn_det_i.bbox;
+						float FX = (float)1.0/frame.cols;
+						float FY = (float)1.0/frame.rows;
+						partInfo["bbox"]["x"] = to_string_with_precision(detection.bbox.x * FX, 4);
+						partInfo["bbox"]["y"] = to_string_with_precision(detection.bbox.y * FY, 4);
+						partInfo["bbox"]["w"] = to_string_with_precision(detection.bbox.width * FX, 4);
+						partInfo["bbox"]["h"] = to_string_with_precision(detection.bbox.height * FY, 4);
+						partInfo["prob"]      = to_string_with_precision(  detection.class_confidence, 4);
+						partInfo["obj_id"] 	= obj_id;
+						partInfo["tag"]	=  class_names[detection.class_id];
+						parts[idx] = partInfo;
+						idx++;						
+						////
+						uint id = stoul(obj_id);//this was a fake 
+						dnn_bbox dnn_obj = dnn_bbox{detection.bbox,detection.class_confidence, id, class_names[detection.class_id],"photo_object_cutted","uuid","embeddings",std::to_string(detection.class_confidence)};
+						detections.push_back(dnn_obj);
 
 					if (std::find(fusion_classes.begin(), fusion_classes.end(), class_names[detection.class_id]) != fusion_classes.end()) {
 						cv::Point2f center(detection.bbox.x + detection.bbox.width/2.0f,
@@ -989,6 +1044,43 @@ auto lam_gotmsg = [](const std::string& topic, const std::string& msg) {
 						}
 					}
 				}
+				for (const auto& pt : coordinates_vec) {
+				// Para cada punto proyectado que NO fue matcheado con una detección local
+
+				// Define un bbox centrado en el punto proyectado (ajusta el tamaño según tu objeto)
+				int bbox_size = 80;
+				cv::Rect bbox(pt.x - bbox_size/2, pt.y - bbox_size/2, bbox_size, bbox_size);
+
+				// Asume un id fake o genera uno (aquí uso un hash sencillo)
+				uint id = std::hash<float>{}(pt.x + pt.y);
+
+				// Publica como cualquier detection normal
+				Json::Value partInfo;
+				float FX = (float)1.0 / frame.cols;
+				float FY = (float)1.0 / frame.rows;
+				partInfo["bbox"]["x"] = to_string_with_precision(bbox.x * FX, 4);
+				partInfo["bbox"]["y"] = to_string_with_precision(bbox.y * FY, 4);
+				partInfo["bbox"]["w"] = to_string_with_precision(bbox.width * FX, 4);
+				partInfo["bbox"]["h"] = to_string_with_precision(bbox.height * FY, 4);
+				partInfo["prob"]      = "0.99";   // Alta porque viene de proyección
+				partInfo["obj_id"]    = std::to_string(id);
+				partInfo["tag"]       = "jug"; // O el nombre de clase correspondiente
+				parts[idx] = partInfo;
+				idx++;
+
+				// Ahora el dnn_bbox virtual
+				dnn_bbox dnn_obj = dnn_bbox{
+					bbox,
+					0.99f,
+					id,
+					"jug",  // O la clase que toque
+					"photo_object_cutted",
+					"uuid",
+					"embeddings",
+					"0.99"
+				};
+				detections.push_back(dnn_obj);
+			}
 
 
 
