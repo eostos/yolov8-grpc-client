@@ -81,7 +81,7 @@ private:
     bool _debugFlag = 0;
     bool _debugMini = 1;
     deque<FrMs> _th_events_buf;
-    const int   _NUMITEMS = 2;
+    const int   _NUMITEMS = 1;
     string      _PORT = "";
     bool _runthread = true;
     //bool _freshFlag = false;
