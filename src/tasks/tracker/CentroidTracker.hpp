@@ -122,6 +122,7 @@ public:
     dnn_bbox getRouteBboxTail();
     //
     void updateSpeed(double fps,std::vector<cv::Point2f> speed_poligon,std::vector<cv::Point2f> speed_meters,ViewTransformer view_transformer) ;
+    void resetSpeed();
      Mat getDrawImageFromTracker();
     Point getCurrentPosition()const;
     double getSmoothedSpeed();
@@ -170,6 +171,7 @@ protected:
 public:
     //CentroidTracker();
     CentroidTracker();
+    
 
     // Constructor with ViewTransformer initialization
     CentroidTracker(const std::vector<cv::Point2f>& speed_poligon, const std::vector<cv::Point2f>& speed_meters);

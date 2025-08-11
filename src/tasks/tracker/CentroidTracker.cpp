@@ -240,9 +240,13 @@ void TrackingObject::startTracker(uint _obj_id, string _obj_label) {
 
 
 
-
+void TrackingObject::resetSpeed() {
+    // Reset speed data (make sure your class has a speed attribute)
+    this->speed_kmh = 0;  // Assuming `current_speed` stores the current speed
+}
 void TrackingObject::updateSpeed(double fps, const std::vector<cv::Point2f> speed_polygon, const std::vector<cv::Point2f> speed_meters, ViewTransformer view_transformer) {
     // Draw the speed polygon for visualization
+	
     for (const auto& point : speed_polygon) {
         cv::circle(drawable, point, 5, cv::Scalar(0, 0, 255), -1); // Draw red circles
     }
@@ -537,6 +541,7 @@ double CentroidTracker::getFps(){
 return totalTime;
 
 }
+
 void CentroidTracker::UpdateObjects(vector<dnn_bbox> _detections, string frame_id, double fps ,bool DEBUG) {
     /*
     @ Draw Search Radius
@@ -614,6 +619,8 @@ void CentroidTracker::UpdateObjects(vector<dnn_bbox> _detections, string frame_i
                 }
                 // IF FOUND, REMOVE THE DETECTION_i, AND UPDATE THE TRACKER
                 if (is_found) {
+					trk_i->resetSpeed();  // This function needs to be implemented in your tracker class
+
                     trk_i->setTrackerDNN(detections[nearest_idx], getRectCenter(detections[nearest_idx].bbox));
                     trk_i->setStatus(1);
                     trk_i->setMatched(true);
