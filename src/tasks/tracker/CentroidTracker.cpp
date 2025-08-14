@@ -245,8 +245,8 @@ void TrackingObject::resetSpeed() {
     this->speed_kmh = 0;  // Assuming `current_speed` stores the current speed
 }
 void TrackingObject::updateSpeed(double fps, const std::vector<cv::Point2f> speed_polygon, const std::vector<cv::Point2f> speed_meters, ViewTransformer view_transformer) {
-    // Draw the speed polygon for visualization
-	
+    fps=9.0;
+	// Draw the speed polygon for visualization
     for (const auto& point : speed_polygon) {
         cv::circle(drawable, point, 5, cv::Scalar(0, 0, 255), -1); // Draw red circles
     }
@@ -266,10 +266,9 @@ void TrackingObject::updateSpeed(double fps, const std::vector<cv::Point2f> spee
             cv::Point2f transformed_point = transformed_points[0];
 
             // Apply a simple moving average for smoothing
-            if (!speed_coordinates.empty() && std::abs(speed_coordinates.back().y - transformed_point.y) > 5) {
-                // Ignore large jumps
-                transformed_point.y = speed_coordinates.back().y;
-            }
+			if (!speed_coordinates.empty() && cv::norm(transformed_point - speed_coordinates.back()) > 5.0f) {
+				transformed_point = speed_coordinates.back();
+			}
             speed_coordinates.push_back(transformed_point);
 
             if (speed_coordinates.size() > fps/2) {
@@ -299,6 +298,8 @@ void TrackingObject::updateSpeed(double fps, const std::vector<cv::Point2f> spee
         }
     }
 }
+
+
 
 
 //(185.30645161290323, 438.4677419354839), (1124.6612903225805, 438.4677419354839), (861.4354838709676, 312.01612903225805), (355.67786187322616, 311.4772942289499)

@@ -1,0 +1,341 @@
+[
+    {
+        "type": "config",
+        "params": [
+            {
+                "id": "1",
+                "host_id": "f9e60c4d-78b6-4cdc-be73-fe63cc50d5bf",
+                "url_video": "35km-up.mp4",
+                "url_video1": "/opt/alice-media/copan-water/horizonal-camera.mp4",
+                "url_video2": "rtsp://admin:technical1415@192.168.1.204:554/Streaming/Channels/102",
+                "name": "FusionadorCam",
+                "task_type": "detection",
+                "model": "traffic",
+                "model_type": "yolov8",
+                "labelsFile": "/opt/alice-config/traffic.names",
+                "input_sizes": "3 640 640",
+                "crop_video": [],
+                "debug": 1,
+                "verbose": 1,
+                "grpc_port": 8001,
+                "grpc_server": "0.0.0.0",
+                "media_path": "/opt/alice-media/",
+                "server_ip": "127.0.0.1",
+                "server_port": 6379,
+                "send_b64": 0,
+                "topost": "",
+                "publish_objects": false,
+                "publish_events": true,
+                "fusion_role": "none",
+                "fusion_classes": [
+                    "jug",
+                    "bag"
+                ],
+                "match_distance_thresh": 20.6,
+                "match_time_thresh": 1,
+                "fusion_cameras": [
+                    {
+                        "host_id": "71358df2-2c4d-4bd1-b0d9-c908ef03d963",
+                        "redis_channel": "objects_device_",
+                        "roi_polygon": [
+                            [
+                                864,
+                                125
+                            ],
+                            [
+                                903,
+                                559
+                            ],
+                            [
+                                286,
+                                645
+                            ],
+                            [
+                                244,
+                                165
+                            ]
+                        ]
+                    }
+                ],
+                "homography_pub": [
+                    [
+                        791,
+                        525
+                    ],
+                    [
+                        201,
+                        539
+                    ],
+                    [
+                        226,
+                        179
+                    ],
+                    [
+                        752,
+                        135
+                    ]
+                ],
+                "homography_fus": [
+                    [
+                        527,
+                        150
+                    ],
+                    [
+                        1011,
+                        203
+                    ],
+                    [
+                        1145,
+                        487
+                    ],
+                    [
+                        500,
+                        413
+                    ]
+                ],
+                "poligons": [
+                    {
+                        "poligon_id": "58",
+                        "points": [
+                            {
+                                "x": 0.0102,
+                                "y": 0.016
+                            },
+                            {
+                                "x": 0.9918,
+                                "y": 0.016
+                            },
+                            {
+                                "x": 0.9918,
+                                "y": 0.984
+                            },
+                            {
+                                "x": 0.0102,
+                                "y": 0.984
+                            }
+                        ]
+                    }
+                ],
+                "measure_speed": true,
+                "poligon_speed": [
+                    {
+                        "poligon_id": "6",
+                        "points": [
+                            {
+                                "x": 78,
+                                "y": 158
+                            },
+                            {
+                                "x": 379,
+                                "y": 160
+                            },
+                            {
+                                "x": 663,
+                                "y": 375
+                            },
+                            {
+                                "x": 115,
+                                "y": 400
+                            }
+                        ],
+                        "meters": [
+                            {
+                                "x": 0,
+                                "y": 0
+                            },
+                            {
+                                "x": 7.8,
+                                "y": 0
+                            },
+                            {
+                                "x": 7.8,
+                                "y": 14.43
+                            },
+                            {
+                                "x": 0,
+                                "y": 14.43
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": "2",
+                "host_id": "71358df2-2c4d-4bd1-b0d9-c908ef03d963",
+                "url_video1": "rtsp://admin:admin123@192.168.1.176:554/Streaming/Channels/1601",
+                "url_video3": "/opt/alice-media/copan-water/new-camera-jug-in.mp4",
+                "url_video2": "/opt/alice-media/copan-water/new-camera.mp4",
+                "url_video": "/opt/alice-media/copan-water/complete-videos/top_1280x720.mp4",
+                "name": "cargue1-op",
+                "task_type": "detection",
+                "model": "water-jugs",
+                "model_type": "yolov8",
+                "labelsFile": "water-jugs.names",
+                "input_sizes": "3 640 640",
+                "crop_video": [],
+                "debug": 1,
+                "verbose": 1,
+                "grpc_port": 8001,
+                "grpc_server": "0.0.0.0",
+                "media_path": "/opt/alice-media/",
+                "server_ip": "127.0.0.1",
+                "server_port": 6379,
+                "send_b64": 0,
+                "topost": "",
+                "publish_objects": true,
+                "publish_events": true,
+                "fusion_role": "publisher",
+                "fusion_classes": [
+                    "jug"
+                ],
+                "match_distance_thresh": 0.6,
+                "match_time_thresh": 1,
+                "fusion_cameras": [
+                    {
+                        "host_id": "PUBLICADOR-UUID-2222",
+                        "redis_channel": "objects_device_PUBLICADOR-UUID-2222",
+                        "roi_polygon": [
+                            [
+                                0.27,
+                                0.3788
+                            ],
+                            [
+                                0.6705,
+                                0.3387
+                            ],
+                            [
+                                0.7807,
+                                0.9739
+                            ],
+                            [
+                                0.2104,
+                                0.994
+                            ]
+                        ]
+                    }
+                ],
+                "homography_pub": [
+                    [
+                        105,
+                        115
+                    ],
+                    [
+                        1100,
+                        17
+                    ],
+                    [
+                        1082,
+                        634
+                    ],
+                    [
+                        259,
+                        515
+                    ]
+                ],
+                "homography_fus": [
+                    [
+                        1016,
+                        443
+                    ],
+                    [
+                        184,
+                        566
+                    ],
+                    [
+                        319,
+                        157
+                    ],
+                    [
+                        713,
+                        70
+                    ]
+                ],
+                "poligons": [
+                    {
+                        "poligon_id": "4",
+                        "points": [
+                            {
+                                "x": 0.2937,
+                                "y": 0.1265
+                            },
+                            {
+                                "x": 0.8101,
+                                "y": 0.186
+                            },
+                            {
+                                "x": 0.8228,
+                                "y": 0.42
+                            },
+                            {
+                                "x": 0.2734,
+                                "y": 0.318
+                            }
+                        ]
+                    },
+                    {
+                        "poligon_id": "61",
+                        "points": [
+                            {
+                                "x": 0.0684,
+                                "y": 0.01
+                            },
+                            {
+                                "x": 0.711,
+                                "y": 0.012
+                            },
+                            {
+                                "x": 0.7757,
+                                "y": 0.3287
+                            },
+                            {
+                                "x": 0.0228,
+                                "y": 0.3828
+                            }
+                        ]
+                    }
+                ],
+                "poligon_speed": [
+                    {
+                        "poligon_id": "6",
+                        "points": [
+                            {
+                                "x": 130,
+                                "y": 180.1
+                            },
+                            {
+                                "x": 255,
+                                "y": 180
+                            },
+                            {
+                                "x": 412,
+                                "y": 325
+                            },
+                            {
+                                "x": 186,
+                                "y": 345
+                            }
+                        ],
+                        "meters": [
+                            {
+                                "x": 0,
+                                "y": 0
+                            },
+                            {
+                                "x": 6,
+                                "y": 0
+                            },
+                            {
+                                "x": 6,
+                                "y": 23
+                            },
+                            {
+                                "x": 0,
+                                "y": 23
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+]
