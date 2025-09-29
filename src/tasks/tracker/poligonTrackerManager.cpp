@@ -830,6 +830,8 @@ void PoligonTrackerManager::evaluateAreaBbox() {
                     event_poligon["type_event"] = type_event;
                     event_poligon["side"] = lado;
                     if(this->getPoligonID()=="17"){
+
+
                     cout <<this->getPoligonID()<< " ID , this->_eval_points   , LADO :  " << lado <<" TYPE " <<type_event<<endl;
                     }
                     Json::Value temp_point;
@@ -956,10 +958,16 @@ void PoligonTrackerManager::evaluateArea() {
                 bool k = calculateIntersection(p0_ext, p1_ext, p2, p3, pout);
 
                 if (k) {
+
                     lado = j;
                     Json::Value event_poligon;
                     event_poligon["type_event"] = type_event;
                     event_poligon["side"] = lado;
+                                    std::cout << "TRACKER " << to->getId()
+                            << " status_0=" << status_0
+                            << " status_1=" << status_1
+                            << " route_size=" << route_area_size
+                            << " awake=" << to->isAwake() << std::endl;
                     cout <<this->getPoligonID()<< " ID ,   , LADO :  " << lado <<" TYPE " <<type_event<<" "<<to->getLabel()<<" TRK ID "<< to->getId()<<endl;
                     Json::Value temp_point;
                     temp_point["x"] = pout.x / static_cast<float>(this->getSize().width);
@@ -988,21 +996,11 @@ void PoligonTrackerManager::evaluateArea() {
                     break;
                 }
             }
-            auto t_intersect_end = Clock::now();
-            if (PROFILE_INTERSECTION)
-                std::cout << "[Profile] Tracker " << i << " intersection loop: " 
-                    << std::chrono::duration_cast<std::chrono::microseconds>(t_intersect_end-t_intersect_start).count()
-                    << " us\n";
+         
+
         }
 
-        auto t_tracker_end = Clock::now();
-        if (PROFILE_LOOP)
-            std::cout << "[Profile] Tracker " << i << " total: " 
-                << std::chrono::duration_cast<std::chrono::microseconds>(t_tracker_end-t_tracker_start).count()
-                << " us\n";
+
     }
-    auto t_eval_end = Clock::now();
-    std::cout << "[Profile] Total evaluateArea: " 
-              << std::chrono::duration_cast<std::chrono::milliseconds>(t_eval_end-t_eval_start).count()
-              << " ms\n";
+
 }

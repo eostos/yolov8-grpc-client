@@ -356,9 +356,9 @@ void TrackingObject::setTrackerDNN(const dnn_bbox &dnnData, cv::Point center_det
 		//min(bbox.width, bbox.height)/2 + abs(bbox.width - box.height)/2
 	}
 	//
-	//If gun -> max_distance*4
-	if(obj_label=="bag"){max_distance *= 3;}
-
+if (obj_label == "bag") {
+        max_distance *= 3;
+    }
 	last_updated = getTimeMilis();
 	duration = last_updated - timestamp_in;
 
@@ -450,7 +450,7 @@ void TrackingObject::drawTrack(Mat &draw_trks, int &ix) {
 	Scalar TXT_COLOR = isMatched() ? EB_GRN : EB_RED;
 	rectangle(draw_trks, last_box, BOX_COLOR, 2, 8, 0);
 	drawRoute(draw_trks);
-	//putText(draw_trks, strid, pt0, FONT_HERSHEY_SIMPLEX, 0.75, TXT_COLOR, 2); //it daw the tracker 
+	putText(draw_trks, strid, pt0, FONT_HERSHEY_SIMPLEX, 0.75, TXT_COLOR, 2); //it daw the tracker 
 	//putText(draw_trks, strprob, pt0, FONT_HERSHEY_SIMPLEX, 0.75, TXT_COLOR, 2);
 }
 
@@ -559,7 +559,7 @@ void CentroidTracker::UpdateObjects(vector<dnn_bbox> _detections, string frame_i
     detections = validateDets(_detections);
     for(auto detection: detections){
         Rect det_bbox = detection.bbox;
-       // cv::rectangle(dets_img, det_bbox, Scalar(255,64,64), 4, 8, 0);
+       //cv::rectangle(dets_img, det_bbox, Scalar(255,64,64), 4, 8, 0);
     }
     // Set all trackers as NOT matched
     for (auto &trk_i: objects) {
@@ -596,7 +596,7 @@ void CentroidTracker::UpdateObjects(vector<dnn_bbox> _detections, string frame_i
                     //float dist = distanceP(projected_center, center_det);
                     float max_dist = trk_i->getMaxDistance();
                     bool C1 = (dist<min_dist);
-                    bool C2 = (dist<max_dist);
+                    bool C2 = (dist<max_dist );
                     bool C3 = (detections[i].obj_id == trk_i->getObjId());
     /*
     //treat truck as car
@@ -724,7 +724,9 @@ Json::Value CentroidTracker::reportObjects(bool &save_img) {
 			partInfo["init_time"] = trk_i->getTimestampIn();
 			partInfo["duration_time"] = trk_i->getDuration();
 			partInfo["tracker_size"] = trk_i->getRouteSize();
-			partInfo["state"] = trk_i->getStatus();            
+			partInfo["state"] = trk_i->getStatus();   
+			//cout<< trk_i->getStatus() <<"  STATUS   *************** " << trk_i->getId()<< " ID  "<< endl;    
+   
 			partInfo["init_frame_id"] = trk_i->getInitFrameId();
 			//partInfo["speed"] = trk_i->getSpeed();
 			//cout<<trk_i->getSpeed()<<"  speed   ***************"<<endl;

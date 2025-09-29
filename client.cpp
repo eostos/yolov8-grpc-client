@@ -279,8 +279,8 @@ std::unique_ptr<TaskInterface> createDetectorInstance(const std::string& modelTy
 }
 void send_out_imageb64(Redox &rdx,Mat drawings,string host_id) {
 	cv::Mat resized_frame;
-   // cv::resize(drawings, resized_frame, cv::Size(360*3, 240*3));
-	cv::resize(drawings, resized_frame, cv::Size(1280, 720));
+    cv::resize(drawings, resized_frame, cv::Size(360, 240));
+	//cv::resize(drawings, resized_frame, cv::Size(1280, 720));
 	std::vector<uchar> buf;
 	 std::vector<int> params = {cv::IMWRITE_JPEG_QUALITY, 100};
 	cv::imencode(".jpg", resized_frame, buf,params);
@@ -599,8 +599,8 @@ auto lam_gotmsg = [](const std::string& topic, const std::string& msg) {
 	std::vector<TrackingObject *> trackers(MAX_NUM_TRACKERS);
 	for (size_t i = 0; i < MAX_NUM_TRACKERS; ++i) {
 		trackers[i] = new TrackingObject();///
-		trackers[i]->setMaxRouteSize(50);
-		trackers[i]->setMaxDisappeared(20);//originally was in 10
+		trackers[i]->setMaxRouteSize(5000);
+		trackers[i]->setMaxDisappeared(50);//originally was in 10
 	}
 
 	// ADD TRACKER OBJECTS TO TRACKING MANAGER
@@ -1131,6 +1131,8 @@ for (size_t i = 0; i < coordinates_vec.size(); ++i) {
 						parts[idx] = partInfo;
 						idx++;						
 						////
+					    draw_label(frame,  class_names[detection.class_id], detection.class_confidence, detection.bbox.x, detection.bbox.y - 1);
+						cv::rectangle(frame, detection.bbox, Scalar(255,0,64), 4, 8, 0);
 						uint id = stoul(obj_id);//this was a fake 
 						dnn_bbox dnn_obj = dnn_bbox{detection.bbox,detection.class_confidence, id, class_names[detection.class_id],"photo_object_cutted","uuid","embeddings",std::to_string(detection.class_confidence)};
 						detections.push_back(dnn_obj);
@@ -1249,8 +1251,8 @@ for (size_t i = 0; i < coordinates_vec.size(); ++i) {
         std::cout << " Time LOOP : " << static_cast<double>(diff2) << " ms" << std::endl;
 		fps = 1000.0 / static_cast<double>(diff2);
 
-       // cv::imshow("video feed", frame);
-       // cv::waitKey(0);
+       //cv::imshow("video feed", frame);
+        //cv::waitKey(0);
 
 
 #ifdef WRITE_FRAME
