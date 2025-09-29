@@ -899,7 +899,7 @@ auto lam_gotmsg = [](const std::string& topic, const std::string& msg) {
             			
 							if (std::find(fusion_classes.begin(), fusion_classes.end(), class_names[detection.class_id]) != fusion_classes.end()) 
 							{   cv::rectangle(frame, detection.bbox, cv::Scalar(255, 0, 0), 2);
-								draw_label(frame,  class_names[detection.class_id], detection.class_confidence, detection.bbox.x, detection.bbox.y - 1);
+								//draw_label(frame,  class_names[detection.class_id], detection.class_confidence, detection.bbox.x, detection.bbox.y - 1);
 								cv::Point2f center(detection.bbox.x + detection.bbox.width/2.0f, detection.bbox.y + detection.bbox.height);
 								cv::circle(frame, center, 5, cv::Scalar(0, 255, 0), -1); // green filled circle
 								/// IS THE POINT INSIDE THE ROI POLYGON ?
@@ -957,7 +957,8 @@ auto lam_gotmsg = [](const std::string& topic, const std::string& msg) {
 						detections.push_back(dnn_obj);
 						if (std::find(fusion_classes.begin(), fusion_classes.end(), class_names[detection.class_id]) != fusion_classes.end()) 
 							{   cv::rectangle(frame, detection.bbox, cv::Scalar(255, 0, 0), 2);
-								draw_label(frame,  class_names[detection.class_id], detection.class_confidence, detection.bbox.x, detection.bbox.y - 1);
+								//
+								//(frame,  class_names[detection.class_id], detection.class_confidence, detection.bbox.x, detection.bbox.y - 1);
 								cv::Point2f center(detection.bbox.x + detection.bbox.width/2.0f, detection.bbox.y + detection.bbox.height/2.0f);
 								/// IS THE POINT INSIDE THE ROI POLYGON ?
 
