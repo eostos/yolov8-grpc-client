@@ -956,7 +956,7 @@ auto lam_gotmsg = [](const std::string& topic, const std::string& msg) {
 						dnn_bbox dnn_obj = dnn_bbox{detection.bbox,detection.class_confidence, id, class_names[detection.class_id],"photo_object_cutted","uuid","embeddings",std::to_string(detection.class_confidence)};
 						detections.push_back(dnn_obj);
 						if (std::find(fusion_classes.begin(), fusion_classes.end(), class_names[detection.class_id]) != fusion_classes.end()) 
-							{   cv::rectangle(frame, detection.bbox, cv::Scalar(255, 0, 0), 2);
+							{  // cv::rectangle(frame, detection.bbox, cv::Scalar(255, 0, 0), 2);
 								//
 								//(frame,  class_names[detection.class_id], detection.class_confidence, detection.bbox.x, detection.bbox.y - 1);
 								cv::Point2f center(detection.bbox.x + detection.bbox.width/2.0f, detection.bbox.y + detection.bbox.height/2.0f);
@@ -1133,7 +1133,7 @@ for (size_t i = 0; i < coordinates_vec.size(); ++i) {
 						idx++;						
 						////
 					   // draw_label(frame,  class_names[detection.class_id], detection.class_confidence, detection.bbox.x, detection.bbox.y - 1);
-						cv::rectangle(frame, detection.bbox, Scalar(255,0,64), 4, 8, 0);
+						//cv::rectangle(frame, detection.bbox, Scalar(255,0,64), 4, 8, 0);
 						uint id = stoul(obj_id);//this was a fake 
 						dnn_bbox dnn_obj = dnn_bbox{detection.bbox,detection.class_confidence, id, class_names[detection.class_id],"photo_object_cutted","uuid","embeddings",std::to_string(detection.class_confidence)};
 						detections.push_back(dnn_obj);
