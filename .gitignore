@@ -1,3 +1,4 @@
 build
 processed.avi
 *.mp4
+lib/hiredis/
