@@ -1083,7 +1083,7 @@ for (size_t i = 0; i < coordinates_vec.size(); ++i) {
 						partInfo["prob"]      = to_string_with_precision(  detection.class_confidence, 4);
 						partInfo["obj_id"] 	= obj_id;
 						partInfo["tag"]	=  class_names[detection.class_id];
-						draw_label(frame,  class_names[detection.class_id], detection.class_confidence, detection.bbox.x, detection.bbox.y - 1);
+						//draw_label(frame,  class_names[detection.class_id], detection.class_confidence, detection.bbox.x, detection.bbox.y - 1);
 						parts[idx] = partInfo;
 						idx++;						
 						////
@@ -1132,7 +1132,7 @@ for (size_t i = 0; i < coordinates_vec.size(); ++i) {
 						parts[idx] = partInfo;
 						idx++;						
 						////
-					    draw_label(frame,  class_names[detection.class_id], detection.class_confidence, detection.bbox.x, detection.bbox.y - 1);
+					   // draw_label(frame,  class_names[detection.class_id], detection.class_confidence, detection.bbox.x, detection.bbox.y - 1);
 						cv::rectangle(frame, detection.bbox, Scalar(255,0,64), 4, 8, 0);
 						uint id = stoul(obj_id);//this was a fake 
 						dnn_bbox dnn_obj = dnn_bbox{detection.bbox,detection.class_confidence, id, class_names[detection.class_id],"photo_object_cutted","uuid","embeddings",std::to_string(detection.class_confidence)};
