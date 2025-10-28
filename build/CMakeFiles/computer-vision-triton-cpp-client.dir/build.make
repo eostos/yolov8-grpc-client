@@ -241,6 +241,7 @@ computer-vision-triton-cpp-client: /usr/lib/x86_64-linux-gnu/libopencv_xobjdetec
 computer-vision-triton-cpp-client: /usr/lib/x86_64-linux-gnu/libopencv_xphoto.so.4.5.4d
 computer-vision-triton-cpp-client: /usr/lib/x86_64-linux-gnu/libcurl.so
 computer-vision-triton-cpp-client: /usr/local/lib/libhiredis.so.1.2.1-dev
+computer-vision-triton-cpp-client: /usr/local/cuda/lib64/libcudart.so
 computer-vision-triton-cpp-client: /usr/lib/x86_64-linux-gnu/libopencv_highgui.so.4.5.4d
 computer-vision-triton-cpp-client: /usr/lib/x86_64-linux-gnu/libopencv_datasets.so.4.5.4d
 computer-vision-triton-cpp-client: /usr/lib/x86_64-linux-gnu/libopencv_plot.so.4.5.4d

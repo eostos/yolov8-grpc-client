@@ -1,26 +1,39 @@
 #pragma once
-#include "common.hpp"
-#include "Yolo.hpp"
+
+// --- must be first ---
+#define TRITON_NO_GPU 0
+#define TRITON_ENABLE_GPU 1
+
+#include <cuda_runtime_api.h>
+#include <cuda_runtime.h>
+#include <cuda.h>
+
 #include <curl/curl.h>
 #include <rapidjson/document.h>
+#include "common.hpp"
+#include "Yolo.hpp"
+
+// Forward declaration
+namespace tc = triton::client;
 
 struct TritonModelInfo {
-        std::string output_name_;
-        std::vector<std::string> output_names_;
-        std::string input_name_;
-        std::string input_datatype_;
-        // The shape of the input
-        int input_c_;
-        int input_h_;
-        int input_w_;
-        // The format of the input
-        std::string input_format_;
-        int type1_{CV_32FC1};
-        int type3_{CV_32FC3};
-        int max_batch_size_;
-        int batch_size_{1};
-        std::vector<int64_t> shape_;
-
+    std::string output_name_;
+    std::vector<std::string> output_names_;
+    std::string input_name_;
+    std::string input_datatype_;
+    // The shape of the input
+    int input_c_;
+    int input_h_;
+    int input_w_;
+    // The format of the input
+    std::string input_format_;
+    int type1_{CV_32FC1};
+    int type3_{CV_32FC3};
+    int max_batch_size_;
+    int batch_size_{1};
+    std::vector<int64_t> shape_;
+    std::vector<std::vector<int64_t>> output_shapes_;
+    std::vector<std::string> output_datatypes_;
 };  
 
 union TritonClient
@@ -38,46 +51,47 @@ union TritonClient
 enum ProtocolType { HTTP = 0, GRPC = 1 };
 
 class Triton{
-    private:
-        TritonClient triton_client_;
-        const std::string& url_; 
-        bool verbose_; 
-        ProtocolType protocol_;
-        std::string model_name_;
-        TritonModelInfo model_info_;
-        std::string model_version_ ="";
+private:
+    TritonClient triton_client_;
+    const std::string& url_; 
+    bool verbose_; 
+    ProtocolType protocol_;
+    std::string model_name_;
+    TritonModelInfo model_info_;
+    std::string model_version_ ="";
 
+    // Private helper methods for shared memory
+    void cleanupSHM(const std::string& input_shm_name, const std::string& output_shm_name);
+    void cleanupInputsOutputs(std::vector<tc::InferInput*>& inputs, 
+                             std::vector<const tc::InferRequestedOutput*>& outputs);
 
-    public:
+public:
+    Triton(const std::string& url, ProtocolType protocol, std::string modelName, std::string modelVersion ="", bool verbose = false) : 
+        url_{url}, 
+        verbose_{verbose}, 
+        protocol_{protocol},
+        model_name_{modelName}
+    {
+    }
 
-        Triton(const std::string& url, ProtocolType protocol, std::string modelName, std::string modelVersion ="", bool verbose = false) : 
-            url_{url}, 
-            verbose_{verbose}, 
-            protocol_{protocol},
-            model_name_{modelName}
-        {
+    // Callback function to handle the response data
+    TritonModelInfo parseModelHttp(const std::string& modelName, const std::string& url);
+    TritonModelInfo parseModelGrpc(const inference::ModelMetadataResponse& model_metadata,const inference::ModelConfigResponse& model_config);
+    TritonModelInfo getModelInfo(const std::string& modelName, const std::string& url, const std::vector<int64_t>& shape);
 
-        }
+    void setInputShape(const std::vector<int64_t>& shape);
 
-        // Callback function to handle the response data
-        //size_t WriteCallback(char* ptr, size_t size, size_t nmemb, std::string& data);
-        TritonModelInfo parseModelHttp(const std::string& modelName, const std::string& url);
-        TritonModelInfo parseModelGrpc(const inference::ModelMetadataResponse& model_metadata,const inference::ModelConfigResponse& model_config);
-        TritonModelInfo getModelInfo(const std::string& modelName, const std::string& url, const std::vector<int64_t>& shape);
-
-        void setInputShape(const std::vector<int64_t>& shape);
-
-        // Function to create Triton client based on the protocol
-        void createTritonClient();
-        std::tuple<std::vector<std::vector<float>> , std::vector<std::vector<int64_t>>> infer(const std::vector<uint8_t>& input_data);
-        std::tuple<std::vector<std::vector<float>> , std::vector<std::vector<int64_t>>> inferAsync(const std::vector<uint8_t>& input_data);
-        std::vector<const tc::InferRequestedOutput*> createInferRequestedOutput(const std::vector<std::string>& output_names_);
-        std::tuple<std::vector<std::vector<float>> , std::vector<std::vector<int64_t>>> getInferResults(
-            tc::InferResult* result,
-            const size_t batch_size,
-            const std::vector<std::string>& output_names, const bool batching);
+    // Function to create Triton client based on the protocol
+    void createTritonClient();
     
-
+    // Inference methods
+    std::tuple<std::vector<std::vector<float>> , std::vector<std::vector<int64_t>>> infer(const std::vector<uint8_t>& input_data);
+    std::tuple<std::vector<std::vector<float>> , std::vector<std::vector<int64_t>>> inferAsync(const std::vector<uint8_t>& input_data);
+    
+    // Utility methods
+    std::vector<const tc::InferRequestedOutput*> createInferRequestedOutput(const std::vector<std::string>& output_names_);
+    std::tuple<std::vector<std::vector<float>> , std::vector<std::vector<int64_t>>> getInferResults(
+        tc::InferResult* result,
+        const size_t batch_size,
+        const std::vector<std::string>& output_names, const bool batching);
 };
-
-

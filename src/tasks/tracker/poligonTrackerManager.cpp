@@ -963,12 +963,15 @@ void PoligonTrackerManager::evaluateArea() {
                     Json::Value event_poligon;
                     event_poligon["type_event"] = type_event;
                     event_poligon["side"] = lado;
-                                    std::cout << "TRACKER " << to->getId()
+                    std::cout << "TRACKER " << to->getId()
                             << " status_0=" << status_0
                             << " status_1=" << status_1
                             << " route_size=" << route_area_size
                             << " awake=" << to->isAwake() << std::endl;
-                    cout <<this->getPoligonID()<< " ID ,   , LADO :  " << lado <<" TYPE " <<type_event<<" "<<to->getLabel()<<" TRK ID "<< to->getId()<<endl;
+                            if(lado==2){
+cout <<this->getPoligonID()<< " ID ,   , LADO :  " << lado <<" TYPE " <<type_event<<" "<<to->getLabel()<<" TRK ID "<< to->getId()<<endl;
+                            }
+                    
                     Json::Value temp_point;
                     temp_point["x"] = pout.x / static_cast<float>(this->getSize().width);
                     temp_point["y"] = pout.y / static_cast<float>(this->getSize().height);

@@ -1,39 +1,100 @@
+
+//#include "Triton.hpp"
+
+
+// --- must be first ---
+#define TRITON_NO_GPU 0
+#define TRITON_ENABLE_GPU 1
+
+#include <cuda.h>  // or <driver_types.h>
+
+#include <cuda_runtime.h>
 #include "Triton.hpp"
 #include <future>
-
     static size_t WriteCallback(char* ptr, size_t size, size_t nmemb, std::string& data) {
         size_t totalSize = size * nmemb;
         data.append(ptr, totalSize);
         return totalSize;
     }
+namespace {
 
-    TritonModelInfo Triton::parseModelHttp(const std::string& modelName, const std::string& url) {
-        TritonModelInfo info;
 
-        CURL* curl = curl_easy_init();
-        if (!curl) {
-            std::cerr << "Failed to initialize libcurl." << std::endl;
-            std::exit(1);
+    #define CHECK_CUDA(x) \
+    { cudaError_t err = (x); if (err != cudaSuccess) \
+        throw std::runtime_error(std::string("CUDA error: ") + cudaGetErrorString(err)); }
+
+    static size_t dtype_size_bytes(const std::string& dtype)
+    {
+        std::string dt = dtype;
+        std::transform(dt.begin(), dt.end(), dt.begin(), ::toupper);
+        if (dt == "FP32") return 4;
+        if (dt == "FP16") return 2;
+        if (dt == "INT8" || dt == "UINT8") return 1;
+        if (dt == "INT16" || dt == "UINT16") return 2;
+        if (dt == "INT32" || dt == "UINT32") return 4;
+        if (dt == "INT64" || dt == "UINT64") return 8;
+        throw std::runtime_error("Unsupported dtype: " + dtype);
+    }
+}
+
+// Remove the duplicate dtype_size_bytes function that was at line 324
+// Keep all your existing functions (parseModelHttp, getModelInfo, etc.) as they are
+
+// Add the private method implementations BEFORE your infer function
+void Triton::cleanupSHM(const std::string& input_shm_name, const std::string& output_shm_name) {
+    try {
+        if (protocol_ == ProtocolType::HTTP) {
+            triton_client_.httpClient->UnregisterCudaSharedMemory(input_shm_name);
+            triton_client_.httpClient->UnregisterCudaSharedMemory(output_shm_name);
+        } else {
+            triton_client_.grpcClient->UnregisterCudaSharedMemory(input_shm_name);
+            triton_client_.grpcClient->UnregisterCudaSharedMemory(output_shm_name);
         }
+        std::cout << "[DEBUG] SHM cleanup completed" << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << "[WARNING] Error during SHM cleanup: " << e.what() << std::endl;
+    }
+}
 
-        const auto modelConfigUrl = "http://" + url + ":8000/v2/models/" + modelName + "/config";
+void Triton::cleanupInputsOutputs(std::vector<tc::InferInput*>& inputs, 
+                                 std::vector<const tc::InferRequestedOutput*>& outputs) {
+    for (auto input : inputs) {
+        delete input;
+    }
+    for (auto output : outputs) {
+        delete output;
+    }
+}
 
-        // Set the URL and callback function
-        curl_easy_setopt(curl, CURLOPT_URL, modelConfigUrl.c_str());
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
 
-        // Response data will be stored in this string
-        std::string responseData;
 
-        // Set the pointer to the response data string
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseData);
+TritonModelInfo Triton::parseModelHttp(const std::string& modelName, const std::string& url) {
+    TritonModelInfo info;
 
-        // Perform the request
-        CURLcode res = curl_easy_perform(curl);
-        if (res != CURLE_OK) {
-            std::cerr << "Failed to perform request: " << curl_easy_strerror(res) << std::endl;
-            std::exit(1);
-        }
+    CURL* curl = curl_easy_init();
+    if (!curl) {
+        std::cerr << "Failed to initialize libcurl." << std::endl;
+        std::exit(1);
+    }
+
+    const auto modelConfigUrl = "http://" + url + ":8000/v2/models/" + modelName + "/config";
+
+    // Set the URL and callback function - FIX THIS LINE:
+    curl_easy_setopt(curl, CURLOPT_URL, modelConfigUrl.c_str());
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback); // This should work now
+
+    // Response data will be stored in this string
+    std::string responseData;
+
+    // Set the pointer to the response data string
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseData);
+
+    // Perform the request
+    CURLcode res = curl_easy_perform(curl);
+    if (res != CURLE_OK) {
+        std::cerr << "Failed to perform request: " << curl_easy_strerror(res) << std::endl;
+        std::exit(1);
+    }
         if (responseData.find("Request for unknown model") != std::string::npos) {
             std::cerr << "Unknown model: " << modelName << std::endl;
             std::exit(1);
@@ -109,26 +170,32 @@
             info.shape_.push_back(dim.GetInt64());
         }
 
-        info.max_batch_size_ = responseJson["max_batch_size"].GetInt();
-
-        for (const auto& output : responseJson["output"].GetArray()) {
-            info.output_names_.push_back(output["name"].GetString());
+  // NEW: Store output shapes and datatypes
+    for (const auto& output : responseJson["output"].GetArray()) {
+        info.output_names_.push_back(output["name"].GetString());
+        
+        // Get output shape
+        std::vector<int64_t> output_shape;
+        const auto& outputDims = output["dims"].GetArray();
+        for (const auto& dim : outputDims) {
+            output_shape.push_back(dim.GetInt64());
         }
-
-        info.input_datatype_ = responseJson["input"][0]["data_type"].GetString();
-
-        // After retrieving the input data type from the model configuration
-        // Remove the "TYPE_" prefix from the input data type
-        info.input_datatype_.erase(0, 5);
-
-        // Other parameter assignments can be added based on the JSON structure
-
-        // Cleanup
-        curl_easy_cleanup(curl);
-
-        return info;
+        info.output_shapes_.push_back(output_shape);
+        
+        // Get output datatype
+        std::string output_datatype = output["data_type"].GetString();
+        output_datatype.erase(0, 5); // Remove "TYPE_" prefix
+        info.output_datatypes_.push_back(output_datatype);
     }
 
+    info.input_datatype_ = responseJson["input"][0]["data_type"].GetString();
+    info.input_datatype_.erase(0, 5);
+
+    // Cleanup
+    curl_easy_cleanup(curl);
+
+    return info;
+}
 
     TritonModelInfo Triton::getModelInfo(const std::string& modelName, const std::string& url, const std::vector<int64_t>& shape) {
         model_info_ = parseModelHttp(modelName, url);
@@ -208,107 +275,274 @@
     }
 
 
-    std::tuple<std::vector<std::vector<float>> , std::vector<std::vector<int64_t>>> Triton::getInferResults(
-                    tc::InferResult* result,
-                    const size_t batch_size,
-                    const std::vector<std::string>& output_names, const bool batching)
-    {
-        if (!result->RequestStatus().IsOk())
-        {
-            std::cerr << "inference  failed with error: " << result->RequestStatus()
-                << std::endl;
-            exit(1);
-        }
-
-        std::vector<std::vector<float>> infer_results;
-        std::vector<std::vector<int64_t> > infer_shapes;
-
-        float* outputData;
-        size_t outputByteSize;
-        for (auto outputName : output_names)
-        {
-            std::vector<int64_t> infer_shape;
-            std::vector<float> infer_result;
-
-            result->RawData(
-                outputName, (const uint8_t**)&outputData, &outputByteSize);
-
-            tc::Error err = result->Shape(outputName, &infer_shape);
-            infer_result = std::vector<float>(outputByteSize / sizeof(float));
-            std::memcpy(infer_result.data(), outputData, outputByteSize);
-            if (!err.IsOk())
-            {
-                std::cerr << "unable to get data for " << outputName << std::endl;
-                exit(1);
-            }
-            infer_results.push_back(infer_result);
-            infer_shapes.push_back(infer_shape);
-        }
-
-        return make_tuple(infer_results, infer_shapes);
+std::tuple<std::vector<std::vector<float>>, std::vector<std::vector<int64_t>>> 
+Triton::getInferResults(
+    tc::InferResult* result,
+    const size_t batch_size,
+    const std::vector<std::string>& output_names,
+    const bool batching)
+{
+    if (!result) {
+        std::cerr << "CRITICAL: Null result pointer in getInferResults" << std::endl;
+        return std::make_tuple(std::vector<std::vector<float>>(), std::vector<std::vector<int64_t>>());
     }
 
+    if (!result->RequestStatus().IsOk()) {
+        std::cerr << "Inference failed with error: " << result->RequestStatus() << std::endl;
+        return std::make_tuple(std::vector<std::vector<float>>(), std::vector<std::vector<int64_t>>());
+    }
 
-std::tuple<std::vector<std::vector<float>>, std::vector<std::vector<int64_t>>> Triton::infer(const std::vector<uint8_t>& input_data) {
-    tc::Error err;
-    std::vector<tc::InferInput*> inputs = { nullptr };
-    std::vector<const tc::InferRequestedOutput*> outputs = createInferRequestedOutput(model_info_.output_names_);
-    tc::InferOptions options(model_name_);
-    options.model_version_ = model_version_;
+    std::vector<std::vector<float>> infer_results;
+    std::vector<std::vector<int64_t>> infer_shapes;
 
-    if (inputs[0] != nullptr) {
-        err = inputs[0]->Reset();
+    for (const auto& outputName : output_names) {
+        std::vector<int64_t> infer_shape;
+        tc::Error err = result->Shape(outputName, &infer_shape);
         if (!err.IsOk()) {
-            std::cerr << "failed resetting input: " << err << std::endl;
-            exit(1);
+            std::cerr << "Unable to get shape for output: " << outputName << " - " << err.Message() << std::endl;
+            continue;
         }
-    } else {
-        err = tc::InferInput::Create(
-            &inputs[0], model_info_.input_name_, model_info_.shape_, model_info_.input_datatype_);
+
+        // Get output data
+        const uint8_t* raw_output = nullptr;
+        size_t raw_output_bytes = 0;
+        
+        err = result->RawData(outputName, &raw_output, &raw_output_bytes);
+        
         if (!err.IsOk()) {
-            std::cerr << "unable to get input: " << err << std::endl;
-            exit(1);
+            std::cerr << "Error getting raw data for " << outputName << ": " << err.Message() << std::endl;
+            continue;
         }
+
+        if (raw_output == nullptr || raw_output_bytes == 0) {
+            std::cerr << "CRITICAL: Empty output buffer for " << outputName << std::endl;
+            continue;
+        }
+
+        // Calculate expected size
+        size_t expected_elements = 1;
+        for (const auto& dim : infer_shape) expected_elements *= dim;
+        size_t expected_bytes = expected_elements * sizeof(float);
+
+       // std::cout << "[DEBUG] Processing " << outputName 
+       //           << " - Expected: " << expected_elements << " elements (" << expected_bytes << " bytes)"
+       //           << ", Actual: " << (raw_output_bytes / sizeof(float)) << " elements (" << raw_output_bytes << " bytes)"
+        //          << std::endl;
+
+        // Copy data
+        size_t elements_to_copy = raw_output_bytes / sizeof(float);
+        std::vector<float> infer_result(elements_to_copy);
+        std::memcpy(infer_result.data(), raw_output, raw_output_bytes);
+
+        infer_results.push_back(infer_result);
+        infer_shapes.push_back(infer_shape);
+        
+      //  std::cout << "[SUCCESS] Output " << outputName << " - Got " << infer_result.size() << " elements" << std::endl;
     }
 
-    err = inputs[0]->AppendRaw(input_data);
-    if (!err.IsOk()) {
-        std::cerr << "failed setting input: " << err << std::endl;
-        exit(1);
-    }
-
-    // Start time measurement
-    auto start = std::chrono::steady_clock::now();
-
-    tc::InferResult* result;
-    std::unique_ptr<tc::InferResult> result_ptr;
-    if (protocol_ == ProtocolType::HTTP) {
-        err = triton_client_.httpClient->Infer(
-            &result, options, inputs, outputs);
-    } else {
-        err = triton_client_.grpcClient->Infer(
-            &result, options, inputs, outputs);
-    }
-
-    // End time measurement
-    auto end = std::chrono::steady_clock::now();
-
-    if (!err.IsOk()) {
-        std::cerr << "failed sending synchronous infer request: " << err << std::endl;
-        exit(1);
-    }
-
-    // Calculate the duration
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    std::cout << "Inference time Titon: " << duration << " ms" << std::endl;
-
-    const auto [infer_results, infer_shapes] = getInferResults(result, model_info_.batch_size_, model_info_.output_names_, model_info_.max_batch_size_ != 0);
-    result_ptr.reset(result);
     return std::make_tuple(infer_results, infer_shapes);
 }
- 
- 
- 
+
+#define CHECK_CUDA(x) \
+  { cudaError_t err = (x); if (err != cudaSuccess) \
+    throw std::runtime_error(std::string("CUDA error: ") + cudaGetErrorString(err)); }
+
+
+
+// Now replace your existing infer function with this corrected version:
+
+std::tuple<std::vector<std::vector<float>>, std::vector<std::vector<int64_t>>> 
+Triton::infer(const std::vector<uint8_t>& input_data) {
+   // std::cout << "[DEBUG] === Triton::infer() with Dynamic Shared Memory ===" << std::endl;
+
+    tc::Error err;
+    std::vector<tc::InferInput*> inputs;
+    std::vector<const tc::InferRequestedOutput*> outputs;
+    
+    // Generate unique SHM names for this inference
+    auto timestamp = std::chrono::system_clock::now().time_since_epoch().count();
+    std::string shm_name_in = "input_shm_" + std::to_string(timestamp);
+    std::string shm_name_out = "output_shm_" + std::to_string(timestamp);
+
+    void* gpu_input_ptr = nullptr;
+    void* gpu_output_ptr = nullptr;
+    size_t output_byte_size = 0;
+
+    try {
+        // ====== Calculate input size ======
+        size_t input_element_count = 1;
+        for (const auto& dim : model_info_.shape_) {
+            input_element_count *= dim;
+        }
+        
+        size_t input_byte_size = input_element_count * dtype_size_bytes(model_info_.input_datatype_);
+       // std::cout << "[DEBUG] Input elements: " << input_element_count 
+        //          << ", Input bytes: " << input_byte_size << std::endl;
+
+        // Validate input size
+        if (input_data.size() != input_byte_size) {
+            throw std::runtime_error("Input data size mismatch. Expected: " + 
+                                    std::to_string(input_byte_size) + 
+                                    ", Got: " + std::to_string(input_data.size()));
+        }
+
+        // ====== Allocate GPU input memory ======
+        CHECK_CUDA(cudaMalloc(&gpu_input_ptr, input_byte_size));
+        CHECK_CUDA(cudaMemcpy(gpu_input_ptr, input_data.data(), input_byte_size, cudaMemcpyHostToDevice));
+
+        // ====== Create CUDA IPC handle for input ======
+        cudaIpcMemHandle_t input_handle;
+        CHECK_CUDA(cudaIpcGetMemHandle(&input_handle, gpu_input_ptr));
+
+        // ====== Calculate output size ======
+        if (!model_info_.output_shapes_.empty()) {
+            const auto& output_shape = model_info_.output_shapes_[0];
+            size_t output_element_count = 1;
+            for (const auto& dim : output_shape) {
+                output_element_count *= dim;
+            }
+            
+            std::string output_dtype = model_info_.output_datatypes_[0];
+            output_byte_size = output_element_count * dtype_size_bytes(output_dtype);
+            
+          //  std::cout << "[DEBUG] Using actual output shape: [";
+           // for (const auto& dim : output_shape) {
+            //    std::cout << dim << " ";
+           // }
+            //std::cout << "], elements: " << output_element_count 
+            //          << ", bytes: " << output_byte_size << std::endl;
+        } else {
+            output_byte_size = 10 * 1024 * 1024; // 10MB fallback
+           // std::cout << "[DEBUG] Using fallback output size: " << output_byte_size << " bytes" << std::endl;
+        }
+
+        // ====== Allocate GPU output memory ======
+        CHECK_CUDA(cudaMalloc(&gpu_output_ptr, output_byte_size));
+        CHECK_CUDA(cudaMemset(gpu_output_ptr, 0, output_byte_size));
+
+        cudaIpcMemHandle_t output_handle;
+        CHECK_CUDA(cudaIpcGetMemHandle(&output_handle, gpu_output_ptr));
+
+        //std::cout << "[DEBUG] SHM names - Input: " << shm_name_in << ", Output: " << shm_name_out << std::endl;
+
+        // ====== Register SHM ======
+        if (protocol_ == ProtocolType::HTTP) {
+            err = triton_client_.httpClient->RegisterCudaSharedMemory(shm_name_in, input_handle, 0, input_byte_size);
+            if (!err.IsOk()) throw std::runtime_error("Failed to register input SHM: " + err.Message());
+            
+            err = triton_client_.httpClient->RegisterCudaSharedMemory(shm_name_out, output_handle, 0, output_byte_size);
+            if (!err.IsOk()) {
+                triton_client_.httpClient->UnregisterCudaSharedMemory(shm_name_in);
+                throw std::runtime_error("Failed to register output SHM: " + err.Message());
+            }
+        } else {
+            err = triton_client_.grpcClient->RegisterCudaSharedMemory(shm_name_in, input_handle, 0, input_byte_size);
+            if (!err.IsOk()) throw std::runtime_error("Failed to register input SHM: " + err.Message());
+            
+            err = triton_client_.grpcClient->RegisterCudaSharedMemory(shm_name_out, output_handle, 0, output_byte_size);
+            if (!err.IsOk()) {
+                triton_client_.grpcClient->UnregisterCudaSharedMemory(shm_name_in);
+                throw std::runtime_error("Failed to register output SHM: " + err.Message());
+            }
+        }
+
+        //std::cout << "[DEBUG] SHM regions registered successfully." << std::endl;
+
+        // ====== Prepare input with shared memory ======
+        tc::InferInput* input;
+        err = tc::InferInput::Create(&input, model_info_.input_name_, model_info_.shape_, model_info_.input_datatype_);
+        if (!err.IsOk()) throw std::runtime_error("InferInput::Create failed: " + err.Message());
+        
+        err = input->SetSharedMemory(shm_name_in, input_byte_size, 0);
+        if (!err.IsOk()) {
+            delete input;
+            throw std::runtime_error("SetSharedMemory for input failed: " + err.Message());
+        }
+        inputs.push_back(input);
+
+        // ====== Prepare outputs WITHOUT shared memory ======
+        // 🚨 CRITICAL CHANGE: Don't use SHM for outputs, use regular outputs
+        for (const auto& output_name : model_info_.output_names_) {
+            tc::InferRequestedOutput* output;
+            err = tc::InferRequestedOutput::Create(&output, output_name);
+            if (!err.IsOk()) {
+                cleanupInputsOutputs(inputs, outputs);
+                throw std::runtime_error("InferRequestedOutput::Create failed: " + err.Message());
+            }
+            outputs.push_back(output);
+        }
+
+        // ====== Run inference ======
+        tc::InferOptions options(model_name_);
+        options.model_version_ = model_version_;
+
+        auto start = std::chrono::steady_clock::now();
+        tc::InferResult* result = nullptr;
+
+        if (protocol_ == ProtocolType::HTTP) {
+            err = triton_client_.httpClient->Infer(&result, options, inputs, outputs);
+        } else {
+            err = triton_client_.grpcClient->Infer(&result, options, inputs, outputs);
+        }
+
+        auto end = std::chrono::steady_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+        //std::cout << "[INFO] Inference time (GPU SHM): " << duration << " ms" << std::endl;
+
+        if (!err.IsOk()) {
+            throw std::runtime_error("Inference failed: " + err.Message());
+        }
+
+        // ====== DEBUG: Check result status immediately ======
+        //std::cout << "[DEBUG] Result status: " << (result ? "VALID" : "NULL") << std::endl;
+        if (result) {
+        //    std::cout << "[DEBUG] Request status: " << result->RequestStatus().IsOk() << std::endl;
+            
+            // Test output data access
+            for (const auto& output_name : model_info_.output_names_) {
+                const uint8_t* test_data = nullptr;
+                size_t test_size = 0;
+                tc::Error test_err = result->RawData(output_name, &test_data, &test_size);
+        //        std::cout << "[DEBUG] Output " << output_name << " - err: " << test_err.IsOk() 
+           //               << ", data_ptr: " << (void*)test_data << ", size: " << test_size << std::endl;
+            }
+        }
+
+        // ====== Process results ======
+        std::unique_ptr<tc::InferResult> result_ptr;
+        result_ptr.reset(result);
+        
+        const auto [infer_results, infer_shapes] = getInferResults(
+            result, model_info_.batch_size_, model_info_.output_names_, 
+            model_info_.max_batch_size_ != 0);
+
+        // ====== Cleanup ======
+        cleanupSHM(shm_name_in, shm_name_out);
+        cleanupInputsOutputs(inputs, outputs);
+        
+        if (gpu_input_ptr) {
+            cudaFree(gpu_input_ptr);
+        }
+        if (gpu_output_ptr) {
+            cudaFree(gpu_output_ptr);
+        }
+
+        //std::cout << "[DEBUG] === Triton::infer() with SHM completed successfully ===" << std::endl;
+
+        return std::make_tuple(infer_results, infer_shapes);
+
+    } catch (const std::exception& e) {
+        std::cerr << "[ERROR] " << e.what() << std::endl;
+        
+        cleanupSHM(shm_name_in, shm_name_out);
+        cleanupInputsOutputs(inputs, outputs);
+        
+        if (gpu_input_ptr) cudaFree(gpu_input_ptr);
+        if (gpu_output_ptr) cudaFree(gpu_output_ptr);
+        
+        throw;
+    }
+}
 std::tuple<std::vector<std::vector<float>>, std::vector<std::vector<int64_t>>> Triton::inferAsync(const std::vector<uint8_t>& input_data) {
     tc::Error err;
     std::vector<tc::InferInput*> inputs = { nullptr };

@@ -537,6 +537,15 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/client.cpp.o: \
  /workspace/install/include/grpcpp/impl/codegen/proto_buffer_writer.h \
  /workspace/install/include/grpcpp/impl/codegen/stub_options.h \
  /workspace/install/include/ipc.h \
+ /usr/local/cuda/include/cuda_runtime_api.h \
+ /usr/local/cuda/include/crt/host_defines.h \
+ /usr/local/cuda/include/builtin_types.h \
+ /usr/local/cuda/include/device_types.h \
+ /usr/local/cuda/include/driver_types.h \
+ /usr/local/cuda/include/vector_types.h \
+ /usr/local/cuda/include/surface_types.h \
+ /usr/local/cuda/include/texture_types.h \
+ /usr/local/cuda/include/cuda_device_runtime_api.h \
  /workspace/install/include/http_client.h \
  /yolov8-grpc-client/include/TaskInterface.hpp \
  /usr/include/opencv4/opencv2/opencv.hpp \
@@ -608,7 +617,15 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/client.cpp.o: \
  /yolov8-grpc-client/src/tasks/object_detection/src/YoloNas.hpp \
  /yolov8-grpc-client/src/tasks/object_detection/src/YOLOv7_NMS.hpp \
  /yolov8-grpc-client/src/triton/Triton.hpp \
- /usr/include/x86_64-linux-gnu/curl/curl.h \
+ /usr/local/cuda/include/cuda_runtime.h \
+ /usr/local/cuda/include/crt/host_config.h \
+ /usr/local/cuda/include/library_types.h \
+ /usr/local/cuda/include/channel_descriptor.h \
+ /usr/local/cuda/include/cuda_runtime_api.h \
+ /usr/local/cuda/include/driver_functions.h \
+ /usr/local/cuda/include/vector_functions.h \
+ /usr/local/cuda/include/vector_functions.hpp \
+ /usr/local/cuda/include/cuda.h /usr/include/x86_64-linux-gnu/curl/curl.h \
  /usr/include/x86_64-linux-gnu/curl/curlver.h \
  /usr/include/x86_64-linux-gnu/curl/system.h \
  /usr/include/x86_64-linux-gnu/sys/socket.h \

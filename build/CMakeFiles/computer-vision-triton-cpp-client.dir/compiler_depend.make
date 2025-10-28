@@ -614,6 +614,15 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/client.cpp.o: ../client.cpp \
   /workspace/install/include/grpcpp/impl/codegen/proto_buffer_writer.h \
   /workspace/install/include/grpcpp/impl/codegen/stub_options.h \
   /workspace/install/include/ipc.h \
+  /usr/local/cuda/include/cuda_runtime_api.h \
+  /usr/local/cuda/include/crt/host_defines.h \
+  /usr/local/cuda/include/builtin_types.h \
+  /usr/local/cuda/include/device_types.h \
+  /usr/local/cuda/include/driver_types.h \
+  /usr/local/cuda/include/vector_types.h \
+  /usr/local/cuda/include/surface_types.h \
+  /usr/local/cuda/include/texture_types.h \
+  /usr/local/cuda/include/cuda_device_runtime_api.h \
   /workspace/install/include/http_client.h \
   ../include/TaskInterface.hpp \
   /usr/include/opencv4/opencv2/opencv.hpp \
@@ -685,6 +694,15 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/client.cpp.o: ../client.cpp \
   ../src/tasks/object_detection/src/YoloNas.hpp \
   ../src/tasks/object_detection/src/YOLOv7_NMS.hpp \
   ../src/triton/Triton.hpp \
+  /usr/local/cuda/include/cuda_runtime.h \
+  /usr/local/cuda/include/crt/host_config.h \
+  /usr/local/cuda/include/library_types.h \
+  /usr/local/cuda/include/channel_descriptor.h \
+  /usr/local/cuda/include/cuda_runtime_api.h \
+  /usr/local/cuda/include/driver_functions.h \
+  /usr/local/cuda/include/vector_functions.h \
+  /usr/local/cuda/include/vector_functions.hpp \
+  /usr/local/cuda/include/cuda.h \
   /usr/include/x86_64-linux-gnu/curl/curl.h \
   /usr/include/x86_64-linux-gnu/curl/curlver.h \
   /usr/include/x86_64-linux-gnu/curl/system.h \
@@ -1692,6 +1710,15 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/
   /workspace/install/include/grpcpp/impl/codegen/proto_buffer_writer.h \
   /workspace/install/include/grpcpp/impl/codegen/stub_options.h \
   /workspace/install/include/ipc.h \
+  /usr/local/cuda/include/cuda_runtime_api.h \
+  /usr/local/cuda/include/crt/host_defines.h \
+  /usr/local/cuda/include/builtin_types.h \
+  /usr/local/cuda/include/device_types.h \
+  /usr/local/cuda/include/driver_types.h \
+  /usr/local/cuda/include/vector_types.h \
+  /usr/local/cuda/include/surface_types.h \
+  /usr/local/cuda/include/texture_types.h \
+  /usr/local/cuda/include/cuda_device_runtime_api.h \
   /workspace/install/include/http_client.h \
   ../include/TaskInterface.hpp \
   /usr/include/opencv4/opencv2/opencv.hpp \
@@ -5065,12 +5092,9 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/poligonTracke
 
 CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.o: ../src/triton/Triton.cpp \
   /usr/include/stdc-predef.h \
-  ../src/triton/Triton.hpp \
-  ../include/common.hpp \
-  /usr/include/opencv4/opencv2/core.hpp \
-  /usr/include/opencv4/opencv2/core/cvdef.h \
-  /usr/include/opencv4/opencv2/core/version.hpp \
-  /usr/include/c++/11/limits \
+  /usr/local/cuda/include/cuda.h \
+  /usr/include/c++/11/stdlib.h \
+  /usr/include/c++/11/cstdlib \
   /usr/include/x86_64-linux-gnu/c++/11/bits/c++config.h \
   /usr/include/x86_64-linux-gnu/c++/11/bits/os_defines.h \
   /usr/include/features.h \
@@ -5083,27 +5107,9 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.o: ../src
   /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
   /usr/include/x86_64-linux-gnu/c++/11/bits/cpu_defines.h \
   /usr/include/c++/11/pstl/pstl_config.h \
-  /usr/include/opencv4/opencv2/core/hal/interface.h \
-  /usr/include/c++/11/cstddef \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h \
-  /usr/include/c++/11/cstdint \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdint.h \
-  /usr/include/stdint.h \
-  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
-  /usr/include/x86_64-linux-gnu/bits/types.h \
-  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
-  /usr/include/x86_64-linux-gnu/bits/time64.h \
-  /usr/include/x86_64-linux-gnu/bits/wchar.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
-  /usr/include/opencv4/opencv2/core/cv_cpu_dispatch.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/emmintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/xmmintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/mmintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/mm_malloc.h \
-  /usr/include/c++/11/stdlib.h \
-  /usr/include/c++/11/cstdlib \
   /usr/include/stdlib.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h \
   /usr/include/x86_64-linux-gnu/bits/waitflags.h \
   /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
   /usr/include/x86_64-linux-gnu/bits/floatn.h \
@@ -5111,10 +5117,14 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.o: ../src
   /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
   /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
   /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
   /usr/include/endian.h \
   /usr/include/x86_64-linux-gnu/bits/endian.h \
   /usr/include/x86_64-linux-gnu/bits/endianness.h \
@@ -5135,7 +5145,36 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.o: ../src
   /usr/include/alloca.h \
   /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
   /usr/include/c++/11/bits/std_abs.h \
-  /usr/include/c++/11/array \
+  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdint.h \
+  /usr/include/stdint.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  /usr/local/cuda/include/cuda_runtime.h \
+  /usr/local/cuda/include/crt/host_config.h \
+  /usr/local/cuda/include/builtin_types.h \
+  /usr/local/cuda/include/device_types.h \
+  /usr/local/cuda/include/crt/host_defines.h \
+  /usr/local/cuda/include/driver_types.h \
+  /usr/local/cuda/include/vector_types.h \
+  /usr/lib/gcc/x86_64-linux-gnu/11/include/limits.h \
+  /usr/lib/gcc/x86_64-linux-gnu/11/include/syslimits.h \
+  /usr/include/limits.h \
+  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
+  /usr/include/linux/limits.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
+  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/xopen_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/uio_lim.h \
+  /usr/local/cuda/include/surface_types.h \
+  /usr/local/cuda/include/texture_types.h \
+  /usr/local/cuda/include/library_types.h \
+  /usr/local/cuda/include/channel_descriptor.h \
+  /usr/local/cuda/include/cuda_runtime_api.h \
+  /usr/local/cuda/include/cuda_device_runtime_api.h \
+  /usr/local/cuda/include/driver_functions.h \
+  /usr/local/cuda/include/vector_functions.h \
+  /usr/local/cuda/include/vector_functions.hpp \
   /usr/include/c++/11/utility \
   /usr/include/c++/11/bits/stl_relops.h \
   /usr/include/c++/11/bits/stl_pair.h \
@@ -5147,9 +5186,81 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.o: ../src
   /usr/include/c++/11/ext/numeric_traits.h \
   /usr/include/c++/11/bits/cpp_type_traits.h \
   /usr/include/c++/11/ext/type_traits.h \
-  /usr/include/c++/11/bits/functexcept.h \
-  /usr/include/c++/11/bits/exception_defines.h \
-  /usr/include/c++/11/bits/stl_algobase.h \
+  ../src/triton/Triton.hpp \
+  /usr/local/cuda/include/cuda_runtime_api.h \
+  /usr/include/x86_64-linux-gnu/curl/curl.h \
+  /usr/include/x86_64-linux-gnu/curl/curlver.h \
+  /usr/include/x86_64-linux-gnu/curl/system.h \
+  /usr/include/x86_64-linux-gnu/sys/socket.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_iovec.h \
+  /usr/include/x86_64-linux-gnu/bits/socket.h \
+  /usr/include/x86_64-linux-gnu/bits/socket_type.h \
+  /usr/include/x86_64-linux-gnu/bits/sockaddr.h \
+  /usr/include/x86_64-linux-gnu/asm/socket.h \
+  /usr/include/asm-generic/socket.h \
+  /usr/include/linux/posix_types.h \
+  /usr/include/linux/stddef.h \
+  /usr/include/x86_64-linux-gnu/asm/posix_types.h \
+  /usr/include/x86_64-linux-gnu/asm/posix_types_64.h \
+  /usr/include/asm-generic/posix_types.h \
+  /usr/include/x86_64-linux-gnu/asm/bitsperlong.h \
+  /usr/include/asm-generic/bitsperlong.h \
+  /usr/include/x86_64-linux-gnu/asm/sockios.h \
+  /usr/include/asm-generic/sockios.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_osockaddr.h \
+  /usr/include/stdio.h \
+  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdarg.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+  /usr/include/time.h \
+  /usr/include/x86_64-linux-gnu/bits/time.h \
+  /usr/include/x86_64-linux-gnu/bits/timex.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+  /usr/include/x86_64-linux-gnu/sys/time.h \
+  /usr/include/x86_64-linux-gnu/curl/easy.h \
+  /usr/include/x86_64-linux-gnu/curl/multi.h \
+  /usr/include/x86_64-linux-gnu/curl/curl.h \
+  /usr/include/x86_64-linux-gnu/curl/urlapi.h \
+  /usr/include/x86_64-linux-gnu/curl/options.h \
+  /usr/include/rapidjson/document.h \
+  /usr/include/rapidjson/reader.h \
+  /usr/include/rapidjson/allocators.h \
+  /usr/include/rapidjson/rapidjson.h \
+  /usr/include/c++/11/cstring \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/inttypes.h \
+  /usr/include/c++/11/cassert \
+  /usr/include/assert.h \
+  /usr/include/rapidjson/stream.h \
+  /usr/include/rapidjson/encodings.h \
+  /usr/include/rapidjson/encodedstream.h \
+  /usr/include/rapidjson/memorystream.h \
+  /usr/include/rapidjson/internal/meta.h \
+  /usr/include/rapidjson/rapidjson.h \
+  /usr/include/rapidjson/internal/stack.h \
+  /usr/include/rapidjson/allocators.h \
+  /usr/include/rapidjson/internal/swap.h \
+  /usr/include/rapidjson/internal/strtod.h \
+  /usr/include/rapidjson/internal/ieee754.h \
+  /usr/include/rapidjson/internal/biginteger.h \
+  /usr/include/rapidjson/internal/diyfp.h \
+  /usr/include/rapidjson/internal/pow10.h \
+  /usr/include/c++/11/limits \
+  /usr/include/rapidjson/error/error.h \
+  /usr/include/rapidjson/rapidjson.h \
+  /usr/include/rapidjson/internal/strfunc.h \
+  /usr/include/rapidjson/stream.h \
+  /usr/include/c++/11/new \
+  /usr/include/c++/11/bits/exception.h \
+  /usr/include/c++/11/iterator \
   /usr/include/c++/11/bits/stl_iterator_base_types.h \
   /usr/include/c++/11/bits/iterator_concepts.h \
   /usr/include/c++/11/bits/ptr_traits.h \
@@ -5158,47 +5269,18 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.o: ../src
   /usr/include/c++/11/bits/concept_check.h \
   /usr/include/c++/11/debug/assertions.h \
   /usr/include/c++/11/bits/stl_iterator.h \
-  /usr/include/c++/11/new \
-  /usr/include/c++/11/bits/exception.h \
+  /usr/include/c++/11/bits/exception_defines.h \
   /usr/include/c++/11/bits/stl_construct.h \
-  /usr/include/c++/11/debug/debug.h \
-  /usr/include/c++/11/bits/predefined_ops.h \
-  /usr/include/c++/11/bits/range_access.h \
-  /usr/include/opencv4/opencv2/core/base.hpp \
-  /usr/include/opencv4/opencv2/opencv_modules.hpp \
-  /usr/include/c++/11/climits \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/limits.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/syslimits.h \
-  /usr/include/limits.h \
-  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
-  /usr/include/linux/limits.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
-  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/xopen_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/uio_lim.h \
-  /usr/include/c++/11/algorithm \
-  /usr/include/c++/11/bits/stl_algo.h \
-  /usr/include/c++/11/bits/algorithmfwd.h \
-  /usr/include/c++/11/bits/stl_heap.h \
-  /usr/include/c++/11/bits/stl_tempbuf.h \
-  /usr/include/c++/11/bits/uniform_int_dist.h \
-  /usr/include/c++/11/bits/ranges_algo.h \
-  /usr/include/c++/11/bits/ranges_algobase.h \
-  /usr/include/c++/11/iterator \
   /usr/include/c++/11/iosfwd \
   /usr/include/c++/11/bits/stringfwd.h \
   /usr/include/c++/11/bits/memoryfwd.h \
   /usr/include/c++/11/bits/postypes.h \
   /usr/include/c++/11/cwchar \
   /usr/include/wchar.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdarg.h \
   /usr/include/x86_64-linux-gnu/bits/types/wint_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/mbstate_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
   /usr/include/c++/11/bits/stream_iterator.h \
+  /usr/include/c++/11/debug/debug.h \
   /usr/include/c++/11/bits/streambuf_iterator.h \
   /usr/include/c++/11/streambuf \
   /usr/include/c++/11/bits/localefwd.h \
@@ -5217,11 +5299,6 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.o: ../src
   /usr/include/x86_64-linux-gnu/bits/sched.h \
   /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
   /usr/include/x86_64-linux-gnu/bits/cpu-set.h \
-  /usr/include/time.h \
-  /usr/include/x86_64-linux-gnu/bits/time.h \
-  /usr/include/x86_64-linux-gnu/bits/timex.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
   /usr/include/x86_64-linux-gnu/bits/setjmp.h \
   /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
   /usr/include/x86_64-linux-gnu/c++/11/bits/atomic_word.h \
@@ -5229,6 +5306,10 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.o: ../src
   /usr/include/c++/11/bits/locale_classes.h \
   /usr/include/c++/11/string \
   /usr/include/c++/11/bits/char_traits.h \
+  /usr/include/c++/11/bits/stl_algobase.h \
+  /usr/include/c++/11/bits/functexcept.h \
+  /usr/include/c++/11/bits/predefined_ops.h \
+  /usr/include/c++/11/cstdint \
   /usr/include/c++/11/bits/allocator.h \
   /usr/include/x86_64-linux-gnu/c++/11/bits/c++allocator.h \
   /usr/include/c++/11/ext/new_allocator.h \
@@ -5236,6 +5317,12 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.o: ../src
   /usr/include/c++/11/bits/cxxabi_forced.h \
   /usr/include/c++/11/bits/stl_function.h \
   /usr/include/c++/11/backward/binders.h \
+  /usr/include/c++/11/bits/stl_algo.h \
+  /usr/include/c++/11/bits/algorithmfwd.h \
+  /usr/include/c++/11/bits/stl_heap.h \
+  /usr/include/c++/11/bits/stl_tempbuf.h \
+  /usr/include/c++/11/bits/uniform_int_dist.h \
+  /usr/include/c++/11/bits/range_access.h \
   /usr/include/c++/11/bits/basic_string.h \
   /usr/include/c++/11/ext/alloc_traits.h \
   /usr/include/c++/11/bits/alloc_traits.h \
@@ -5248,12 +5335,6 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.o: ../src
   /usr/include/c++/11/bits/string_view.tcc \
   /usr/include/c++/11/ext/string_conversions.h \
   /usr/include/c++/11/cstdio \
-  /usr/include/stdio.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
   /usr/include/c++/11/cerrno \
   /usr/include/errno.h \
   /usr/include/x86_64-linux-gnu/bits/errno.h \
@@ -5274,6 +5355,24 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.o: ../src
   /usr/include/c++/11/typeinfo \
   /usr/include/c++/11/bits/nested_exception.h \
   /usr/include/c++/11/bits/streambuf.tcc \
+  ../include/common.hpp \
+  /usr/include/opencv4/opencv2/core.hpp \
+  /usr/include/opencv4/opencv2/core/cvdef.h \
+  /usr/include/opencv4/opencv2/core/version.hpp \
+  /usr/include/opencv4/opencv2/core/hal/interface.h \
+  /usr/include/c++/11/cstddef \
+  /usr/include/opencv4/opencv2/core/cv_cpu_dispatch.h \
+  /usr/lib/gcc/x86_64-linux-gnu/11/include/emmintrin.h \
+  /usr/lib/gcc/x86_64-linux-gnu/11/include/xmmintrin.h \
+  /usr/lib/gcc/x86_64-linux-gnu/11/include/mmintrin.h \
+  /usr/lib/gcc/x86_64-linux-gnu/11/include/mm_malloc.h \
+  /usr/include/c++/11/array \
+  /usr/include/opencv4/opencv2/core/base.hpp \
+  /usr/include/opencv4/opencv2/opencv_modules.hpp \
+  /usr/include/c++/11/climits \
+  /usr/include/c++/11/algorithm \
+  /usr/include/c++/11/bits/ranges_algo.h \
+  /usr/include/c++/11/bits/ranges_algobase.h \
   /usr/include/c++/11/bits/invoke.h \
   /usr/include/c++/11/bits/ranges_util.h \
   /usr/include/c++/11/pstl/glue_algorithm_defs.h \
@@ -5297,9 +5396,6 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.o: ../src
   /usr/include/c++/11/bits/vector.tcc \
   /usr/include/c++/11/pstl/execution_defs.h \
   /usr/include/opencv4/opencv2/core/cvstd.hpp \
-  /usr/include/c++/11/cstring \
-  /usr/include/string.h \
-  /usr/include/strings.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
   /usr/include/x86_64-linux-gnu/bits/math-vector.h \
@@ -5370,7 +5466,6 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.o: ../src
   /usr/include/c++/11/pstl/glue_memory_defs.h \
   /usr/include/opencv4/opencv2/core/neon_utils.hpp \
   /usr/include/opencv4/opencv2/core/vsx_utils.hpp \
-  /usr/include/assert.h \
   /usr/include/opencv4/opencv2/core/check.hpp \
   /usr/include/opencv4/opencv2/core/traits.hpp \
   /usr/include/opencv4/opencv2/core/matx.hpp \
@@ -5513,12 +5608,10 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.o: ../src
   /workspace/install/include/absl/synchronization/internal/kernel_timeout.h \
   /workspace/install/include/absl/base/internal/raw_logging.h \
   /workspace/install/include/absl/base/internal/atomic_hook.h \
-  /usr/include/c++/11/cassert \
   /workspace/install/include/absl/base/log_severity.h \
   /workspace/install/include/absl/base/macros.h \
   /workspace/install/include/absl/time/clock.h \
   /workspace/install/include/absl/time/time.h \
-  /usr/include/x86_64-linux-gnu/sys/time.h \
   /workspace/install/include/absl/strings/string_view.h \
   /workspace/install/include/absl/base/internal/throw_delegate.h \
   /workspace/install/include/absl/time/civil_time.h \
@@ -5745,54 +5838,6 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.o: ../src
   /usr/include/opencv4/opencv2/video/tracking.hpp \
   /usr/include/opencv4/opencv2/video/background_segm.hpp \
   /usr/include/c++/11/variant \
-  /usr/include/x86_64-linux-gnu/curl/curl.h \
-  /usr/include/x86_64-linux-gnu/curl/curlver.h \
-  /usr/include/x86_64-linux-gnu/curl/system.h \
-  /usr/include/x86_64-linux-gnu/sys/socket.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_iovec.h \
-  /usr/include/x86_64-linux-gnu/bits/socket.h \
-  /usr/include/x86_64-linux-gnu/bits/socket_type.h \
-  /usr/include/x86_64-linux-gnu/bits/sockaddr.h \
-  /usr/include/x86_64-linux-gnu/asm/socket.h \
-  /usr/include/asm-generic/socket.h \
-  /usr/include/linux/posix_types.h \
-  /usr/include/linux/stddef.h \
-  /usr/include/x86_64-linux-gnu/asm/posix_types.h \
-  /usr/include/x86_64-linux-gnu/asm/posix_types_64.h \
-  /usr/include/asm-generic/posix_types.h \
-  /usr/include/x86_64-linux-gnu/asm/bitsperlong.h \
-  /usr/include/asm-generic/bitsperlong.h \
-  /usr/include/x86_64-linux-gnu/asm/sockios.h \
-  /usr/include/asm-generic/sockios.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_osockaddr.h \
-  /usr/include/x86_64-linux-gnu/curl/easy.h \
-  /usr/include/x86_64-linux-gnu/curl/multi.h \
-  /usr/include/x86_64-linux-gnu/curl/curl.h \
-  /usr/include/x86_64-linux-gnu/curl/urlapi.h \
-  /usr/include/x86_64-linux-gnu/curl/options.h \
-  /usr/include/rapidjson/document.h \
-  /usr/include/rapidjson/reader.h \
-  /usr/include/rapidjson/allocators.h \
-  /usr/include/rapidjson/rapidjson.h \
-  /usr/include/inttypes.h \
-  /usr/include/rapidjson/stream.h \
-  /usr/include/rapidjson/encodings.h \
-  /usr/include/rapidjson/encodedstream.h \
-  /usr/include/rapidjson/memorystream.h \
-  /usr/include/rapidjson/internal/meta.h \
-  /usr/include/rapidjson/rapidjson.h \
-  /usr/include/rapidjson/internal/stack.h \
-  /usr/include/rapidjson/allocators.h \
-  /usr/include/rapidjson/internal/swap.h \
-  /usr/include/rapidjson/internal/strtod.h \
-  /usr/include/rapidjson/internal/ieee754.h \
-  /usr/include/rapidjson/internal/biginteger.h \
-  /usr/include/rapidjson/internal/diyfp.h \
-  /usr/include/rapidjson/internal/pow10.h \
-  /usr/include/rapidjson/error/error.h \
-  /usr/include/rapidjson/rapidjson.h \
-  /usr/include/rapidjson/internal/strfunc.h \
-  /usr/include/rapidjson/stream.h \
   /usr/include/c++/11/future \
   /usr/include/c++/11/bits/atomic_futex.h
 
@@ -6137,11 +6182,7 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.o: ../src
 
 /usr/include/x86_64-linux-gnu/bits/sigaction.h:
 
-/usr/include/x86_64-linux-gnu/bits/sigevent-consts.h:
-
 /usr/include/x86_64-linux-gnu/bits/types/sigevent_t.h:
-
-/usr/include/x86_64-linux-gnu/bits/types/sigval_t.h:
 
 /usr/include/x86_64-linux-gnu/bits/siginfo-consts.h:
 
@@ -6232,6 +6273,20 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.o: ../src
 /usr/include/x86_64-linux-gnu/curl/system.h:
 
 /usr/include/x86_64-linux-gnu/curl/curlver.h:
+
+/usr/local/cuda/include/cuda.h:
+
+/usr/local/cuda/include/driver_functions.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/sigval_t.h:
+
+/usr/local/cuda/include/channel_descriptor.h:
+
+/usr/local/cuda/include/crt/host_config.h:
+
+/usr/include/x86_64-linux-gnu/bits/sigevent-consts.h:
+
+/usr/local/cuda/include/cuda_runtime.h:
 
 /usr/include/rapidjson/stream.h:
 
@@ -6343,6 +6398,10 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.o: ../src
 
 /usr/include/opencv4/opencv2/opencv.hpp:
 
+/usr/local/cuda/include/cuda_device_runtime_api.h:
+
+/usr/local/cuda/include/crt/host_defines.h:
+
 /usr/include/boost/preprocessor/cat.hpp:
 
 /usr/include/x86_64-linux-gnu/bits/siginfo-arch.h:
@@ -6358,6 +6417,8 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.o: ../src
 /workspace/install/include/google/protobuf/stubs/bytestream.h:
 
 /workspace/install/include/google/protobuf/source_context.pb.h:
+
+/usr/local/cuda/include/cuda_runtime_api.h:
 
 /workspace/install/include/google/protobuf/type.pb.h:
 
@@ -6901,6 +6962,8 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.o: ../src
 
 ../src/tasks/classification/src/TorchvisionClassifier.hpp:
 
+/usr/local/cuda/include/builtin_types.h:
+
 /usr/include/endian.h:
 
 /usr/include/c++/11/bits/cpp_type_traits.h:
@@ -6909,9 +6972,13 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.o: ../src
 
 /usr/include/c++/11/bits/exception.h:
 
+/usr/local/cuda/include/device_types.h:
+
 /usr/include/c++/11/bits/locale_facets.h:
 
 /workspace/install/include/grpcpp/impl/codegen/rpc_method.h:
+
+/usr/local/cuda/include/surface_types.h:
 
 /usr/include/c++/11/bits/ranges_util.h:
 
@@ -6974,6 +7041,8 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.o: ../src
 /workspace/install/include/google/protobuf/stubs/casts.h:
 
 /usr/include/c++/11/pstl/execution_defs.h:
+
+/usr/local/cuda/include/driver_types.h:
 
 /usr/include/c++/11/bits/cxxabi_forced.h:
 
@@ -7118,6 +7187,8 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.o: ../src
 /usr/include/c++/11/tr1/exp_integral.tcc:
 
 /usr/include/boost/mpl/aux_/adl_barrier.hpp:
+
+/usr/local/cuda/include/vector_functions.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h:
 
@@ -7293,6 +7364,8 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.o: ../src
 
 /usr/include/boost/mpl/aux_/lambda_arity_param.hpp:
 
+/usr/local/cuda/include/vector_types.h:
+
 /workspace/install/include/grpcpp/impl/codegen/sync_stream.h:
 
 /usr/include/x86_64-linux-gnu/bits/local_lim.h:
@@ -7344,6 +7417,8 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.o: ../src
 /usr/include/opencv4/opencv2/core/cvstd_wrapper.hpp:
 
 /workspace/install/include/grpcpp/impl/codegen/completion_queue.h:
+
+/usr/local/cuda/include/library_types.h:
 
 /workspace/install/include/grpc/support/cpu.h:
 
@@ -7412,6 +7487,8 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.o: ../src
 /usr/include/opencv4/opencv2/core/cuda.inl.hpp:
 
 /usr/include/c++/11/bits/atomic_base.h:
+
+/usr/local/cuda/include/texture_types.h:
 
 /usr/include/opencv4/opencv2/videoio.hpp:
 
@@ -7694,6 +7771,8 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.o: ../src
 /workspace/install/include/grpcpp/impl/codegen/metadata_map.h:
 
 /usr/include/x86_64-linux-gnu/bits/siginfo-consts-arch.h:
+
+/usr/local/cuda/include/vector_functions.hpp:
 
 /usr/include/opencv4/opencv2/flann/allocator.h:
 

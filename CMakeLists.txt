@@ -52,6 +52,7 @@ add_executable(${PROJECT_NAME} ${SOURCES} ${DETECTOR_SOURCES} ${TRITON_SOURCES})
 # Set include directories for the target
 target_include_directories(${PROJECT_NAME}
     PRIVATE
+    ${CUDAToolkit_INCLUDE_DIRS} /usr/local/cuda/include     
     ${OpenCV_INCLUDE_DIRS}
     $ENV{TritonClientBuild_DIR}/include
     ${PROJECT_SOURCE_DIR}/include
@@ -78,8 +79,9 @@ target_link_directories(${PROJECT_NAME}
     /usr/lib/x86_64-linux-gnu
     # Add any additional link directories here
 )
+find_package(CUDAToolkit REQUIRED)
+target_compile_definitions(${PROJECT_NAME} PRIVATE TRITON_ENABLE_GPU=1 TRITON_NO_GPU=0)
 
-# Link libraries for the target
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
     grpcclient
@@ -93,5 +95,7 @@ target_link_libraries(${PROJECT_NAME}
     tbb
     boost_system
     boost_filesystem
+    ${CUDA_LIBRARIES}
+     CUDA::cudart
 
 )
