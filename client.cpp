@@ -1164,10 +1164,10 @@ for (size_t i = 0; i < coordinates_vec.size(); ++i) {
 
 			int64 ti = cv::getTickCount();
 			auto starttrack = std::chrono::steady_clock::now();
-			tracking.setDataImages(frame);
+			//tracking.setDataImages(frame);
            // UpdateObjects(vector<dnn_bbox> _detections, string frame_id)
-			tracking.UpdateObjects(detections,frameId,fps_camera,true);
-			tracking.evalObjects();
+			//tracking.UpdateObjects(detections,frameId,fps_camera,true);
+			//tracking.evalObjects();
 			//cout << " - Number of active trackers: " <<  tracking.getActiveTrackers() << " - " << host_id << endl;
 			//cout << " - Number of active trackers: " <<  tracking.getActiveTrackers() << " - " << host_id << endl;
 
@@ -1245,12 +1245,14 @@ for (size_t i = 0; i < coordinates_vec.size(); ++i) {
 
 
 		if (!DEBUG) {
-		send_out_imageb64(rdx,frame,msgi.host_uuid); //it takes a lot of time in my pc core I5 around 13 ms 
+		//send_out_imageb64(rdx,frame,msgi.host_uuid); //it takes a lot of time in my pc core I5 around 13 ms 
 		}
 		auto end2 = std::chrono::steady_clock::now();
         auto diff2 = std::chrono::duration_cast<std::chrono::milliseconds>(end2 - start).count();
         std::cout << " Time LOOP : " << static_cast<double>(diff2) << " ms" << std::endl;
 		fps = 1000.0 / static_cast<double>(diff2);
+		std::cout << " fps : " << fps  << std::endl;
+
 
        //cv::imshow("video feed", frame);
         //cv::waitKey(0);
