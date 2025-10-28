@@ -178,7 +178,7 @@ void processYOLODetections(const float* output_data, const std::vector<int64_t>&
 }
 
 void processVideo(const std::string& video_path, std::string url, bool verbose, tc::Headers http_headers) {
-    cv::VideoCapture cap(video_path);
+    cv::VideoCapture cap(video_path,cv::CAP_FFMPEG);
     if (!cap.isOpened()) {
         std::cerr << "Error: No se puede abrir el video: " << video_path << std::endl;
         return;
@@ -194,8 +194,8 @@ void processVideo(const std::string& video_path, std::string url, bool verbose, 
     std::cout << "FPS: " << fps << std::endl;
     std::cout << "Total frames: " << total_frames << std::endl;
     
-    cv::namedWindow("YOLO Object Detection - Triton Server", cv::WINDOW_NORMAL);
-    cv::resizeWindow("YOLO Object Detection - Triton Server", 800, 600);
+    //cv::namedWindow("YOLO Object Detection - Triton Server", cv::WINDOW_NORMAL);
+   // cv::resizeWindow("YOLO Object Detection - Triton Server", 800, 600);
     
     std::unique_ptr<tc::InferenceServerGrpcClient> client;
     FAIL_IF_ERR(
@@ -344,6 +344,7 @@ void processVideo(const std::string& video_path, std::string url, bool verbose, 
                   << " | Inferencia: " << cv::format("%.1f", inference_time) << " ms"
                   << " | FPS: " << cv::format("%.2f", current_fps) << std::endl;
 
+cv::waitKey(30);
         //cv::imshow("YOLO Object Detection - Triton Server", display_frame);
         
         //int key = cv::waitKey(1) & 0xFF;
@@ -397,7 +398,7 @@ void processVideo(const std::string& video_path, std::string url, bool verbose, 
 int main(int argc, char** argv) {
     bool verbose = false;
     std::string url("localhost:8001");
-    std::string video_path("/opt/alice-media/copan-water/cut_resized_1280x720.mp4");
+    std::string video_path("rtsp://admin:technical1514@192.168.1.205:554/Streaming/Channels/102");
     tc::Headers http_headers;
 
     int opt;
@@ -424,13 +425,13 @@ int main(int argc, char** argv) {
         }
     }
 
-    std::ifstream test_file(video_path);
-    if (!test_file.good()) {
-        std::cerr << "Error: El archivo de video no existe: " << video_path << std::endl;
-        std::cerr << "Usa: -i /ruta/completa/al/video.mp4" << std::endl;
-        return 1;
-    }
-    test_file.close();
+//    std::ifstream test_file(video_path);
+ //   if (!test_file.good()) {
+  //      std::cerr << "Error: El archivo de video no existe: " << video_path << std::endl;
+   //     std::cerr << "Usa: -i /ruta/completa/al/video.mp4" << std::endl;
+    //    return 1;
+   // }
+   // test_file.close();
 
     std::cout << "=== TRITON VIDEO PROCESSING CLIENT ===" << std::endl;
     std::cout << "Video: " << video_path << std::endl;

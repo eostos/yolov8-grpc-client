@@ -22,6 +22,7 @@
 #include "bufferPhoto.hpp"
 #include "CentroidTracker.hpp"
 #include "poligonTrackerManager.hpp"
+
 //////////////////////////
 using namespace cv;
 using namespace redox;
@@ -30,7 +31,7 @@ using namespace redox;
 /////////////////////////////////
 /////////////////////////////////
 string host_id;
-CircularBuffer photo_buffer(30);
+CircularBuffer photo_buffer(90);
 string media_path = "/opt/alice-media/tracker";
 bool read_config = false;
 bool save_img_obj= false;
@@ -42,6 +43,9 @@ Json::Value dataJson;
 Redox rdx;
 ///////////////////////////////
 ///////////////////////////////
+float euclideanDistance(const cv::Point2f& p1, const cv::Point2f& p2) {
+    return std::sqrt(std::pow(p1.x - p2.x, 2) + std::pow(p1.y - p2.y, 2));
+}
 
 void join_and_send_outdata_redox(Redox &rdx,
 						FrMs msg_n,
@@ -100,8 +104,33 @@ void join_and_send_outdata_redox(Redox &rdx,
 }
 
 
+void send_meter_coordinates_json(
+    const std::string& host_id,
+    float fps,
+    const std::string& motion_method,
+    const std::string& unixTimeStamp,
+    const std::string& frameId,
+    Redox& rdx,
+    const std::string& channel,
+    const Json::Value& coordinates_json)
+{
+    Json::Value jsonMsg;
+    jsonMsg["host_id"]         = host_id;
+    jsonMsg["unix_timestamp"]  = unixTimeStamp;
+    jsonMsg["frame_id"]        = frameId;
+    jsonMsg["fps"]             = fps;
+    jsonMsg["motion_method"]   = motion_method;
+    jsonMsg["coordinates"]     = coordinates_json; // <- Aquí las coordenadas
 
+    // Serializa a string
+    Json::StreamWriterBuilder builder;
+    std::string msgToSend = Json::writeString(builder, jsonMsg);
 
+    // Publica
+    std::string send_channel = channel + host_id;
+    std::cout << "Publishing to channel: " << send_channel << std::endl;
+    rdx.publish(send_channel, msgToSend);
+}
 
 std::vector<PoligonTrackerManager*> get_poligons_trackers(Json::Value poligon_json) {
 
@@ -250,9 +279,10 @@ std::unique_ptr<TaskInterface> createDetectorInstance(const std::string& modelTy
 }
 void send_out_imageb64(Redox &rdx,Mat drawings,string host_id) {
 	cv::Mat resized_frame;
-    cv::resize(drawings, resized_frame, cv::Size(360*3, 240*3));
+    cv::resize(drawings, resized_frame, cv::Size(360, 240));
+	//cv::resize(drawings, resized_frame, cv::Size(1280, 720));
 	std::vector<uchar> buf;
-	 std::vector<int> params = {cv::IMWRITE_JPEG_QUALITY, 95};
+	 std::vector<int> params = {cv::IMWRITE_JPEG_QUALITY, 100};
 	cv::imencode(".jpg", resized_frame, buf,params);
 	auto *enc_msg = reinterpret_cast<unsigned char*>(buf.data());
 	std::string encoded = base64_encode(enc_msg, buf.size());
@@ -389,11 +419,125 @@ void ProcessVideo(const std::string& sourceName,
 	string to_post = config_params["topost"].asString();
 	string redis_ip = config_params["server_ip"].asString();
 	int redis_port = config_params["server_port"].asInt();
+
+	// Lee el rol y configuración de fusión desde el config
+	std::vector<std::string> fusion_classes;
+	if (config_params.isMember("fusion_classes") && config_params["fusion_classes"].isArray()) {
+		for (const auto& val : config_params["fusion_classes"]) {
+			if (val.isString()) {
+				fusion_classes.push_back(val.asString());
+			}
+		}
+	}
+	std::string fusion_role = config_params.get("fusion_role", "none").asString();
+	bool publish_objects = config_params.get("publish_objects", true).asBool();
+	bool publish_events = config_params.get("publish_events", false).asBool();
+	std::vector<cv::Point2f> img_pts, world_pts,roi_polygon;
+	std::vector<cv::Point> roi_polygon_int;
+	if(fusion_role== "publisher"){
+	for (const auto& pt : config_params["homography_pub"])
+    img_pts.emplace_back(pt[0].asFloat(), pt[1].asFloat());
+	for (const auto& pt : config_params["homography_fus"])
+    world_pts.emplace_back(pt[0].asFloat(), pt[1].asFloat());
+	}
+
+	// Si es fusionador, cargar lista de cámaras para fusionar
+	std::vector<Json::Value> fusion_cameras;
+	std::string redis_channel_camera_1;
+	std::string redis_channel;
+	std::string host_id_camera_1;
+	if ( fusion_role == "fusion" && config_params.isMember("fusion_cameras")) {
+		fusion_cameras = get_list_of_json(config_params["fusion_cameras"]);
+			for (const auto& cam : fusion_cameras) {
+			host_id_camera_1 = cam["host_id"].asString();
+			redis_channel = cam["redis_channel"].asString();
+			for (const auto& pt : config_params["fusion_cameras"][0]["roi_polygon"]) {
+			roi_polygon.emplace_back(pt[0].asFloat(), pt[1].asFloat());
+			std::cout << "Added point: (" << pt[0].asFloat() << ", " << pt[1].asFloat() << ")" << std::endl;
+		}
+			redis_channel_camera_1=redis_channel_camera_1+host_id_camera_1;
+			std::cout << "Host: " << host_id_camera_1 << ", Channel: " << redis_channel_camera_1 << std::endl;
+		}
+		
+		for (const auto& pt : roi_polygon) {
+			roi_polygon_int.emplace_back(static_cast<int>(pt.x), static_cast<int>(pt.y));
+		}
+	}
+
+	if (redis_ip.empty() || redis_port <= 0) {
+		std::cerr << "Invalid Redis configuration: IP or port is not set correctly." << std::endl;
+		exit(-1);
+	}
+
+	cv::Rect roi;
+	bool crop_enabled = false;
+
+	// Antes del loop, cuando lees el config:
+	if (config_params.isMember("crop_video") && config_params["crop_video"].size() == 2) {
+		auto crop_video = config_params["crop_video"];
+		int x1 = crop_video[0][0].asInt();
+		int y1 = crop_video[0][1].asInt();
+		int x2 = crop_video[1][0].asInt();
+		int y2 = crop_video[1][1].asInt();
+		// Validación básica
+		if (x2 > x1 && y2 > y1) {
+			roi = cv::Rect(x1, y1, x2 - x1, y2 - y1);
+			crop_enabled = true;
+		}
+	}
+
+
+
+
 	cout << redis_port << " REDIS PORT " << endl;
 	cout << "Config path: " << sourceName << ", id: " << id << ", host_id: " << host_id << endl;
 	//Redox rdx;
 	//REDOX
 	//CONNECTIONS
+auto lam_gotmsg = [](const std::string& topic, const std::string& msg) {
+     FrMs msgi;
+
+    // Parse JSON
+    Json::CharReaderBuilder builder;
+    Json::Value j;
+    std::string errs;
+    std::istringstream s(msg);
+    bool ok = Json::parseFromStream(builder, s, &j, &errs);
+    if (!ok) {
+        std::cerr << "Error parsing JSON: " << errs << std::endl;
+        return;
+    }
+
+    // Assign basic fields
+    msgi.host_uuid    = j.get("host_id", "none").asString();
+    msgi.timestamp    = j.get("unix_timestamp", "0").asString();
+    msgi.frame_id     = j.get("frame_id", "none").asString();
+    msgi.fps          = j.get("fps", 0.0).asFloat();
+    msgi.analytic_type = j.get("motion_method", "none").asString();
+    // Optionally: msgi.event_type = ... // if present
+
+    // Extract vector of coordinates
+    std::vector<cv::Point2f> coordinates_vec;
+    const Json::Value& coords = j["coordinates"];
+    if (coords.isArray()) {
+        for (const auto& pt_json : coords) {
+            float x = pt_json.get("x", 0.0).asFloat();
+            float y = pt_json.get("y", 0.0).asFloat();
+            coordinates_vec.emplace_back(x, y);
+        }
+    }
+    // If your struct supports coordinates:
+    msgi.coordinates = coordinates_vec;
+
+    // (Optional) Print points for debug
+ //   std::cout << "Received " << coordinates_vec.size() << " points from host " << msgi.host_uuid << std::endl;
+ //   for (const auto& pt : coordinates_vec) {
+ //       std::cout << "Point: (" << pt.x << ", " << pt.y << ")\n";
+  //  }
+
+    // Use msgi as needed, for example:
+    smartQueueEvents.addNewItem(msgi);
+};
 	auto subbed = [](const string& topic) {
         cout << ">>> Subscribed to " << topic << endl;
 	};
@@ -412,8 +556,20 @@ void ProcessVideo(const std::string& sourceName,
 	};
 
 
+	auto lam_err_callback = [](const string& topic, const int &errnum) {
+		cerr << ">>> LAM_ERR_CALLBACK " << topic << " errnum: " << errnum << endl;
+		cerr << "REDIS ERROR ACTIVATES THE redis ERROR CALLBACK" << endl;
+		exit(-3);
+	};
 	Subscriber sub;
 	if (!rdx.connect(redis_ip, redis_port,rdxconn) || !sub.connect(redis_ip, redis_port,subconn)) {
+		cout << "Could not connect to port :  " << redis_port << " - " << host_id << endl;
+		cout << "Not connection To Redis - " << host_id << endl;
+		exit(-2);
+	}
+
+		Subscriber sub1;
+	if ( !sub1.connect(redis_ip, redis_port,subconn)) {
 		cout << "Could not connect to port :  " << redis_port << " - " << host_id << endl;
 		cout << "Not connection To Redis - " << host_id << endl;
 		exit(-2);
@@ -433,12 +589,18 @@ void ProcessVideo(const std::string& sourceName,
 	if (!rdx.set(status_channel,"0")) {
 		cout << "Failed to set status - " << host_id << endl;  
 	}
+
+	if(fusion_role== "fusion") {
+		std::cout << "FUSION ROLE ACTIVATED " << std::endl;
+
+	sub1.subscribe(redis_channel_camera_1, lam_gotmsg, subbed, unsubbed, lam_err_callback);
+	} 
 	const size_t MAX_NUM_TRACKERS = 200;//originally was in 25
 	std::vector<TrackingObject *> trackers(MAX_NUM_TRACKERS);
 	for (size_t i = 0; i < MAX_NUM_TRACKERS; ++i) {
 		trackers[i] = new TrackingObject();///
-		trackers[i]->setMaxRouteSize(250);
-		trackers[i]->setMaxDisappeared(20);//originally was in 10
+		trackers[i]->setMaxRouteSize(5000);
+		trackers[i]->setMaxDisappeared(50);//originally was in 10
 	}
 
 	// ADD TRACKER OBJECTS TO TRACKING MANAGER
@@ -533,7 +695,7 @@ void ProcessVideo(const std::string& sourceName,
 	sub.subscribe(notifications_channel, notifications_msg, subbed, unsubbed, err_callback);
 	sub.subscribe("tracker_check_config", config_msg);
 
-	Mat imgShow,imgSave,frame;
+	Mat imgShow,imgSave,original, frame,image_from_2_camera;
 	int64 thFPS;
 	thFPS = getTickCount();
 	float fps_calc = -1;
@@ -582,20 +744,58 @@ void ProcessVideo(const std::string& sourceName,
 	}else{
 		cout << "Url opened ,after fps calculation:  !!! :  " <<endl;
 	}
-
-
-
-
-
-	
 	
 	string motion_method = "KNN";
 	FrMs msgi;
+	FrMs msg_n;
     double fps=0.0;
+
+
+
+
+	//*****************************************************
+	// HOMOGRPHY 
+	// 
+	//  */
+
+	cv::Mat H;
+	if(img_pts.size() == 4 && world_pts.size() == 4) {
+		H = cv::findHomography(img_pts, world_pts);
+		std::cout << "Homography Matrix H:\n" << H << std::endl;
+	} else {
+		std::cout  << "Homography: Need exactly 4 points for both image and world" << std::endl;
+	}
+
+
+
+
+	//std::vector<cv::Point2f> img_pts_vec = img_pts;
+	//std::vector<cv::Point2f> world_proj;
+	//cv::perspectiveTransform(img_pts_vec, world_proj, H);
+	
+	//cv::Mat H_inv = H.inv();
     while (true) {
 /////////////////////////////
-  		auto start = std::chrono::steady_clock::now();
-		cap.read(frame) ;
+  		
+  		Json::Value world_points_json(Json::arrayValue);
+		std::vector<cv::Point2f> world_points_vec;
+		std::vector<cv::Point2f> coordinates_vec;//points  received from redis
+		cap.read(original) ;
+		auto start = std::chrono::steady_clock::now();
+		if (crop_enabled) {
+			// Valida que el ROI esté dentro del frame
+			if (original.cols >= roi.x + roi.width && original.rows >= roi.y + roi.height) {
+				frame = original(roi);
+			} else {
+				std::cerr << "Frame is smaller than required ROI, using complete frame" << std::endl;
+				frame = original;
+			}
+		} else {
+			frame = original;
+		}
+
+
+		
 		
       	//resize(frame, frame, Size(1280, 720));
 		std::string unixTimeStamp = unixTimeStampStr();
@@ -609,6 +809,9 @@ void ProcessVideo(const std::string& sourceName,
         //smartQueueFrames.addNewItem(msgi);
 
         //double fps = 1000.0 / static_cast<double>(diff);
+        std::string fpsText = "FPS: " + std::to_string(fps);
+		int point_y = frame.cols/2;
+        cv::putText(frame, fpsText, cv::Point(10,point_y ), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 255, 0), 2);
  		if (!status_analytics) {
 			if (!rdx.set(status_channel,"1")) {
 
@@ -635,17 +838,35 @@ void ProcessVideo(const std::string& sourceName,
 			//	poligon_tracker_manager.clear(); 
 			
 			poligon_tracker_manager = get_poligons_trackers(config_params["poligons"]);
+			
 			// --------------------------------------------------------------------
 		for (int i = 0, m = (int)poligon_tracker_manager.size(); i < m; ++i) 
 		{
 				poligon_tracker_manager[i]->setTrackers(trackers);
 			}
 		}
- 		//auto eventsQueue_size = abs(smartQueueEvents.getListSize());
+
+		if(fusion_role=="fusion")//if we choose none it wouldnt do nothing and the software continue 
+		{
+				auto eventsQueue_size = abs(smartQueueEvents.getListSize());
+				cout << "Events Queue Size: " << eventsQueue_size << endl;
+				//auto smartQueue_size = abs(smartQueue.getListSize());
+			if (eventsQueue_size<1){
+				cout << "Waiting for events, please turn on the camera publisher" << endl;
+				//continue;
+				
+			}else{
+				msg_n = smartQueueEvents.takeOldestItem();
+				coordinates_vec = msg_n.coordinates;
+			}
+	
+				//cv::imshow("Image from other camera", image_from_2_camera);
+				//cv::imwrite("image_from_other_camera.jpg", image_from_2_camera);
+				//cv::waitKey(1); // Para mostrar la imagen de la otra cámara
+		}
 		//auto framesQueue_size = abs(smartQueueFrames.getListSize());
         vector<dnn_bbox> detections;
 		Json::Value parts;
-		FrMs msgi;
 		int idx = 0;
 		string obj_id = "1";
         //struct dnn_bbox{
@@ -658,42 +879,275 @@ void ProcessVideo(const std::string& sourceName,
         //    string embeddings;//std::vector<float> embeddings;
 	    //    string prob_det;
         //    };
-	
-        for (auto&& prediction : predictions) 
-        {
-            if (std::holds_alternative<Detection>(prediction)) 
-            {
-                 Detection detection = std::get<Detection>(prediction);
-                //std::cout << "Detecting cars : "  << detection.bbox<<std::endl;
-                //std::cout << "Detecting cars : "  << class_names[detection.class_id]<<std::endl;
-                //std::cout << "Detecting cars : "  << detection.class_id<<std::endl;
-                //std::cout << "Detecting cars : "  << detection.class_confidence<<std::endl;
-                ///////
-				Json::Value partInfo;
-				//Rect ri = dnn_det_i.bbox;
-				float FX = (float)1.0/frame.cols;
-				float FY = (float)1.0/frame.rows;
-				partInfo["bbox"]["x"] = to_string_with_precision(detection.bbox.x * FX, 4);
-				partInfo["bbox"]["y"] = to_string_with_precision(detection.bbox.y * FY, 4);
-				partInfo["bbox"]["w"] = to_string_with_precision(detection.bbox.width * FX, 4);
-				partInfo["bbox"]["h"] = to_string_with_precision(detection.bbox.height * FY, 4);
-				partInfo["prob"]      = to_string_with_precision(  detection.class_confidence, 4);
-				partInfo["obj_id"] 	= obj_id;
-				partInfo["tag"]	=  class_names[detection.class_id];
-				parts[idx] = partInfo;
-				idx++;						
-				////
-                uint id = stoul(obj_id);//this was a fake 
-				//std::cout << "Detected class  "  << class_names[detection.class_id]<<std::endl;
-				
-                dnn_bbox dnn_obj = dnn_bbox{detection.bbox,detection.class_confidence, id, class_names[detection.class_id],"photo_object_cutted","uuid","embeddings",std::to_string(detection.class_confidence)};
-                detections.push_back(dnn_obj);
-				
-               // cv::rectangle(frame, detection.bbox, cv::Scalar(255, 0, 0), 2);
-                //draw_label(frame,  class_names[detection.class_id], detection.class_confidence, detection.bbox.x, detection.bbox.y - 1);
-            }
-        }
 
+		if(DEBUG){
+  		cv::polylines(frame, roi_polygon_int, true, cv::Scalar(0,255,255), 2);
+		}
+
+		//IF NO PUBLISH EVENTS , THE ANALYTICS WONT SEND THE EVENTS BY REDIS.
+		if(!publish_events && fusion_role=="publisher" ) 
+		{
+			for (auto&& prediction : predictions) 
+				{
+					if (std::holds_alternative<Detection>(prediction)) 
+					{
+						Detection detection = std::get<Detection>(prediction);
+						if(detection.class_confidence < 0.3) 
+						{
+							continue; // Skip detections with low confidence
+						}	
+						
+            			
+							if (std::find(fusion_classes.begin(), fusion_classes.end(), class_names[detection.class_id]) != fusion_classes.end()) 
+							{   cv::rectangle(frame, detection.bbox, cv::Scalar(255, 0, 0), 2);
+								//draw_label(frame,  class_names[detection.class_id], detection.class_confidence, detection.bbox.x, detection.bbox.y - 1);
+								cv::Point2f center(detection.bbox.x + detection.bbox.width/2.0f, detection.bbox.y + detection.bbox.height);
+								cv::circle(frame, center, 5, cv::Scalar(0, 255, 0), -1); // green filled circle
+								/// IS THE POINT INSIDE THE ROI POLYGON ?
+
+									std::vector<cv::Point2f> src = {center}, dst;
+									cv::perspectiveTransform(src, dst, H);
+									cv::Point2f world_pt = dst[0];
+									// --- aquí guardas el punto ---
+									world_points_vec.push_back(world_pt);
+									// Si quieres guardar también el id del objeto:
+								
+							}
+					}
+				}
+				for (const auto& pt : world_points_vec) {
+						Json::Value pt_json;
+						pt_json["x"] = pt.x;
+						pt_json["y"] = pt.y;
+						world_points_json.append(pt_json);
+				}
+			send_meter_coordinates_json(msgi.host_uuid, fps, motion_method,unixTimeStamp, frameId, rdx, redis_channel, world_points_json);
+		}
+		if(publish_events && fusion_role=="publisher"){
+				//it will publish the events to redis for analize the events
+				for (auto&& prediction : predictions) 
+				{
+					if (std::holds_alternative<Detection>(prediction)) 
+					{
+						Detection detection = std::get<Detection>(prediction);
+						if(detection.class_confidence < 0.3) 
+						{
+							continue; // Skip detections with low confidence
+						}	
+						//std::cout << "Detecting cars : "  << detection.bbox<<std::endl;
+						//std::cout << "Detecting cars : "  << class_names[detection.class_id]<<std::endl;
+						//std::cout << "Detecting cars : "  << detection.class_id<<std::endl;
+						//std::cout << "Detecting cars : "  << detection.class_confidence<<std::endl;
+						///////
+						Json::Value partInfo;
+						//Rect ri = dnn_det_i.bbox;
+						float FX = (float)1.0/frame.cols;
+						float FY = (float)1.0/frame.rows;
+						partInfo["bbox"]["x"] = to_string_with_precision(detection.bbox.x * FX, 4);
+						partInfo["bbox"]["y"] = to_string_with_precision(detection.bbox.y * FY, 4);
+						partInfo["bbox"]["w"] = to_string_with_precision(detection.bbox.width * FX, 4);
+						partInfo["bbox"]["h"] = to_string_with_precision(detection.bbox.height * FY, 4);
+						partInfo["prob"]      = to_string_with_precision(  detection.class_confidence, 4);
+						partInfo["obj_id"] 	= obj_id;
+						partInfo["tag"]	=  class_names[detection.class_id];
+						parts[idx] = partInfo;
+						idx++;						
+						////
+						uint id = stoul(obj_id);//this was a fake 
+						dnn_bbox dnn_obj = dnn_bbox{detection.bbox,detection.class_confidence, id, class_names[detection.class_id],"photo_object_cutted","uuid","embeddings",std::to_string(detection.class_confidence)};
+						detections.push_back(dnn_obj);
+						if (std::find(fusion_classes.begin(), fusion_classes.end(), class_names[detection.class_id]) != fusion_classes.end()) 
+							{  // cv::rectangle(frame, detection.bbox, cv::Scalar(255, 0, 0), 2);
+								//
+								//(frame,  class_names[detection.class_id], detection.class_confidence, detection.bbox.x, detection.bbox.y - 1);
+								cv::Point2f center(detection.bbox.x + detection.bbox.width/2.0f, detection.bbox.y + detection.bbox.height/2.0f);
+								/// IS THE POINT INSIDE THE ROI POLYGON ?
+
+									std::vector<cv::Point2f> src = {center}, dst;
+									cv::perspectiveTransform(src, dst, H);
+									cv::Point2f world_pt = dst[0];
+									// --- aquí guardas el punto ---
+									world_points_vec.push_back(world_pt);
+									// Si quieres guardar también el id del objeto:
+								
+							}
+
+					}
+					
+				}
+			for (const auto& pt : world_points_vec) {
+					Json::Value pt_json;
+					pt_json["x"] = pt.x;
+					pt_json["y"] = pt.y;
+					world_points_json.append(pt_json);
+			}
+			send_meter_coordinates_json(msgi.host_uuid, fps, motion_method,unixTimeStamp, frameId, rdx, redis_channel, world_points_json);
+			//send_resize_frame_redis
+			//send_meter_coordinares(rdx,world_points_json,msgi.host_uuid); //it takes a lot of time in my pc core I5 around 13 ms 
+		}
+		if(fusion_role=="fusion" ) 
+		{
+				if (DEBUG) {
+					for (const auto& pt : coordinates_vec) {
+						//cout<< "Point from other camera: OPENING FUSSSIONNN" << endl;
+						int size = 12;      // Tamaño del cuadrado
+						int line_len = 5;   // Largo de cada esquina
+
+						int x = static_cast<int>(pt.x);
+						int y = static_cast<int>(pt.y);
+
+						// Esquina superior izquierda
+						cv::line(frame, cv::Point(x - size, y - size), cv::Point(x - size + line_len, y - size), cv::Scalar(0, 255, 0), 2);
+						cv::line(frame, cv::Point(x - size, y - size), cv::Point(x - size, y - size + line_len), cv::Scalar(0, 255, 0), 2);
+						// Esquina superior derecha
+						cv::line(frame, cv::Point(x + size, y - size), cv::Point(x + size - line_len, y - size), cv::Scalar(0, 255, 0), 2);
+						cv::line(frame, cv::Point(x + size, y - size), cv::Point(x + size, y - size + line_len), cv::Scalar(0, 255, 0), 2);
+						// Esquina inferior izquierda
+						cv::line(frame, cv::Point(x - size, y + size), cv::Point(x - size + line_len, y + size), cv::Scalar(0, 255, 0), 2);
+						cv::line(frame, cv::Point(x - size, y + size), cv::Point(x - size, y + size - line_len), cv::Scalar(0, 255, 0), 2);
+						// Esquina inferior derecha
+						cv::line(frame, cv::Point(x + size, y + size), cv::Point(x + size - line_len, y + size), cv::Scalar(0, 255, 0), 2);
+						cv::line(frame, cv::Point(x + size, y + size), cv::Point(x + size, y + size - line_len), cv::Scalar(0, 255, 0), 2);
+					}
+				}
+							std::vector<cv::Point2f> image_points;
+
+
+
+				std::vector<cv::Point2f> centers_to_transform;
+				std::vector<std::pair<cv::Point2f, Detection>> filtered_detections;
+
+
+for (auto&& prediction : predictions) {
+    if (!std::holds_alternative<Detection>(prediction)) continue;
+    Detection detection = std::get<Detection>(prediction);
+    if (detection.class_confidence < 0.3) continue;
+
+    cv::Point2f center(
+        detection.bbox.x + detection.bbox.width / 2.0f,
+        detection.bbox.y + detection.bbox.height / 2.0f
+    );
+
+    if (cv::pointPolygonTest(roi_polygon, center, false) >= 0) {
+        filtered_detections.emplace_back(center, detection);
+    }
+}
+
+std::vector<bool> matched(coordinates_vec.size(), false);
+float match_threshold = 60.0f;
+
+for (size_t i = 0; i < coordinates_vec.size(); ++i) {
+    for (const auto& [center, det] : filtered_detections) {
+        if (euclideanDistance(center, coordinates_vec[i]) < match_threshold) {
+            matched[i] = true;
+            break;
+        }
+    }
+}
+
+for (size_t i = 0; i < coordinates_vec.size(); ++i) {
+    if (matched[i]) continue;
+
+    const auto& pt = coordinates_vec[i];
+    int bbox_size = 90;
+    cv::Rect bbox(pt.x - bbox_size/2, pt.y - bbox_size/2, bbox_size, bbox_size);
+
+    Detection virtual_det;
+    virtual_det.bbox = bbox;
+    virtual_det.class_confidence = 0.99f;
+    virtual_det.class_id = 2;  // Clase dummy "jug"
+
+    predictions.push_back(virtual_det);  // 👈 Aquí se añade como std::variant
+}
+						for (auto&& prediction : predictions) 
+				{
+					if (std::holds_alternative<Detection>(prediction)) 
+					{
+						Detection detection = std::get<Detection>(prediction);
+						if(detection.class_confidence < 0.3) 
+						{
+							continue; // Skip detections with low confidence
+						}	
+						//std::cout << "Detecting cars : "  << detection.bbox<<std::endl;
+						//std::cout << "Detecting cars : "  << class_names[detection.class_id]<<std::endl;
+						//std::cout << "Detecting cars : "  << detection.class_id<<std::endl;
+						//std::cout << "Detecting cars : "  << detection.class_confidence<<std::endl;
+						///////
+						Json::Value partInfo;
+						//Rect ri = dnn_det_i.bbox;
+						float FX = (float)1.0/frame.cols;
+						float FY = (float)1.0/frame.rows;
+						partInfo["bbox"]["x"] = to_string_with_precision(detection.bbox.x * FX, 4);
+						partInfo["bbox"]["y"] = to_string_with_precision(detection.bbox.y * FY, 4);
+						partInfo["bbox"]["w"] = to_string_with_precision(detection.bbox.width * FX, 4);
+						partInfo["bbox"]["h"] = to_string_with_precision(detection.bbox.height * FY, 4);
+						partInfo["prob"]      = to_string_with_precision(  detection.class_confidence, 4);
+						partInfo["obj_id"] 	= obj_id;
+						partInfo["tag"]	=  class_names[detection.class_id];
+						//draw_label(frame,  class_names[detection.class_id], detection.class_confidence, detection.bbox.x, detection.bbox.y - 1);
+						parts[idx] = partInfo;
+						idx++;						
+						////
+						uint id = stoul(obj_id);//this was a fake 
+						dnn_bbox dnn_obj = dnn_bbox{detection.bbox,detection.class_confidence, id, class_names[detection.class_id],"photo_object_cutted","uuid","embeddings",std::to_string(detection.class_confidence)};
+						detections.push_back(dnn_obj);
+
+
+					}
+					
+				}
+
+
+
+
+
+
+		}
+		if(fusion_role=="none" ) 
+		{
+						for (auto&& prediction : predictions) 
+				{
+					if (std::holds_alternative<Detection>(prediction)) 
+					{
+						Detection detection = std::get<Detection>(prediction);
+						if(detection.class_confidence < 0.3) 
+						{
+							continue; // Skip detections with low confidence
+						}	
+						//std::cout << "Detecting cars : "  << detection.bbox<<std::endl;
+						//std::cout << "Detecting cars : "  << class_names[detection.class_id]<<std::endl;
+						//std::cout << "Detecting cars : "  << detection.class_id<<std::endl;
+						//std::cout << "Detecting cars : "  << detection.class_confidence<<std::endl;
+						///////
+						Json::Value partInfo;
+						//Rect ri = dnn_det_i.bbox;
+						float FX = (float)1.0/frame.cols;
+						float FY = (float)1.0/frame.rows;
+						partInfo["bbox"]["x"] = to_string_with_precision(detection.bbox.x * FX, 4);
+						partInfo["bbox"]["y"] = to_string_with_precision(detection.bbox.y * FY, 4);
+						partInfo["bbox"]["w"] = to_string_with_precision(detection.bbox.width * FX, 4);
+						partInfo["bbox"]["h"] = to_string_with_precision(detection.bbox.height * FY, 4);
+						partInfo["prob"]      = to_string_with_precision(  detection.class_confidence, 4);
+						partInfo["obj_id"] 	= obj_id;
+						partInfo["tag"]	=  class_names[detection.class_id];
+						parts[idx] = partInfo;
+						idx++;						
+						////
+					   // draw_label(frame,  class_names[detection.class_id], detection.class_confidence, detection.bbox.x, detection.bbox.y - 1);
+						//cv::rectangle(frame, detection.bbox, Scalar(255,0,64), 4, 8, 0);
+						uint id = stoul(obj_id);//this was a fake 
+						dnn_bbox dnn_obj = dnn_bbox{detection.bbox,detection.class_confidence, id, class_names[detection.class_id],"photo_object_cutted","uuid","embeddings",std::to_string(detection.class_confidence)};
+						detections.push_back(dnn_obj);
+
+
+					}
+					
+				}
+
+		}
+
+
+// Map img_pts to world using H
 		///*Filling the object of detection for send it to web//
 				msgi.host_uuid      =host_id;
 				msgi.timestamp      =unixTimeStamp;
@@ -715,6 +1169,9 @@ void ProcessVideo(const std::string& sourceName,
            // UpdateObjects(vector<dnn_bbox> _detections, string frame_id)
 			tracking.UpdateObjects(detections,frameId,fps_camera,true);
 			tracking.evalObjects();
+			//cout << " - Number of active trackers: " <<  tracking.getActiveTrackers() << " - " << host_id << endl;
+			//cout << " - Number of active trackers: " <<  tracking.getActiveTrackers() << " - " << host_id << endl;
+
 
 			for (auto &trk_i: trackers) {
 				trk_i->restartPolygons();
@@ -728,18 +1185,6 @@ void ProcessVideo(const std::string& sourceName,
 
 			Json::Value objects_to_report = tracking.reportObjects(save_img);
 			tracking.deactivateObjects();
-
-			// Compute FPS for this iteration before printing/sending/drawing
-			auto end_iter = std::chrono::steady_clock::now();
-			double loop_ms = std::chrono::duration<double, std::milli>(end_iter - start).count();
-			fps = (loop_ms > 0.0) ? 1000.0 / loop_ms : 0.0;
-			msgi.fps = fps;
-			std::cout << " Time LOOP : " << loop_ms << " ms" << std::endl;
-			{
-				std::string fpsText = "FPS: " + std::to_string(fps);
-				int point_y = frame.rows/2;
-				cv::putText(frame, fpsText, cv::Point(10,point_y ), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 255, 0), 2);
-			}
 
 			if (DEBUG) {
 				cout << " - Number of detections: " << detections.size() << " - " << host_id << endl;
@@ -769,10 +1214,11 @@ void ProcessVideo(const std::string& sourceName,
 					cout << "Failed to set update time - " << host_id << endl;
 				}
 			}
+		if (DEBUG) {
 			auto endtrack = std::chrono::steady_clock::now();
         	auto difftrack = std::chrono::duration_cast<std::chrono::milliseconds>(endtrack - starttrack).count();
         	std::cout << "Infer time track: " << difftrack << " ms" << std::endl;
-			if (DEBUG) {
+			
 				//float data_fin = (tf-ti)*1000/cv::getTickFrequency();
 				//cout << " - Time elapsed per frame: " << data_fin << "ms - " << host_id << endl;				
 				imgShow = tracking.getDrawImage();
@@ -788,25 +1234,29 @@ void ProcessVideo(const std::string& sourceName,
 						cv::line(imgShow, p0, p1, EB_GRN, 1);
 					}
 				}
-			send_out_imageb64(rdx,imgShow,msgi.host_uuid); //it takes a lot of time in my pc core I5 around 13 ms 
-			//cv::imshow("video feed", imgShow);
-        	//cv::waitKey(0);
 
+						send_out_imageb64(rdx,imgShow,msgi.host_uuid); //it takes a lot of time in my pc core I5 around 13 ms 
+						//cv::imshow
 
-			}
-
-
-
+		}
+		
 
 
 
 
 
-		//send_out_imageb64(rdx,frame,msgi.host_uuid); //it takes a lot of time in my pc core I5 around 13 ms 
-		// end-of-loop FPS calculation moved above before publishing/drawing to keep values coherent
+		if (!DEBUG) {
+		send_out_imageb64(rdx,frame,msgi.host_uuid); //it takes a lot of time in my pc core I5 around 13 ms 
+		}
+		auto end2 = std::chrono::steady_clock::now();
+        auto diff2 = std::chrono::duration_cast<std::chrono::milliseconds>(end2 - start).count();
+        std::cout << " Time LOOP : " << static_cast<double>(diff2) << " ms" << std::endl;
+		fps = 1000.0 / static_cast<double>(diff2);
+		std::cout << " FPS : " <<fps  << std::endl;
 
-       // cv::imshow("video feed", frame);
-       // cv::waitKey(0);
+
+       //cv::imshow("video feed", frame);
+        cv::waitKey(1);
 
 
 #ifdef WRITE_FRAME
