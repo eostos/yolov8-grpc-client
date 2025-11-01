@@ -474,8 +474,9 @@ void CentroidTracker::setTransformedImage() {
 
 void CentroidTracker::drawRoi() {
 	if (!setted_roi) {
-		float x1,x2,y1,y2;
-		x1 = 0.05;x2=0.95;y1=0.05;y2=0.95;
+		//float x1,x2,y1,y2;
+		//x1 = 0.05;x2=0.95;y1=0.05;y2=0.95;
+		float x1 = 0.0, x2 = 1.0, y1 = 0.0, y2 = 1.0;  // ← 0% de margen
 		limit_roi_objects = Rect (Point(draw_img.cols * x1, draw_img.rows * y1),
 						Point(draw_img.cols * x2, draw_img.rows * y2) );
 		setted_roi = true;
@@ -483,7 +484,7 @@ void CentroidTracker::drawRoi() {
 			obj->setLimitTracker(limit_roi_objects);
 		}
 	}
-	setDrawRoi();
+	//setDrawRoi();
 }
 
 void CentroidTracker::setDrawRoi() {
@@ -588,36 +589,25 @@ void CentroidTracker::UpdateObjects(vector<dnn_bbox> _detections, string frame_i
                 //trk_i->drawSearchRadius(draw_img, METHOD);
                 //- PROYECTAR UN CENTRO VIRTUAL USANDO LA TRAYECTORIA PREVIA DE ROUTE (try flow)
                 //- AQUÍ SERÍA POSIBLE USAR MINIFLOW
-                for (int i=0; i<detections.size();i++) {
-                    Point center_det = getRectCenter(detections[i].bbox);
-                    //- vvvv ÉSTE CALCULO SE DEBE HACER CON EL CENTRO PROYECTADO
-                    //float dist = trk_i->calcDistance(projected_center);
-                    float dist = trk_i->calcDistAlt(center_det, METHOD);
-                    //float dist = distanceP(projected_center, center_det);
-                    float max_dist = trk_i->getMaxDistance();
-                    bool C1 = (dist<min_dist);
-                    bool C2 = (dist<max_dist );
-                    bool C3 = (detections[i].obj_id == trk_i->getObjId());
-    /*
-    //treat truck as car
-    string aux_id0 = detections[i].label;
-    string aux_id1 = trk_i->getRouteBboxTail().label;
-    //aux0 = aux0==7 ? 2 : aux0;
-    //aux1 = aux1==7 ? 2 : aux1;
-    //bool C3 = (aux_id0 == aux_id1);
-    if ( ( aux_id0=="car" && aux_id1=="truck" ) || ( aux_id0=="truck" && aux_id1=="car" ) ) {
-        C3 = 1;
-    cout << " xx aux_id0 " << aux_id0 << endl;
-    cout << " xx aux_id1 " << aux_id1 << endl;
-    }*/
-                    bool C4 = (trk_i->isUpdated());
-                    bool C5 = !(trk_i->isMatched());
-                    if (C1 && C2 && C3 && C5) {
-                        min_dist = dist;
-                        is_found = true;
-                        nearest_idx = i;
-                    }
-                }
+ for (int i=0; i<detections.size();i++) {
+    Point center_det = getRectCenter(detections[i].bbox);
+    float dist = trk_i->calcDistAlt(center_det, METHOD);
+    float max_dist = trk_i->getMaxDistance();
+    bool C1 = (dist<min_dist);
+    bool C2 = (dist<max_dist );
+    
+    // SOLUCIÓN SIMPLE - Solo permite matching si las clases son iguales
+    bool C3 = (detections[i].obj_id == trk_i->getObjId()) && 
+              (detections[i].label == trk_i->getRouteBboxTail().label);
+    
+    bool C4 = (trk_i->isUpdated());
+    bool C5 = !(trk_i->isMatched());
+    if (C1 && C2 && C3 && C5) {
+        min_dist = dist;
+        is_found = true;
+        nearest_idx = i;
+    }
+}
                 // IF FOUND, REMOVE THE DETECTION_i, AND UPDATE THE TRACKER
                 if (is_found) {
 					trk_i->resetSpeed();  // This function needs to be implemented in your tracker class

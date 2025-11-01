@@ -5088,7 +5088,9 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/tracker/poligonTracke
   ../src/tasks/tracker/ViewTransformer.hpp \
   /usr/include/c++/11/numeric \
   /usr/include/c++/11/bits/stl_numeric.h \
-  /usr/include/c++/11/pstl/glue_numeric_defs.h
+  /usr/include/c++/11/pstl/glue_numeric_defs.h \
+  /usr/include/c++/11/unordered_set \
+  /usr/include/c++/11/bits/unordered_set.h
 
 CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.o: ../src/triton/Triton.cpp \
   /usr/include/stdc-predef.h \

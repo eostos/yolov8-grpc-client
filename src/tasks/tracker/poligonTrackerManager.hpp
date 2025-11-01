@@ -14,6 +14,8 @@
 #include <opencv2/opencv.hpp> 
 #include "CentroidTracker.hpp"
 #include <chrono>
+#include <unordered_set>  // ← AGREGAR ESTE
+#include <unordered_map>  // ← Y ESTE
 using Clock = std::chrono::high_resolution_clock;
 
 struct PoligonEvent {
@@ -31,6 +33,7 @@ public:
 
     // bool evaluate(Json::Value &results);
     // bool evaluate(Json::Value &results);
+    //std::unordered_map<std::string, std::unordered_set<int>> counted_trackers;
     virtual Json::Value evaluate();
     void evaluateArea();
     void evaluateAreaBbox();

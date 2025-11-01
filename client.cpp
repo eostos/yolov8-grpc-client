@@ -1234,8 +1234,8 @@ for (size_t i = 0; i < coordinates_vec.size(); ++i) {
 						cv::line(imgShow, p0, p1, EB_GRN, 1);
 					}
 				}
-
-						send_out_imageb64(rdx,imgShow,msgi.host_uuid); //it takes a lot of time in my pc core I5 around 13 ms 
+					//cv::imshow("video feed", imgShow);
+					send_out_imageb64(rdx,imgShow,msgi.host_uuid); //it takes a lot of time in my pc core I5 around 13 ms 
 						//cv::imshow
 
 		}

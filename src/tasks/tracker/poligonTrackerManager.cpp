@@ -853,7 +853,7 @@ void PoligonTrackerManager::evaluateArea() {
     bool PROFILE_LOOP = false;
     bool PROFILE_INTERSECTION = false;
     bool PROFILE_POLYGONTEST = false;
-
+static std::unordered_set<std::string> already_counted;
     // Timer global
     auto t_eval_start = Clock::now();
 
@@ -908,7 +908,7 @@ void PoligonTrackerManager::evaluateArea() {
             to->setPolygon(this->getPoligonID());
         }
 
-        if (route_area_size < 3 || !to->isAwake()) continue;
+        if (route_area_size <  3|| !to->isAwake()) continue;
 
         auto& bboxPoints_first = route_poligon[route_area_size - 3];
         cv::Point2f bboxCenter_first((bboxPoints_first[0].x + bboxPoints_first[2].x) / 2.0f, (bboxPoints_first[0].y + bboxPoints_first[2].y) / 2.0f);
@@ -969,8 +969,33 @@ void PoligonTrackerManager::evaluateArea() {
                             << " route_size=" << route_area_size
                             << " awake=" << to->isAwake() << std::endl;
                             if(lado==2){
-cout <<this->getPoligonID()<< " ID ,   , LADO :  " << lado <<" TYPE " <<type_event<<" "<<to->getLabel()<<" TRK ID "<< to->getId()<<endl;
-                            }
+                        //cout <<this->getPoligonID()<< " ID ,   , LADO :  " << lado <<" TYPE " <<type_event<<" "<<to->getLabel()<<" TRK ID "<< to->getId()<<endl;
+                        std::string unique_key = to->getId() + "_lado2";
+                        
+                        if (already_counted.find(unique_key) == already_counted.end()) {
+                            // PRIMERA VEZ
+                            cout << "*** CONTEO *** Poligono: " << this->getPoligonID() 
+                                 << ", Lado: 2, Tipo: " << type_event 
+                                 << ", Objeto: " << to->getLabel() 
+                                 << ", Tracker: " << to->getId() << endl;
+                            
+                            already_counted.insert(unique_key);  
+}
+}
+  if(lado==3){
+                        //cout <<this->getPoligonID()<< " ID ,   , LADO :  " << lado <<" TYPE " <<type_event<<" "<<to->getLabel()<<" TRK ID "<< to->getId()<<endl;
+                        std::string unique_key = to->getId() + "_lado2";
+                        
+                        if (already_counted.find(unique_key) == already_counted.end()) {
+                            // PRIMERA VEZ
+                            cout << "*** CONTEO *** Poligono: " << this->getPoligonID() 
+                                 << ", Lado: 2, Tipo: " << type_event 
+                                 << ", Objeto: " << to->getLabel() 
+                                 << ", Tracker: " << to->getId() << endl;
+                            
+                            already_counted.insert(unique_key);  
+}
+}
                     
                     Json::Value temp_point;
                     temp_point["x"] = pout.x / static_cast<float>(this->getSize().width);
