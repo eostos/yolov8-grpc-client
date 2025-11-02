@@ -599,8 +599,8 @@ auto lam_gotmsg = [](const std::string& topic, const std::string& msg) {
 	std::vector<TrackingObject *> trackers(MAX_NUM_TRACKERS);
 	for (size_t i = 0; i < MAX_NUM_TRACKERS; ++i) {
 		trackers[i] = new TrackingObject();///
-		trackers[i]->setMaxRouteSize(5000);
-		trackers[i]->setMaxDisappeared(50);//originally was in 10
+		trackers[i]->setMaxRouteSize(50);
+		trackers[i]->setMaxDisappeared(10);//originally was in 10
 	}
 
 	// ADD TRACKER OBJECTS TO TRACKING MANAGER
