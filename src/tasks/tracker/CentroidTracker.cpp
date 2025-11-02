@@ -139,7 +139,7 @@ int TrackingObject::getRouteSize() {
 }
 
 bool TrackingObject::isUpdated() {
-	return (getTimeMilis() - last_updated) < 2000;
+	return (getTimeMilis() - last_updated) < 800;
 }
 
 bool TrackingObject::isToDelete() {
