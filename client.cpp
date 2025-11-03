@@ -1256,7 +1256,7 @@ for (size_t i = 0; i < coordinates_vec.size(); ++i) {
 
 
        //cv::imshow("video feed", frame);
-        cv::waitKey(1);
+        //cv::waitKey(0);
 
 
 #ifdef WRITE_FRAME

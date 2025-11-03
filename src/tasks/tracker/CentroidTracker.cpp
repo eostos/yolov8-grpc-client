@@ -134,12 +134,13 @@ int TrackingObject::getDisappeared() {
 	return disappeared;
 }
 
+
 int TrackingObject::getRouteSize() {
 	return route.size();
 }
 
 bool TrackingObject::isUpdated() {
-	return (getTimeMilis() - last_updated) < 800;
+	return (getTimeMilis() - last_updated) < 4000;
 }
 
 bool TrackingObject::isToDelete() {
@@ -370,11 +371,18 @@ if (obj_label == "bag") {
 bool TrackingObject::lifeControl() {
 	bool C1 = !limit_tracker.contains(route.back()); //Point is inside the frame big roi
 	bool C2 = disappeared > max_disappeared; //Missed more than X frames
+	//cout<<"disappeared  "<<disappeared<<"   max_disappeared "<<max_disappeared<<endl;
 	bool C3 = route.size() > max_route_size; //Long enough
 	bool C4 = !(isUpdated()); //Lost tracker for N secs
 	//bool C4 = (getTimeMilis() - last_updated) > 2000; //Lost tracker for N secs
 
 	if (C1 || C2 || C3 || C4) {
+		std::cout << "💀 TRACKER_DIED: " << id 
+                  << " | Reasons: " << C1 << C2 << C3 << C4
+                  << " | Disapp: " << disappeared << "/" << max_disappeared
+                  << " | Route: " << route.size() << "/" << max_route_size
+                  << " | Pos: " << route.back()
+                  << " | Label: " << obj_label << std::endl;
 		return true; //Object is out of bounds or lost, cannot be tracked.
 	} else {
 		return false; //Object is inside of bounds, can be tracked still.
@@ -683,7 +691,7 @@ void CentroidTracker::evalObjects() {
 			bool dead_object = trk_i->lifeControl();
 			if (dead_object) {
 				trk_i->setToDelete(dead_object);
-				//cout << "*-*-*-*-*-*-* Delete tracker : "<< trk_i->getId()<<endl;
+				cout << "*-*-*-*-*-*-* Delete tracker : "<< trk_i->getId()<<endl;
 			}
 		}
 	}

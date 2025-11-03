@@ -982,20 +982,7 @@ static std::unordered_set<std::string> already_counted;
                             already_counted.insert(unique_key);  
 }
 }
-  if(lado==3){
-                        //cout <<this->getPoligonID()<< " ID ,   , LADO :  " << lado <<" TYPE " <<type_event<<" "<<to->getLabel()<<" TRK ID "<< to->getId()<<endl;
-                        std::string unique_key = to->getId() + "_lado2";
-                        
-                        if (already_counted.find(unique_key) == already_counted.end()) {
-                            // PRIMERA VEZ
-                            cout << "*** CONTEO *** Poligono: " << this->getPoligonID() 
-                                 << ", Lado: 2, Tipo: " << type_event 
-                                 << ", Objeto: " << to->getLabel() 
-                                 << ", Tracker: " << to->getId() << endl;
-                            
-                            already_counted.insert(unique_key);  
-}
-}
+
                     
                     Json::Value temp_point;
                     temp_point["x"] = pout.x / static_cast<float>(this->getSize().width);
