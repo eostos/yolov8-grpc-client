@@ -27,12 +27,13 @@
 #include <csignal>
 #include <stdexcept>
 #include <iostream>
+#include <opencv2/bgsegm.hpp>
 
 //////////////////////////
 using namespace cv;
 using namespace redox;
 
-
+cv::Ptr<cv::BackgroundSubtractor> bgSubtractor;
 /////////////////////////////////
 /////////////////////////////////
 string host_id;
@@ -51,11 +52,56 @@ Redox rdx;
 float euclideanDistance(const cv::Point2f& p1, const cv::Point2f& p2) {
     return std::sqrt(std::pow(p1.x - p2.x, 2) + std::pow(p1.y - p2.y, 2));
 }
+bool tieneMovimiento(const cv::Mat& frame) {
+    static int frameCount = 0;
+    frameCount++;
+    
+    // Procesar solo cada 3 frames para ahorrar CPU
+    if (frameCount % 3 != 0) return false;
+    
+    cv::Mat gray, fgMask;
+    cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
+    
+    // Reducir tamaño para más velocidad
+    cv::resize(gray, gray, cv::Size(320, 240));
+    
+    // Detectar movimiento
+    bgSubtractor->apply(gray, fgMask, 0.01);
+    
+    // Contar píxeles con movimiento
+    int pixelesConMovimiento = cv::countNonZero(fgMask);
+    
+    // Si más del 1% de la imagen tiene movimiento
+    return (pixelesConMovimiento > (320 * 240 * 0.01));
+}
 
 // Función para manejar señales
+
 void signalHandler(int signal) {
-    std::cerr << "Señal recibida: " << signal << std::endl;
+    const char* signal_name = "Unknown";
+    switch(signal) {
+        case SIGTERM: signal_name = "SIGTERM"; break;
+        case SIGSEGV: signal_name = "SIGSEGV"; break;
+        case SIGINT: signal_name = "SIGINT"; break;
+        case SIGABRT: signal_name = "SIGABRT"; break;
+        case SIGKILL: signal_name = "SIGKILL"; break;
+        case SIGHUP: signal_name = "SIGHUP"; break;
+    }
+    
+    std::cerr << "=== SEÑAL RECIBIDA ===" << std::endl;
+    std::cerr << "Señal: " << signal_name << " (" << signal << ")" << std::endl;
+    std::cerr << "PID: " << getpid() << std::endl;
+    std::cerr << "PPID (Parent PID): " << getppid() << std::endl;
+    std::cerr << "UID: " << getuid() << std::endl;
+    std::cerr << "Timestamp: " << time(nullptr) << std::endl;
+    
+    // Stack trace para SIGSEGV/SIGABRT
+    if (signal == SIGSEGV || signal == SIGABRT) {
+        std::cerr << "Posible segmentation fault o abort" << std::endl;
+    }
+    
     std::cerr << "Cerrando aplicación de manera controlada..." << std::endl;
+    
     exit(signal);
 }
 
@@ -612,7 +658,7 @@ auto lam_gotmsg = [](const std::string& topic, const std::string& msg) {
 	for (size_t i = 0; i < MAX_NUM_TRACKERS; ++i) {
 		trackers[i] = new TrackingObject();///
 		trackers[i]->setMaxRouteSize(5000);
-		trackers[i]->setMaxDisappeared(0);//originally was in 10
+		trackers[i]->setMaxDisappeared(10);//originally was in 10
 	}
 
 	// ADD TRACKER OBJECTS TO TRACKING MANAGER
@@ -786,6 +832,7 @@ auto lam_gotmsg = [](const std::string& topic, const std::string& msg) {
 	//cv::perspectiveTransform(img_pts_vec, world_proj, H);
 	
 	//cv::Mat H_inv = H.inv();
+	    bgSubtractor = cv::createBackgroundSubtractorMOG2(300, 16, false);
     while (true) 
 	{
  	try {  
@@ -812,7 +859,18 @@ auto lam_gotmsg = [](const std::string& topic, const std::string& msg) {
                 continue; // Continuar con el siguiente frame
             }
         }
-		
+		 static int framesSinMovimiento = 0;
+        bool hayMovimiento = tieneMovimiento(original);
+		            if (!hayMovimiento) {
+                framesSinMovimiento++;
+                // Si pasaron más de 10 frames sin movimiento, saltar YOLO
+				cout << "No movement detected - skipping frame processing. Frames without movement: " << framesSinMovimiento << std::endl;
+                if (framesSinMovimiento > 10) {
+                    continue; // Saltar todo el procesamiento de este frame
+                }
+            } else {
+                framesSinMovimiento = 0;
+            }
 		if (crop_enabled) {
 			// Valida que el ROI esté dentro del frame
 			if (original.cols >= roi.x + roi.width && original.rows >= roi.y + roi.height) {

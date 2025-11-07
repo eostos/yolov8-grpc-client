@@ -981,4 +981,4 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/client.cpp.o: \
  /yolov8-grpc-client/src/tasks/tracker/ViewTransformer.hpp \
  /yolov8-grpc-client/src/tasks/tracker/poligonTrackerManager.hpp \
  /yolov8-grpc-client/src/tasks/tracker/CentroidTracker.hpp \
- /usr/include/c++/11/csignal
+ /usr/include/c++/11/csignal /usr/include/opencv4/opencv2/bgsegm.hpp
