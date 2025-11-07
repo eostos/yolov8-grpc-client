@@ -50,7 +50,7 @@ void Triton::cleanupSHM(const std::string& input_shm_name, const std::string& ou
             triton_client_.grpcClient->UnregisterCudaSharedMemory(input_shm_name);
             triton_client_.grpcClient->UnregisterCudaSharedMemory(output_shm_name);
         }
-        std::cout << "[DEBUG] SHM cleanup completed" << std::endl;
+        //std::cout << "[DEBUG] SHM cleanup completed" << std::endl;
     } catch (const std::exception& e) {
         std::cerr << "[WARNING] Error during SHM cleanup: " << e.what() << std::endl;
     }

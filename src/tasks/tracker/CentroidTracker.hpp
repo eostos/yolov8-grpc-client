@@ -82,6 +82,7 @@ public:
     std::vector<float> getBboxArea() { return route_areas; }
     std::vector<vector<Point2f>> getBboxPoligon() { return route_polygons; }
     //
+    float getAdaptiveSearchRadius();
     void setMaxRouteSize(int maxRouteSize);
     void setLimitTracker(const Rect &limitTracker);
     void setMaxDisappeared(int maxDisappeared);

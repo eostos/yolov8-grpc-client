@@ -908,7 +908,7 @@ static std::unordered_set<std::string> already_counted;
             to->setPolygon(this->getPoligonID());
         }
 
-        if (route_area_size <  3|| !to->isAwake()) continue;
+        if (route_area_size <  2|| !to->isAwake()) continue;
 
         auto& bboxPoints_first = route_poligon[route_area_size - 3];
         cv::Point2f bboxCenter_first((bboxPoints_first[0].x + bboxPoints_first[2].x) / 2.0f, (bboxPoints_first[0].y + bboxPoints_first[2].y) / 2.0f);
@@ -968,18 +968,27 @@ static std::unordered_set<std::string> already_counted;
                             << " status_1=" << status_1
                             << " route_size=" << route_area_size
                             << " awake=" << to->isAwake() << std::endl;
-                            if(lado==2){
+                     if(lado==2){
+                        //if(this->getPoligonID()=="15"){
                         //cout <<this->getPoligonID()<< " ID ,   , LADO :  " << lado <<" TYPE " <<type_event<<" "<<to->getLabel()<<" TRK ID "<< to->getId()<<endl;
                         std::string unique_key = to->getId() + "_lado2";
                         
-                        if (already_counted.find(unique_key) == already_counted.end()) {
-                            // PRIMERA VEZ
-                            cout << "*** CONTEO *** Poligono: " << this->getPoligonID() 
-                                 << ", Lado: 2, Tipo: " << type_event 
-                                 << ", Objeto: " << to->getLabel() 
-                                 << ", Tracker: " << to->getId() << endl;
-                            
-                            already_counted.insert(unique_key);  
+                            if (already_counted.find(unique_key) == already_counted.end()) {
+                                // PRIMERA VEZ - Solo imprimir si duration > 0.2
+                                float current_duration = std::stof(to->getDuration()); // Convertir string a float
+                                
+                                if (current_duration > 0.001f) {
+                                    cout << "*** CONTEO *** Poligono: " << this->getPoligonID() 
+                                        << ", Lado: 2, Tipo: " << type_event 
+                                        << ", Objeto: " << to->getLabel() 
+                                        << ", Tracker: " << to->getId() 
+                                        <<" GetStatus() " << to->getStatus()
+                                        << " prob " << to->getRouteBboxTail().prob_det
+                                        << " duration " << current_duration << endl;
+                                    
+                                    already_counted.insert(unique_key);  
+                                }
+                          //  }
 }
 }
 

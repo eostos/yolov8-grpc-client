@@ -1095,7 +1095,8 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/client.cpp.o: ../client.cpp \
   ../src/tasks/tracker/CentroidTracker.hpp \
   ../src/tasks/tracker/ViewTransformer.hpp \
   ../src/tasks/tracker/poligonTrackerManager.hpp \
-  ../src/tasks/tracker/CentroidTracker.hpp
+  ../src/tasks/tracker/CentroidTracker.hpp \
+  /usr/include/c++/11/csignal
 
 CMakeFiles/computer-vision-triton-cpp-client.dir/src/tasks/object_detection/src/Yolo.cpp.o: ../src/tasks/object_detection/src/Yolo.cpp \
   /usr/include/stdc-predef.h \
@@ -6877,6 +6878,8 @@ CMakeFiles/computer-vision-triton-cpp-client.dir/src/triton/Triton.cpp.o: ../src
 /usr/include/boost/iterator/detail/config_def.hpp:
 
 /usr/include/x86_64-linux-gnu/bits/struct_mutex.h:
+
+/usr/include/c++/11/csignal:
 
 /usr/include/c++/11/bits/ranges_algo.h:
 

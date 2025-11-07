@@ -140,7 +140,7 @@ int TrackingObject::getRouteSize() {
 }
 
 bool TrackingObject::isUpdated() {
-	return (getTimeMilis() - last_updated) < 4000;
+	return (getTimeMilis() - last_updated) < 1000;
 }
 
 bool TrackingObject::isToDelete() {
@@ -305,7 +305,23 @@ void TrackingObject::updateSpeed(double fps, const std::vector<cv::Point2f> spee
 
 //(185.30645161290323, 438.4677419354839), (1124.6612903225805, 438.4677419354839), (861.4354838709676, 312.01612903225805), (355.67786187322616, 311.4772942289499)
 
-
+float TrackingObject::getAdaptiveSearchRadius() {
+    // VERSIÓN SIMPLE - solo basado en frames desaparecidos
+    if (disappeared == 0) {
+        return max_distance; // Radio normal cuando está activo
+    } else {
+        // Crece con frames perdidos: +40% por frame desaparecido
+        float adaptive_radius = max_distance * (1.0f + disappeared * 0.4f);
+        
+        // Límite máximo: 3x el radio original (evita que crezca demasiado)
+        float max_allowed = max_distance * 3.0f;
+        if (adaptive_radius > max_allowed) {
+            adaptive_radius = max_allowed;
+        }
+        
+        return adaptive_radius;
+    }
+}
 Point TrackingObject::getCurrentPosition() const {
     return current_position;
 }
@@ -373,7 +389,7 @@ bool TrackingObject::lifeControl() {
 	bool C2 = disappeared > max_disappeared; //Missed more than X frames
 	//cout<<"disappeared  "<<disappeared<<"   max_disappeared "<<max_disappeared<<endl;
 	bool C3 = route.size() > max_route_size; //Long enough
-	bool C4 = !(isUpdated()); //Lost tracker for N secs
+	bool C4 = false;//!(isUpdated()); //Lost tracker for N secs
 	//bool C4 = (getTimeMilis() - last_updated) > 2000; //Lost tracker for N secs
 
 	if (C1 || C2 || C3 || C4) {
@@ -600,7 +616,8 @@ void CentroidTracker::UpdateObjects(vector<dnn_bbox> _detections, string frame_i
  for (int i=0; i<detections.size();i++) {
     Point center_det = getRectCenter(detections[i].bbox);
     float dist = trk_i->calcDistAlt(center_det, METHOD);
-    float max_dist = trk_i->getMaxDistance();
+    //float max_dist = trk_i->getMaxDistance();
+	float max_dist = trk_i->getAdaptiveSearchRadius(); // ← LÍNEA CAMBIADA
     bool C1 = (dist<min_dist);
     bool C2 = (dist<max_dist );
     

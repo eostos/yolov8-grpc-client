@@ -23,6 +23,11 @@
 #include "CentroidTracker.hpp"
 #include "poligonTrackerManager.hpp"
 
+
+#include <csignal>
+#include <stdexcept>
+#include <iostream>
+
 //////////////////////////
 using namespace cv;
 using namespace redox;
@@ -45,6 +50,13 @@ Redox rdx;
 ///////////////////////////////
 float euclideanDistance(const cv::Point2f& p1, const cv::Point2f& p2) {
     return std::sqrt(std::pow(p1.x - p2.x, 2) + std::pow(p1.y - p2.y, 2));
+}
+
+// Función para manejar señales
+void signalHandler(int signal) {
+    std::cerr << "Señal recibida: " << signal << std::endl;
+    std::cerr << "Cerrando aplicación de manera controlada..." << std::endl;
+    exit(signal);
 }
 
 void join_and_send_outdata_redox(Redox &rdx,
@@ -400,7 +412,7 @@ void ProcessVideo(const std::string& sourceName,
 ////////////////////////////////////////////////////
 	//namedWindow( "video feed", 0 );
 
-
+ try {
 	string input_url = config_params["url_video"].asString();
 	string grpc_port = config_params["grpc_port"].asString();
 	string grpc_server = config_params["grpc_server"].asString();
@@ -600,7 +612,7 @@ auto lam_gotmsg = [](const std::string& topic, const std::string& msg) {
 	for (size_t i = 0; i < MAX_NUM_TRACKERS; ++i) {
 		trackers[i] = new TrackingObject();///
 		trackers[i]->setMaxRouteSize(5000);
-		trackers[i]->setMaxDisappeared(100);//originally was in 10
+		trackers[i]->setMaxDisappeared(0);//originally was in 10
 	}
 
 	// ADD TRACKER OBJECTS TO TRACKING MANAGER
@@ -774,14 +786,33 @@ auto lam_gotmsg = [](const std::string& topic, const std::string& msg) {
 	//cv::perspectiveTransform(img_pts_vec, world_proj, H);
 	
 	//cv::Mat H_inv = H.inv();
-    while (true) {
-/////////////////////////////
-  		
+    while (true) 
+	{
+ 	try {  
   		Json::Value world_points_json(Json::arrayValue);
 		std::vector<cv::Point2f> world_points_vec;
 		std::vector<cv::Point2f> coordinates_vec;//points  received from redis
-		cap.read(original) ;
 		auto start = std::chrono::steady_clock::now();
+		cap.read(original) ;
+		 if (original.empty()) {
+            std::cerr << "Frame is empty  - or Alice suffer a disconection - Reconnecting  in 10 Secs" << std::endl;
+            
+            // Intentar reconectar después de un tiempo
+            std::this_thread::sleep_for(std::chrono::seconds(10));
+            
+            // Intentar reconectar
+            cap.release();
+            cap.open(input_url);
+            
+            if (!cap.isOpened()) {
+                std::cerr << "Couldnt connect to the Camera , Re-connecting.." << std::endl;
+                continue;
+            } else {
+                std::cout << "Reconexión exitosa" << std::endl;
+                continue; // Continuar con el siguiente frame
+            }
+        }
+		
 		if (crop_enabled) {
 			// Valida que el ROI esté dentro del frame
 			if (original.cols >= roi.x + roi.width && original.rows >= roi.y + roi.height) {
@@ -1018,252 +1049,269 @@ auto lam_gotmsg = [](const std::string& topic, const std::string& msg) {
 				std::vector<std::pair<cv::Point2f, Detection>> filtered_detections;
 
 
-for (auto&& prediction : predictions) {
-    if (!std::holds_alternative<Detection>(prediction)) continue;
-    Detection detection = std::get<Detection>(prediction);
-    if (detection.class_confidence < 0.3) continue;
+		for (auto&& prediction : predictions) {
+			if (!std::holds_alternative<Detection>(prediction)) continue;
+			Detection detection = std::get<Detection>(prediction);
+			if (detection.class_confidence < 0.3) continue;
 
-    cv::Point2f center(
-        detection.bbox.x + detection.bbox.width / 2.0f,
-        detection.bbox.y + detection.bbox.height / 2.0f
-    );
+			cv::Point2f center(
+				detection.bbox.x + detection.bbox.width / 2.0f,
+				detection.bbox.y + detection.bbox.height / 2.0f
+			);
 
-    if (cv::pointPolygonTest(roi_polygon, center, false) >= 0) {
-        filtered_detections.emplace_back(center, detection);
-    }
-}
+			if (cv::pointPolygonTest(roi_polygon, center, false) >= 0) {
+				filtered_detections.emplace_back(center, detection);
+			}
+		}
 
-std::vector<bool> matched(coordinates_vec.size(), false);
-float match_threshold = 60.0f;
+		std::vector<bool> matched(coordinates_vec.size(), false);
+		float match_threshold = 60.0f;
 
-for (size_t i = 0; i < coordinates_vec.size(); ++i) {
-    for (const auto& [center, det] : filtered_detections) {
-        if (euclideanDistance(center, coordinates_vec[i]) < match_threshold) {
-            matched[i] = true;
-            break;
-        }
-    }
-}
+		for (size_t i = 0; i < coordinates_vec.size(); ++i) {
+			for (const auto& [center, det] : filtered_detections) {
+				if (euclideanDistance(center, coordinates_vec[i]) < match_threshold) {
+					matched[i] = true;
+					break;
+				}
+			}
+		}
 
-for (size_t i = 0; i < coordinates_vec.size(); ++i) {
-    if (matched[i]) continue;
+		for (size_t i = 0; i < coordinates_vec.size(); ++i) {
+			if (matched[i]) continue;
 
-    const auto& pt = coordinates_vec[i];
-    int bbox_size = 90;
-    cv::Rect bbox(pt.x - bbox_size/2, pt.y - bbox_size/2, bbox_size, bbox_size);
+			const auto& pt = coordinates_vec[i];
+			int bbox_size = 90;
+			cv::Rect bbox(pt.x - bbox_size/2, pt.y - bbox_size/2, bbox_size, bbox_size);
 
-    Detection virtual_det;
-    virtual_det.bbox = bbox;
-    virtual_det.class_confidence = 0.99f;
-    virtual_det.class_id = 2;  // Clase dummy "jug"
+			Detection virtual_det;
+			virtual_det.bbox = bbox;
+			virtual_det.class_confidence = 0.99f;
+			virtual_det.class_id = 2;  // Clase dummy "jug"
 
-    predictions.push_back(virtual_det);  // 👈 Aquí se añade como std::variant
-}
-						for (auto&& prediction : predictions) 
-				{
-					if (std::holds_alternative<Detection>(prediction)) 
-					{
-						Detection detection = std::get<Detection>(prediction);
-						if(detection.class_confidence < 0.3) 
+			predictions.push_back(virtual_det);  // 👈 Aquí se añade como std::variant
+		}
+								for (auto&& prediction : predictions) 
 						{
-							continue; // Skip detections with low confidence
-						}	
-						//std::cout << "Detecting cars : "  << detection.bbox<<std::endl;
-						//std::cout << "Detecting cars : "  << class_names[detection.class_id]<<std::endl;
-						//std::cout << "Detecting cars : "  << detection.class_id<<std::endl;
-						//std::cout << "Detecting cars : "  << detection.class_confidence<<std::endl;
-						///////
-						Json::Value partInfo;
-						//Rect ri = dnn_det_i.bbox;
-						float FX = (float)1.0/frame.cols;
-						float FY = (float)1.0/frame.rows;
-						partInfo["bbox"]["x"] = to_string_with_precision(detection.bbox.x * FX, 4);
-						partInfo["bbox"]["y"] = to_string_with_precision(detection.bbox.y * FY, 4);
-						partInfo["bbox"]["w"] = to_string_with_precision(detection.bbox.width * FX, 4);
-						partInfo["bbox"]["h"] = to_string_with_precision(detection.bbox.height * FY, 4);
-						partInfo["prob"]      = to_string_with_precision(  detection.class_confidence, 4);
-						partInfo["obj_id"] 	= obj_id;
-						partInfo["tag"]	=  class_names[detection.class_id];
-						//draw_label(frame,  class_names[detection.class_id], detection.class_confidence, detection.bbox.x, detection.bbox.y - 1);
-						parts[idx] = partInfo;
-						idx++;						
-						////
-						uint id = stoul(obj_id);//this was a fake 
-						dnn_bbox dnn_obj = dnn_bbox{detection.bbox,detection.class_confidence, id, class_names[detection.class_id],"photo_object_cutted","uuid","embeddings",std::to_string(detection.class_confidence)};
-						detections.push_back(dnn_obj);
+							if (std::holds_alternative<Detection>(prediction)) 
+							{
+								Detection detection = std::get<Detection>(prediction);
+								if(detection.class_confidence < 0.3) 
+								{
+									continue; // Skip detections with low confidence
+								}	
+								//std::cout << "Detecting cars : "  << detection.bbox<<std::endl;
+								//std::cout << "Detecting cars : "  << class_names[detection.class_id]<<std::endl;
+								//std::cout << "Detecting cars : "  << detection.class_id<<std::endl;
+								//std::cout << "Detecting cars : "  << detection.class_confidence<<std::endl;
+								///////
+								Json::Value partInfo;
+								//Rect ri = dnn_det_i.bbox;
+								float FX = (float)1.0/frame.cols;
+								float FY = (float)1.0/frame.rows;
+								partInfo["bbox"]["x"] = to_string_with_precision(detection.bbox.x * FX, 4);
+								partInfo["bbox"]["y"] = to_string_with_precision(detection.bbox.y * FY, 4);
+								partInfo["bbox"]["w"] = to_string_with_precision(detection.bbox.width * FX, 4);
+								partInfo["bbox"]["h"] = to_string_with_precision(detection.bbox.height * FY, 4);
+								partInfo["prob"]      = to_string_with_precision(  detection.class_confidence, 4);
+								partInfo["obj_id"] 	= obj_id;
+								partInfo["tag"]	=  class_names[detection.class_id];
+								//draw_label(frame,  class_names[detection.class_id], detection.class_confidence, detection.bbox.x, detection.bbox.y - 1);
+								parts[idx] = partInfo;
+								idx++;						
+								////
+								uint id = stoul(obj_id);//this was a fake 
+								dnn_bbox dnn_obj = dnn_bbox{detection.bbox,detection.class_confidence, id, class_names[detection.class_id],"photo_object_cutted","uuid","embeddings",std::to_string(detection.class_confidence)};
+								detections.push_back(dnn_obj);
 
 
-					}
-					
+							}
+							
+						}
+
+
+
+
+
+
+				}
+				if(fusion_role=="none" ) 
+				{
+								for (auto&& prediction : predictions) 
+						{
+							if (std::holds_alternative<Detection>(prediction)) 
+							{
+								Detection detection = std::get<Detection>(prediction);
+								if(detection.class_confidence < 0.3) 
+								{
+									continue; // Skip detections with low confidence
+								}	
+								//draw_label(frame,  class_names[detection.class_id], detection.class_confidence, detection.bbox.x, detection.bbox.y - 1);
+								//std::cout << "Detecting cars : "  << detection.bbox<<std::endl;
+								//std::cout << "Detecting cars : "  << class_names[detection.class_id]<<std::endl;
+								//std::cout << "Detecting cars : "  << detection.class_id<<std::endl;
+								//std::cout << "Detecting cars : "  << detection.class_confidence<<std::endl;
+								///////
+								Json::Value partInfo;
+								//Rect ri = dnn_det_i.bbox;
+								float FX = (float)1.0/frame.cols;
+								float FY = (float)1.0/frame.rows;
+								partInfo["bbox"]["x"] = to_string_with_precision(detection.bbox.x * FX, 4);
+								partInfo["bbox"]["y"] = to_string_with_precision(detection.bbox.y * FY, 4);
+								partInfo["bbox"]["w"] = to_string_with_precision(detection.bbox.width * FX, 4);
+								partInfo["bbox"]["h"] = to_string_with_precision(detection.bbox.height * FY, 4);
+								partInfo["prob"]      = to_string_with_precision(  detection.class_confidence, 4);
+								partInfo["obj_id"] 	= obj_id;
+								partInfo["tag"]	=  class_names[detection.class_id];
+								parts[idx] = partInfo;
+								idx++;						
+								////
+							// draw_label(frame,  class_names[detection.class_id], detection.class_confidence, detection.bbox.x, detection.bbox.y - 1);
+								//cv::rectangle(frame, detection.bbox, Scalar(255,0,64), 4, 8, 0);
+								uint id = stoul(obj_id);//this was a fake 
+								dnn_bbox dnn_obj = dnn_bbox{detection.bbox,detection.class_confidence, id, class_names[detection.class_id],"photo_object_cutted","uuid","embeddings",std::to_string(detection.class_confidence)};
+								detections.push_back(dnn_obj);
+
+
+							}
+							
+						}
+
 				}
 
 
+		// Map img_pts to world using H
+				///*Filling the object of detection for send it to web//
+						msgi.host_uuid      =host_id;
+						msgi.timestamp      =unixTimeStamp;
+						msgi.frame_id       =frameId;
+						msgi.fps            = fps;
+						msgi.resolution_x   = frame.cols;
+						msgi.resolution_y   = frame.rows;
+						msgi.analytics_results = parts;
+						msgi.analytic_type = "analityc_typu";
+						msgi.event_type = "event_typu";   
+						
 
 
 
 
-		}
-		if(fusion_role=="none" ) 
-		{
-						for (auto&& prediction : predictions) 
-				{
-					if (std::holds_alternative<Detection>(prediction)) 
-					{
-						Detection detection = std::get<Detection>(prediction);
-						if(detection.class_confidence < 0.3) 
-						{
-							continue; // Skip detections with low confidence
-						}	
-						//std::cout << "Detecting cars : "  << detection.bbox<<std::endl;
-						//std::cout << "Detecting cars : "  << class_names[detection.class_id]<<std::endl;
-						//std::cout << "Detecting cars : "  << detection.class_id<<std::endl;
-						//std::cout << "Detecting cars : "  << detection.class_confidence<<std::endl;
-						///////
-						Json::Value partInfo;
-						//Rect ri = dnn_det_i.bbox;
-						float FX = (float)1.0/frame.cols;
-						float FY = (float)1.0/frame.rows;
-						partInfo["bbox"]["x"] = to_string_with_precision(detection.bbox.x * FX, 4);
-						partInfo["bbox"]["y"] = to_string_with_precision(detection.bbox.y * FY, 4);
-						partInfo["bbox"]["w"] = to_string_with_precision(detection.bbox.width * FX, 4);
-						partInfo["bbox"]["h"] = to_string_with_precision(detection.bbox.height * FY, 4);
-						partInfo["prob"]      = to_string_with_precision(  detection.class_confidence, 4);
-						partInfo["obj_id"] 	= obj_id;
-						partInfo["tag"]	=  class_names[detection.class_id];
-						parts[idx] = partInfo;
-						idx++;						
-						////
-					   // draw_label(frame,  class_names[detection.class_id], detection.class_confidence, detection.bbox.x, detection.bbox.y - 1);
-						//cv::rectangle(frame, detection.bbox, Scalar(255,0,64), 4, 8, 0);
-						uint id = stoul(obj_id);//this was a fake 
-						dnn_bbox dnn_obj = dnn_bbox{detection.bbox,detection.class_confidence, id, class_names[detection.class_id],"photo_object_cutted","uuid","embeddings",std::to_string(detection.class_confidence)};
-						detections.push_back(dnn_obj);
+					int64 ti = cv::getTickCount();
+					auto starttrack = std::chrono::steady_clock::now();
+					tracking.setDataImages(frame);
+				// UpdateObjects(vector<dnn_bbox> _detections, string frame_id)
+					tracking.UpdateObjects(detections,frameId,fps_camera,true);
+					tracking.evalObjects();
+					//cout << " - Number of active trackers: " <<  tracking.getActiveTrackers() << " - " << host_id << endl;
+					//cout << " - Number of active trackers: " <<  tracking.getActiveTrackers() << " - " << host_id << endl;
 
 
+					for (auto &trk_i: trackers) {
+						trk_i->restartPolygons();
 					}
+
+					for (int i = 0, m = (int)poligon_tracker_manager.size(); i < m; ++i) {
+						poligon_tracker_manager[i]->setSize(frame.size());
+						//poligon_tracker_manager[i]->evaluateAreabbox();
+						poligon_tracker_manager[i]->evaluateArea();
+					}
+
+					Json::Value objects_to_report = tracking.reportObjects(save_img);
+					tracking.deactivateObjects();
+
+					if (DEBUG) {
+						cout << " - Number of detections: " << detections.size() << " - " << host_id << endl;
+						cout << " - Number of active trackers: " <<  tracking.getActiveTrackers() << " - " << host_id << endl;
+					}
+
+					if (!objects_to_report[0].isNull()) {
+						//SEND ANALYTICS RESULTS
+						if (DEBUG){
+							imgSave = tracking.getDetsImage();
+							//imgSave = tracking.getDrawImage();//this is for debug 
+						}else{
+							imgSave = frame;
+						}
+
+						if(measure_speed){
+						photo_buffer.add(imgSave, unixTimeStamp);///this is for testing 
+						
+						//photo_buffer.add(imgSave, unixTimeStamp);///this is for testing 
+						}else{
+						photo_buffer.add(frame, unixTimeStamp);///this is for production 
+						}
+						join_and_send_outdata_redox(rdx,msgi,media_path,objects_to_report,"", "",save_img,imgShow,SEND_B64,to_post,DEBUG,unixTimeStamp);//this is for debug 
+						//join_and_send_outdata_redox(rdx,msgi,media_path,objects_to_report,"", "",save_img,imgSave,SEND_B64,to_post,DEBUG);
+						//SET LAST UPDATED TIME
+						if (!rdx.set(update_channel,to_string(getTimeMilis()))) {
+							cout << "Failed to set update time - " << host_id << endl;
+						}
+					}
+				if (DEBUG) {
+					auto endtrack = std::chrono::steady_clock::now();
+					auto difftrack = std::chrono::duration_cast<std::chrono::milliseconds>(endtrack - starttrack).count();
+					std::cout << "Infer time track: " << difftrack << " ms" << std::endl;
 					
+						//float data_fin = (tf-ti)*1000/cv::getTickFrequency();
+						//cout << " - Time elapsed per frame: " << data_fin << "ms - " << host_id << endl;				
+						imgShow = tracking.getDrawImage();
+
+						for (size_t i = 0, n = poligon_tracker_manager.size(); i < n; ++i) {
+							if (poligon_tracker_manager[i] == nullptr) { continue; }
+							std::vector<cv::Point2f> points = poligon_tracker_manager[i]->getEvalPoints();
+							for (size_t j = 0, m = points.size(); j < m; ++j) {
+								cv::Point2f p0 = points[j];
+								//cv::Point2f p1 = points[(j+1)%m];
+								cv::Point2f p1 = points[(j+1)%m];
+								int tk = ceil(min(imgShow.cols, imgShow.rows) / 200.0);
+								cv::line(imgShow, p0, p1, EB_GRN, 1);
+							}
+						}
+							//cv::imshow("video feed", imgShow);
+							send_out_imageb64(rdx,imgShow,msgi.host_uuid); //it takes a lot of time in my pc core I5 around 13 ms 
+								//cv::imshow
+
 				}
-
-		}
-
-
-// Map img_pts to world using H
-		///*Filling the object of detection for send it to web//
-				msgi.host_uuid      =host_id;
-				msgi.timestamp      =unixTimeStamp;
-				msgi.frame_id       =frameId;
-				msgi.fps            = fps;
-				msgi.resolution_x   = frame.cols;
-				msgi.resolution_y   = frame.rows;
-				msgi.analytics_results = parts;
-				msgi.analytic_type = "analityc_typu";
-				msgi.event_type = "event_typu";   
 				
 
 
 
 
-			int64 ti = cv::getTickCount();
-			auto starttrack = std::chrono::steady_clock::now();
-			tracking.setDataImages(frame);
-           // UpdateObjects(vector<dnn_bbox> _detections, string frame_id)
-			tracking.UpdateObjects(detections,frameId,fps_camera,true);
-			tracking.evalObjects();
-			//cout << " - Number of active trackers: " <<  tracking.getActiveTrackers() << " - " << host_id << endl;
-			//cout << " - Number of active trackers: " <<  tracking.getActiveTrackers() << " - " << host_id << endl;
 
-
-			for (auto &trk_i: trackers) {
-				trk_i->restartPolygons();
-			}
-
-			for (int i = 0, m = (int)poligon_tracker_manager.size(); i < m; ++i) {
-				poligon_tracker_manager[i]->setSize(frame.size());
-				//poligon_tracker_manager[i]->evaluateAreabbox();
-				poligon_tracker_manager[i]->evaluateArea();
-			}
-
-			Json::Value objects_to_report = tracking.reportObjects(save_img);
-			tracking.deactivateObjects();
-
-			if (DEBUG) {
-				cout << " - Number of detections: " << detections.size() << " - " << host_id << endl;
-				cout << " - Number of active trackers: " <<  tracking.getActiveTrackers() << " - " << host_id << endl;
-			}
-
-			if (!objects_to_report[0].isNull()) {
-				//SEND ANALYTICS RESULTS
-				if (DEBUG){
-					imgSave = tracking.getDetsImage();
-					//imgSave = tracking.getDrawImage();//this is for debug 
-				}else{
-					imgSave = frame;
+				if (!DEBUG) {
+				send_out_imageb64(rdx,frame,msgi.host_uuid); //it takes a lot of time in my pc core I5 around 13 ms 
 				}
+				auto end2 = std::chrono::steady_clock::now();
+				auto diff2 = std::chrono::duration_cast<std::chrono::milliseconds>(end2 - start).count();
+				std::cout << " Time LOOP : " << static_cast<double>(diff2) << " ms" << std::endl;
+				fps = 1000.0 / static_cast<double>(diff2);
+				std::cout << " FPS : " <<fps  << std::endl;
 
-				if(measure_speed){
-				photo_buffer.add(imgSave, unixTimeStamp);///this is for testing 
+
+			//cv::imshow("video feed", frame);
+				//cv::waitKey(0);
 				
-				//photo_buffer.add(imgSave, unixTimeStamp);///this is for testing 
-				}else{
-				photo_buffer.add(frame, unixTimeStamp);///this is for production 
-				}
-				join_and_send_outdata_redox(rdx,msgi,media_path,objects_to_report,"", "",save_img,imgShow,SEND_B64,to_post,DEBUG,unixTimeStamp);//this is for debug 
-				//join_and_send_outdata_redox(rdx,msgi,media_path,objects_to_report,"", "",save_img,imgSave,SEND_B64,to_post,DEBUG);
-				//SET LAST UPDATED TIME
-				if (!rdx.set(update_channel,to_string(getTimeMilis()))) {
-					cout << "Failed to set update time - " << host_id << endl;
-				}
-			}
-		if (DEBUG) {
-			auto endtrack = std::chrono::steady_clock::now();
-        	auto difftrack = std::chrono::duration_cast<std::chrono::milliseconds>(endtrack - starttrack).count();
-        	std::cout << "Infer time track: " << difftrack << " ms" << std::endl;
-			
-				//float data_fin = (tf-ti)*1000/cv::getTickFrequency();
-				//cout << " - Time elapsed per frame: " << data_fin << "ms - " << host_id << endl;				
-				imgShow = tracking.getDrawImage();
-
-				for (size_t i = 0, n = poligon_tracker_manager.size(); i < n; ++i) {
-					if (poligon_tracker_manager[i] == nullptr) { continue; }
-					std::vector<cv::Point2f> points = poligon_tracker_manager[i]->getEvalPoints();
-					for (size_t j = 0, m = points.size(); j < m; ++j) {
-						cv::Point2f p0 = points[j];
-						//cv::Point2f p1 = points[(j+1)%m];
-						cv::Point2f p1 = points[(j+1)%m];
-						int tk = ceil(min(imgShow.cols, imgShow.rows) / 200.0);
-						cv::line(imgShow, p0, p1, EB_GRN, 1);
-					}
-				}
-					//cv::imshow("video feed", imgShow);
-					send_out_imageb64(rdx,imgShow,msgi.host_uuid); //it takes a lot of time in my pc core I5 around 13 ms 
-						//cv::imshow
-
-		}
-		
 
 
 
-
-
-		if (!DEBUG) {
-		send_out_imageb64(rdx,frame,msgi.host_uuid); //it takes a lot of time in my pc core I5 around 13 ms 
-		}
-		auto end2 = std::chrono::steady_clock::now();
-        auto diff2 = std::chrono::duration_cast<std::chrono::milliseconds>(end2 - start).count();
-        std::cout << " Time LOOP : " << static_cast<double>(diff2) << " ms" << std::endl;
-		fps = 1000.0 / static_cast<double>(diff2);
-		std::cout << " FPS : " <<fps  << std::endl;
-
-
-       //cv::imshow("video feed", frame);
-        //cv::waitKey(0);
-
-
-#ifdef WRITE_FRAME
-        outputVideo.write(frame);
-#endif
+		#ifdef WRITE_FRAME
+				outputVideo.write(frame);
+		#endif
+	            } catch (const std::exception& e) {
+                std::cerr << "Error en frame processing: " << e.what() << std::endl;
+                // Continua con el siguiente frame en lugar de crashear
+                continue;
+            } catch (...) {
+                std::cerr << "Error desconocido en frame processing" << std::endl;
+                continue;
+            }
+	}
+	
+    } catch (const std::exception& e) {
+        std::cerr << "Error fatal en ProcessVideo: " << e.what() << std::endl;
+        throw; // Relanza para que main lo capture
     }
-}
+
+	}
 
 
 static const std::string keys =
@@ -1283,9 +1331,14 @@ static const std::string keys =
 int main(int argc, const char* argv[])
 {
 
-
+    // Registrar manejadores de señales
+    std::signal(SIGSEGV, signalHandler); // Violación de segmento
+    std::signal(SIGABRT, signalHandler); // Abort
+    std::signal(SIGTERM, signalHandler); // Terminación
+    std::signal(SIGINT, signalHandler);  // Ctrl+C
+    
 ///////////////////////////ALICE
-
+  try {
     string config_path = "config.json";
 	string id = "1";
 	
@@ -1391,10 +1444,14 @@ int main(int argc, const char* argv[])
 
    
     
-
-    // Create Triton client
-    std::unique_ptr<Triton> tritonClient = std::make_unique<Triton>(url, protocol, modelName);
-    tritonClient->createTritonClient();
+        std::unique_ptr<Triton> tritonClient;
+        try {
+            tritonClient = std::make_unique<Triton>(url, protocol, modelName);
+            tritonClient->createTritonClient();
+        } catch (const std::exception& e) {
+            std::cerr << "Error al crear cliente Triton: " << e.what() << std::endl;
+            return 1;
+        }
 
     TritonModelInfo modelInfo = tritonClient->getModelInfo(modelName, serverAddress, input_sizes);
     std::unique_ptr<TaskInterface> task;
@@ -1431,4 +1488,13 @@ int main(int argc, const char* argv[])
     }
 
     return 0;
+	}
+catch (const std::exception& e) {
+    // No se captura aquí
+    std::cout << "Exception: " << e.what() << std::endl;
+}
+catch (...) {
+    // Se captura aquí
+    std::cout << "Unknown exception caught!" << std::endl;
+}
 }
