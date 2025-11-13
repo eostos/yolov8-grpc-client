@@ -83,7 +83,7 @@
                 "host_id": "71358df2-2c4d-4bd1-b0d9-c908ef03d963",
                 "url_video1": "rtsp://admin:admin123@192.168.1.176:554/Streaming/Channels/1601",
                 "url_video3": "/opt/alice-media/copan-water/new-camera-jug-in.mp4",
-                "url_video":"/opt/alice-media/copan-water/new-camera.mp4",
+                "url_video":"/opt/alice-media/botes-250-bolsas-70-S1-JUG222-S2JUG228-S1BAG31-S2BAG10.mp4",
                 "name": "cargue1-op",
                 "task_type": "detection",
                 "model": "water-jugs",

@@ -462,6 +462,22 @@ void ProcessVideo(const std::string& sourceName,
 	string input_url = config_params["url_video"].asString();
 	string grpc_port = config_params["grpc_port"].asString();
 	string grpc_server = config_params["grpc_server"].asString();
+	bool useMotionDetection = false;
+	if (config_params.isMember("motion_detection")) {
+		if (config_params["motion_detection"].isBool()) {
+			useMotionDetection = config_params["motion_detection"].asBool();
+		} else if (config_params["motion_detection"].isString()) {
+			// Por si viene como string "true"/"false"
+			std::string motionStr = config_params["motion_detection"].asString();
+			useMotionDetection = (motionStr == "true" || motionStr == "1");
+		} else if (config_params["motion_detection"].isInt()) {
+			// Por si viene como número 0/1
+			useMotionDetection = (config_params["motion_detection"].asInt() != 0);
+		}
+	} else {
+		// No existe la clave, usar valor por defecto false
+		useMotionDetection = false;
+	}
 	host_id = config_params["host_id"].asString();
 	bool DEBUG = config_params["debug"].asBool();
 	save_img_obj = config_params["save_img_obj"].asBool();
@@ -832,7 +848,12 @@ auto lam_gotmsg = [](const std::string& topic, const std::string& msg) {
 	//cv::perspectiveTransform(img_pts_vec, world_proj, H);
 	
 	//cv::Mat H_inv = H.inv();
-	    bgSubtractor = cv::createBackgroundSubtractorMOG2(300, 16, false);
+	if (useMotionDetection) {
+    bgSubtractor = cv::createBackgroundSubtractorMOG2(300, 16, false);
+		std::cout << "Motion detection ACTIVATED" << std::endl;
+	} else {
+		std::cout << "Motion detection DEACTIVATED" << std::endl;
+	}
     while (true) 
 	{
  	try {  
@@ -860,7 +881,8 @@ auto lam_gotmsg = [](const std::string& topic, const std::string& msg) {
             }
         }
 		 static int framesSinMovimiento = 0;
-        bool hayMovimiento = tieneMovimiento(original);
+		 if (useMotionDetection) {
+         bool hayMovimiento = tieneMovimiento(original);
 		            if (!hayMovimiento) {
                 framesSinMovimiento++;
                 // Si pasaron más de 10 frames sin movimiento, saltar YOLO
@@ -871,6 +893,7 @@ auto lam_gotmsg = [](const std::string& topic, const std::string& msg) {
             } else {
                 framesSinMovimiento = 0;
             }
+			}
 		if (crop_enabled) {
 			// Valida que el ROI esté dentro del frame
 			if (original.cols >= roi.x + roi.width && original.rows >= roi.y + roi.height) {
@@ -1325,6 +1348,7 @@ auto lam_gotmsg = [](const std::string& topic, const std::string& msg) {
 							}
 						}
 							//cv::imshow("video feed", imgShow);
+							//cv::waitKey(0);
 							send_out_imageb64(rdx,imgShow,msgi.host_uuid); //it takes a lot of time in my pc core I5 around 13 ms 
 								//cv::imshow
 
@@ -1355,9 +1379,23 @@ auto lam_gotmsg = [](const std::string& topic, const std::string& msg) {
 				outputVideo.write(frame);
 		#endif
 	            } catch (const std::exception& e) {
-                std::cerr << "Error en frame processing: " << e.what() << std::endl;
-                // Continua con el siguiente frame en lugar de crashear
-                continue;
+			std::string error_msg = e.what();  // ✅ Declarar la variable aquí
+			std::cerr << "Error en frame processing: " << error_msg << std::endl;
+			
+			// Verificar si es el error de CUDA
+			if (error_msg.find("CUDA error: no CUDA-capable device is detected") != std::string::npos ||
+				error_msg.find("no CUDA-capable device") != std::string::npos) {
+				
+				std::cerr << "ERROR CRÍTICO DE CUDA - CERRANDO APLICACIÓN" << std::endl;
+				std::cerr << "No se detectó dispositivo CUDA. Verifique la GPU y drivers." << std::endl;
+				
+				// Forzar cierre inmediato
+				exit(EXIT_FAILURE);
+			}
+        
+        // Para otros errores, continuar
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        continue;
             } catch (...) {
                 std::cerr << "Error desconocido en frame processing" << std::endl;
                 continue;
